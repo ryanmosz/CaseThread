@@ -1,6 +1,8 @@
-# Planning and handoff documents (keep local only)
-planning-rmm/
+# Personal notes and session files
 AGENT-HANDOFF.md
+*.local
+*-local.*
+personal-notes/
 
 # Dependencies
 node_modules/
