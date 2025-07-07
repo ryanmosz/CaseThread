@@ -1,0 +1,244 @@
+{
+  "id": "patent-assignment-agreement",
+  "name": "Patent Assignment Agreement",
+  "type": "agreement",
+  "version": "1.0.0",
+  "description": "Agreement to transfer ownership of patents with USPTO recording format",
+  "complexity": "low-medium",
+  "estimatedTime": "1-2 hours",
+  "metadata": {
+    "category": "patent",
+    "jurisdiction": "federal",
+    "lastUpdated": "2024-01-01",
+    "author": "CaseThread"
+  },
+  "requiredFields": [
+    {
+      "id": "assignor_name",
+      "name": "Assignor Name",
+      "type": "text",
+      "description": "Full legal name of party transferring patents",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "assignee_name",
+      "name": "Assignee Name",
+      "type": "text",
+      "description": "Full legal name of party receiving patents",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "effective_date",
+      "name": "Effective Date",
+      "type": "date",
+      "description": "Date when assignment becomes effective",
+      "required": true
+    },
+    {
+      "id": "assignment_type",
+      "name": "Assignment Type",
+      "type": "select",
+      "description": "Type of assignment",
+      "required": true,
+      "options": ["employee", "purchase", "founder", "corrective"]
+    },
+    {
+      "id": "patent_list",
+      "name": "Patent List",
+      "type": "textarea",
+      "description": "List patents: Number, Title, Filing Date (one per line)",
+      "required": true,
+      "validation": {
+        "minLength": 10
+      }
+    },
+    {
+      "id": "include_applications",
+      "name": "Include Pending Applications?",
+      "type": "boolean",
+      "description": "Include patent applications not yet granted",
+      "required": true
+    },
+    {
+      "id": "include_future",
+      "name": "Include Future Patents?",
+      "type": "boolean",
+      "description": "Include patents filed in the future (employment context)",
+      "required": true
+    },
+    {
+      "id": "consideration_type",
+      "name": "Consideration Type",
+      "type": "select",
+      "description": "What is being exchanged for the patents",
+      "required": true,
+      "options": ["employment", "cash_payment", "equity", "other"]
+    },
+    {
+      "id": "cash_amount",
+      "name": "Purchase Price",
+      "type": "number",
+      "description": "Amount in USD (if cash payment)",
+      "required": false,
+      "validation": {
+        "min": 0
+      }
+    },
+    {
+      "id": "warranty_level",
+      "name": "Warranty Level",
+      "type": "select",
+      "description": "What warranties will assignor provide",
+      "required": true,
+      "options": ["full", "limited", "none"]
+    },
+    {
+      "id": "governing_state",
+      "name": "Governing Law",
+      "type": "select",
+      "description": "State law that governs agreement",
+      "required": true,
+      "options": ["Delaware", "California", "New York", "Texas", "Other"]
+    }
+  ],
+  "sections": [
+    {
+      "id": "title",
+      "title": "Title",
+      "order": 1,
+      "required": true,
+      "content": "PATENT ASSIGNMENT AGREEMENT",
+      "firmCustomizable": false
+    },
+    {
+      "id": "parties",
+      "title": "Parties",
+      "order": 2,
+      "required": true,
+      "content": "This Patent Assignment Agreement (\"Agreement\") is entered into as of {{date effective_date \"MMMM DD, YYYY\"}} (\"Effective Date\") by and between {{assignor_name}} (\"Assignor\") and {{assignee_name}} (\"Assignee\").",
+      "firmCustomizable": true
+    },
+    {
+      "id": "background",
+      "title": "Background",
+      "order": 3,
+      "required": true,
+      "content": "WHEREAS, {{#if employee}}Assignor is employed by Assignee and has developed certain inventions within the scope of employment{{/if}}{{#if purchase}}Assignor owns certain patents and patent applications that Assignee desires to acquire{{/if}}{{#if founder}}Assignor is a founder of Assignee and desires to assign intellectual property to the company{{/if}}{{#if corrective}}the parties wish to correct and confirm the assignment of certain patents{{/if}};\n\nWHEREAS, Assignor desires to assign all right, title, and interest in and to such patents to Assignee;\n\nNOW, THEREFORE, for good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the parties agree as follows:",
+      "firmCustomizable": true,
+      "variables": {
+        "employee": {
+          "source": "assignment_type",
+          "transform": "equals:employee"
+        },
+        "purchase": {
+          "source": "assignment_type",
+          "transform": "equals:purchase"
+        },
+        "founder": {
+          "source": "assignment_type",
+          "transform": "equals:founder"
+        },
+        "corrective": {
+          "source": "assignment_type",
+          "transform": "equals:corrective"
+        }
+      }
+    },
+    {
+      "id": "assignment",
+      "title": "Assignment",
+      "order": 4,
+      "required": true,
+      "content": "1. ASSIGNMENT\n\n1.1 Assignor hereby assigns, transfers, and conveys to Assignee all right, title, and interest in and to the following (collectively, the \"Patents\"):\n\n{{patent_list}}\n\n{{#if include_applications}}1.2 The Patents include all patent applications, provisionals, continuations, continuations-in-part, divisionals, reissues, reexaminations, and extensions related to the above.{{/if}}\n\n{{#if include_future}}1.3 Assignor hereby assigns all future inventions and patent applications conceived, developed, or reduced to practice during the term of Assignor's employment with Assignee.{{/if}}\n\n1.4 This assignment includes all rights of priority, all rights to sue for past infringement, and all proceeds from the Patents.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "consideration",
+      "title": "Consideration",
+      "order": 5,
+      "required": true,
+      "content": "2. CONSIDERATION\n\n{{#if employment}}2.1 The consideration for this assignment is Assignor's employment with Assignee and the compensation provided thereunder.{{/if}}\n\n{{#if cash_payment}}2.1 In consideration for this assignment, Assignee shall pay Assignor the sum of ${{number cash_amount}} within thirty (30) days of the Effective Date.{{/if}}\n\n{{#if equity}}2.1 The consideration for this assignment is the equity interest granted to Assignor in Assignee.{{/if}}\n\n{{#if other}}2.1 The consideration for this assignment is [OTHER CONSIDERATION].{{/if}}",
+      "firmCustomizable": true,
+      "variables": {
+        "employment": {
+          "source": "consideration_type",
+          "transform": "equals:employment"
+        },
+        "cash_payment": {
+          "source": "consideration_type",
+          "transform": "equals:cash_payment"
+        },
+        "equity": {
+          "source": "consideration_type",
+          "transform": "equals:equity"
+        },
+        "other": {
+          "source": "consideration_type",
+          "transform": "equals:other"
+        }
+      }
+    },
+    {
+      "id": "warranties",
+      "title": "Representations and Warranties",
+      "order": 6,
+      "required": true,
+      "content": "3. REPRESENTATIONS AND WARRANTIES\n\n{{#if full_warranty}}3.1 Assignor represents and warrants that:\n(a) Assignor is the sole owner of the Patents;\n(b) Assignor has full right and authority to assign the Patents;\n(c) The Patents are free of all liens and encumbrances;\n(d) Assignor has not previously assigned the Patents;\n(e) To Assignor's knowledge, the Patents are valid and enforceable.{{/if}}\n\n{{#if limited_warranty}}3.1 Assignor represents and warrants that Assignor has not previously assigned the Patents to any third party.{{/if}}\n\n{{#if no_warranty}}3.1 This assignment is made on a \"quitclaim\" basis without any representations or warranties whatsoever.{{/if}}",
+      "firmCustomizable": true,
+      "variables": {
+        "full_warranty": {
+          "source": "warranty_level",
+          "transform": "equals:full"
+        },
+        "limited_warranty": {
+          "source": "warranty_level",
+          "transform": "equals:limited"
+        },
+        "no_warranty": {
+          "source": "warranty_level",
+          "transform": "equals:none"
+        }
+      }
+    },
+    {
+      "id": "further_assurances",
+      "title": "Further Assurances",
+      "order": 7,
+      "required": true,
+      "content": "4. FURTHER ASSURANCES\n\n4.1 Assignor agrees to execute all documents and take all actions reasonably necessary to perfect Assignee's ownership of the Patents, including execution of formal assignment documents for recording with the USPTO.\n\n4.2 Assignor hereby appoints Assignee as attorney-in-fact to execute any documents necessary to effect this assignment if Assignor fails to do so within ten (10) days of request.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "recording",
+      "title": "Recording",
+      "order": 8,
+      "required": true,
+      "content": "5. RECORDING\n\n5.1 Assignee may record this Agreement with the USPTO and any other applicable patent offices.\n\n5.2 Assignor agrees to cooperate with recording requirements, including providing original signatures if required.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "general",
+      "title": "General Provisions",
+      "order": 9,
+      "required": true,
+      "content": "6. GENERAL PROVISIONS\n\n6.1 This Agreement shall be governed by the laws of {{governing_state}}.\n\n6.2 This Agreement constitutes the entire agreement between the parties regarding the assignment of the Patents.\n\n6.3 This Agreement shall be binding upon and inure to the benefit of the parties' successors and assigns.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "signature",
+      "title": "Signatures",
+      "order": 10,
+      "required": true,
+      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\nASSIGNOR:\n\n_____________________________\n{{assignor_name}}\n\nDate: _____________________\n\n\nASSIGNEE:\n\n_____________________________\n{{assignee_name}}\n\nBy: _____________________________\nName:\nTitle:\n\nDate: _____________________\n\n\n[NOTARY ACKNOWLEDGMENT IF REQUIRED FOR RECORDING]",
+      "firmCustomizable": false
+    }
+  ]
+} 

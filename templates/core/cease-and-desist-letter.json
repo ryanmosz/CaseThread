@@ -1,0 +1,269 @@
+{
+  "id": "cease-and-desist-letter",
+  "name": "Cease and Desist Letter (IP Infringement)",
+  "type": "letter",
+  "version": "1.0.0",
+  "description": "Professional cease and desist letter for IP infringement matters",
+  "complexity": "medium",
+  "estimatedTime": "2-3 hours",
+  "metadata": {
+    "category": "enforcement",
+    "jurisdiction": "federal/state",
+    "lastUpdated": "2024-01-01",
+    "author": "CaseThread"
+  },
+  "requiredFields": [
+    {
+      "id": "sender_name",
+      "name": "Sender Name",
+      "type": "text",
+      "description": "Your name or your client's name",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "sender_address",
+      "name": "Sender Address",
+      "type": "textarea",
+      "description": "Complete mailing address",
+      "required": true,
+      "validation": {
+        "minLength": 10,
+        "maxLength": 300
+      }
+    },
+    {
+      "id": "recipient_name",
+      "name": "Recipient Name",
+      "type": "text",
+      "description": "Name of infringing party",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "recipient_address",
+      "name": "Recipient Address",
+      "type": "textarea",
+      "description": "Infringer's address",
+      "required": true,
+      "validation": {
+        "minLength": 10,
+        "maxLength": 300
+      }
+    },
+    {
+      "id": "infringement_type",
+      "name": "Type of IP Infringement",
+      "type": "select",
+      "description": "What type of IP is being infringed",
+      "required": true,
+      "options": ["patent", "trademark", "copyright", "trade_secret"]
+    },
+    {
+      "id": "ip_description",
+      "name": "Description of Your IP",
+      "type": "textarea",
+      "description": "Describe your intellectual property (include registration numbers if applicable)",
+      "required": true,
+      "validation": {
+        "minLength": 20,
+        "maxLength": 500
+      }
+    },
+    {
+      "id": "infringement_description",
+      "name": "Description of Infringement",
+      "type": "textarea",
+      "description": "How is your IP being infringed",
+      "required": true,
+      "validation": {
+        "minLength": 50,
+        "maxLength": 1000
+      }
+    },
+    {
+      "id": "relationship_type",
+      "name": "Relationship to Infringer",
+      "type": "select",
+      "description": "Your relationship with the infringer",
+      "required": true,
+      "options": ["competitor", "customer", "vendor", "none"]
+    },
+    {
+      "id": "tone_level",
+      "name": "Letter Tone",
+      "type": "select",
+      "description": "How aggressive should the letter be",
+      "required": true,
+      "options": ["friendly", "professional", "firm", "aggressive"]
+    },
+    {
+      "id": "desired_outcome",
+      "name": "Desired Outcome",
+      "type": "multiselect",
+      "description": "What do you want to happen",
+      "required": true,
+      "options": ["stop_use", "destroy_inventory", "accounting", "licensing_discussion"]
+    },
+    {
+      "id": "response_deadline",
+      "name": "Response Deadline (Days)",
+      "type": "number",
+      "description": "Days to respond (typically 10-30)",
+      "required": true,
+      "validation": {
+        "min": 7,
+        "max": 60
+      }
+    },
+    {
+      "id": "evidence_attached",
+      "name": "Will Evidence Be Attached?",
+      "type": "boolean",
+      "description": "Will you include evidence exhibits",
+      "required": true
+    }
+  ],
+  "sections": [
+    {
+      "id": "header",
+      "title": "Header",
+      "order": 1,
+      "required": true,
+      "content": "{{date current_date \"MMMM DD, YYYY\"}}\n\nVIA {{#if friendly}}REGULAR MAIL{{else}}CERTIFIED MAIL, RETURN RECEIPT REQUESTED{{/if}}\n\n{{recipient_name}}\n{{recipient_address}}\n\nRe: {{#if patent}}Patent{{/if}}{{#if trademark}}Trademark{{/if}}{{#if copyright}}Copyright{{/if}}{{#if trade_secret}}Trade Secret{{/if}} Infringement - Cease and Desist Demand",
+      "firmCustomizable": true,
+      "variables": {
+        "patent": {
+          "source": "infringement_type",
+          "transform": "equals:patent"
+        },
+        "trademark": {
+          "source": "infringement_type",
+          "transform": "equals:trademark"
+        },
+        "copyright": {
+          "source": "infringement_type",
+          "transform": "equals:copyright"
+        },
+        "trade_secret": {
+          "source": "infringement_type",
+          "transform": "equals:trade_secret"
+        },
+        "friendly": {
+          "source": "tone_level",
+          "transform": "equals:friendly"
+        }
+      }
+    },
+    {
+      "id": "opening",
+      "title": "Opening",
+      "order": 2,
+      "required": true,
+      "content": "Dear {{recipient_name}}:\n\n{{#if friendly}}We are writing to bring to your attention a matter of mutual concern regarding intellectual property rights.{{/if}}{{#if professional}}We represent {{sender_name}} in connection with their intellectual property rights.{{/if}}{{#if firm}}This firm represents {{sender_name}}. We are writing to demand that you immediately cease and desist from infringing our client's intellectual property rights.{{/if}}{{#if aggressive}}This letter serves as formal notice that you are engaging in unlawful infringement of our client's intellectual property rights. Your actions expose you to significant legal liability.{{/if}}",
+      "firmCustomizable": true,
+      "variables": {
+        "friendly": {
+          "source": "tone_level",
+          "transform": "equals:friendly"
+        },
+        "professional": {
+          "source": "tone_level",
+          "transform": "equals:professional"
+        },
+        "firm": {
+          "source": "tone_level",
+          "transform": "equals:firm"
+        },
+        "aggressive": {
+          "source": "tone_level",
+          "transform": "equals:aggressive"
+        }
+      }
+    },
+    {
+      "id": "ownership_assertion",
+      "title": "IP Ownership",
+      "order": 3,
+      "required": true,
+      "content": "{{sender_name}} owns valuable intellectual property rights in {{ip_description}}.",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are an IP attorney describing intellectual property ownership. Be specific about registrations, dates, and scope.",
+        "user": "Expand on these IP rights for a cease and desist letter: {{ip_description}}",
+        "temperature": 0.3,
+        "maxTokens": 300
+      }
+    },
+    {
+      "id": "infringement_identification",
+      "title": "Infringement Description",
+      "order": 4,
+      "required": true,
+      "content": "{{#if friendly}}It has come to our attention that{{else}}We have discovered that{{/if}} you are {{infringement_description}}.\n\n{{#if evidence_attached}}Evidence of this infringement is attached as Exhibit A.{{/if}}",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are an IP attorney describing infringement clearly and specifically. Include enough detail to show the infringement is clear.",
+        "user": "Describe this infringement in detail for a cease and desist letter: {{infringement_description}}",
+        "temperature": 0.3,
+        "maxTokens": 400
+      }
+    },
+    {
+      "id": "legal_basis",
+      "title": "Legal Basis",
+      "order": 5,
+      "required": true,
+      "content": "{{#if patent}}Your unauthorized use of our patented technology constitutes patent infringement under 35 U.S.C. § 271. Patent infringement carries significant penalties, including injunctive relief and damages.{{/if}}\n\n{{#if trademark}}Your use of a confusingly similar mark constitutes trademark infringement under 15 U.S.C. § 1114 and unfair competition under 15 U.S.C. § 1125(a). This creates a likelihood of confusion among consumers.{{/if}}\n\n{{#if copyright}}Your unauthorized copying and use of our copyrighted work constitutes copyright infringement under 17 U.S.C. § 501. Copyright infringement can result in statutory damages up to $150,000 per work for willful infringement.{{/if}}\n\n{{#if trade_secret}}Your unauthorized use of our confidential and proprietary information constitutes misappropriation of trade secrets under [applicable state law/DTSA]. This breach of confidentiality has caused substantial harm to our business.{{/if}}",
+      "firmCustomizable": true
+    },
+    {
+      "id": "demands",
+      "title": "Demands",
+      "order": 6,
+      "required": true,
+      "content": "Therefore, we demand that you:\n\n{{#if stop_use}}1. IMMEDIATELY CEASE AND DESIST from all use of our {{#if patent}}patented technology{{/if}}{{#if trademark}}trademark{{/if}}{{#if copyright}}copyrighted work{{/if}}{{#if trade_secret}}trade secrets{{/if}};\n{{/if}}\n{{#if destroy_inventory}}2. DESTROY all inventory, marketing materials, and other items that infringe our intellectual property;\n{{/if}}\n{{#if accounting}}3. PROVIDE a full accounting of all sales and profits derived from your infringing activities;\n{{/if}}\n{{#if licensing_discussion}}4. CONTACT US to discuss a possible licensing arrangement if you wish to continue using our intellectual property;\n{{/if}}\n5. CONFIRM IN WRITING within {{response_deadline}} days that you have complied with these demands.",
+      "firmCustomizable": true,
+      "variables": {
+        "stop_use": {
+          "source": "desired_outcome",
+          "transform": "includes:stop_use"
+        },
+        "destroy_inventory": {
+          "source": "desired_outcome",
+          "transform": "includes:destroy_inventory"
+        },
+        "accounting": {
+          "source": "desired_outcome",
+          "transform": "includes:accounting"
+        },
+        "licensing_discussion": {
+          "source": "desired_outcome",
+          "transform": "includes:licensing_discussion"
+        }
+      }
+    },
+    {
+      "id": "consequences",
+      "title": "Consequences",
+      "order": 7,
+      "required": true,
+      "content": "{{#if friendly}}We hope to resolve this matter amicably and avoid the need for legal action. However, if necessary, we are prepared to protect our intellectual property rights through appropriate legal channels.{{/if}}\n\n{{#if professional}}If you fail to comply with these demands, we will have no choice but to consider all available legal remedies, including filing a lawsuit seeking injunctive relief, damages, and attorneys' fees.{{/if}}\n\n{{#if firm}}Failure to comply with these demands will leave us no alternative but to pursue all available legal remedies, including immediate legal action for injunctive relief, damages, profits, and attorneys' fees.{{/if}}\n\n{{#if aggressive}}Be advised that continued infringement after receipt of this notice constitutes willful infringement, which may result in enhanced damages and attorneys' fees. We are prepared to immediately file suit to protect our client's rights.{{/if}}",
+      "firmCustomizable": true
+    },
+    {
+      "id": "closing",
+      "title": "Closing",
+      "order": 8,
+      "required": true,
+      "content": "{{#if friendly}}We trust that this matter can be resolved quickly and amicably. Please contact us at your earliest convenience to discuss this matter.{{/if}}\n\n{{#if professional}}We await your prompt response and compliance with these demands.{{/if}}\n\n{{#if firm}}This is a serious matter requiring your immediate attention. Govern yourself accordingly.{{/if}}\n\n{{#if aggressive}}Time is of the essence. This letter is written without prejudice to any other rights or remedies available to our client, all of which are expressly reserved.{{/if}}\n\nYou must respond within {{response_deadline}} days of the date of this letter.\n\nSincerely,\n\n[ATTORNEY NAME]\n[FIRM NAME]\n[PHONE]\n[EMAIL]\n\nAttorney for {{sender_name}}",
+      "firmCustomizable": true
+    }
+  ]
+} 

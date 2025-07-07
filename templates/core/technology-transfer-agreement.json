@@ -1,0 +1,357 @@
+{
+  "id": "technology-transfer-agreement",
+  "name": "Technology Transfer Agreement",
+  "type": "agreement",
+  "version": "1.0.0",
+  "description": "Comprehensive agreement for transferring technology, know-how, and IP rights",
+  "complexity": "very-high",
+  "estimatedTime": "6-8 hours",
+  "metadata": {
+    "category": "technology-transfer",
+    "jurisdiction": "international",
+    "lastUpdated": "2024-01-01",
+    "author": "CaseThread"
+  },
+  "requiredFields": [
+    {
+      "id": "provider_name",
+      "name": "Technology Provider",
+      "type": "text",
+      "description": "Entity providing the technology",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "recipient_name",
+      "name": "Technology Recipient",
+      "type": "text",
+      "description": "Entity receiving the technology",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "effective_date",
+      "name": "Effective Date",
+      "type": "date",
+      "description": "Date agreement becomes effective",
+      "required": true
+    },
+    {
+      "id": "technology_field",
+      "name": "Technology Field",
+      "type": "select",
+      "description": "General field of technology",
+      "required": true,
+      "options": ["biotechnology", "software", "manufacturing", "energy", "medical_device", "other"]
+    },
+    {
+      "id": "technology_description",
+      "name": "Technology Description",
+      "type": "textarea",
+      "description": "Detailed description of technology being transferred",
+      "required": true,
+      "validation": {
+        "minLength": 100,
+        "maxLength": 2000
+      }
+    },
+    {
+      "id": "transfer_components",
+      "name": "Transfer Components",
+      "type": "multiselect",
+      "description": "What is being transferred",
+      "required": true,
+      "options": ["patents", "know_how", "software", "materials", "data", "equipment"]
+    },
+    {
+      "id": "patent_list",
+      "name": "Patent Information",
+      "type": "textarea",
+      "description": "List patents if applicable (number, title, country)",
+      "required": false,
+      "validation": {
+        "maxLength": 1000
+      }
+    },
+    {
+      "id": "transfer_type",
+      "name": "Transfer Structure",
+      "type": "select",
+      "description": "Legal structure of transfer",
+      "required": true,
+      "options": ["exclusive_license", "non_exclusive_license", "assignment", "hybrid"]
+    },
+    {
+      "id": "field_of_use",
+      "name": "Field of Use Restriction",
+      "type": "textarea",
+      "description": "Any limitations on use (leave blank if none)",
+      "required": false,
+      "validation": {
+        "maxLength": 500
+      }
+    },
+    {
+      "id": "territory",
+      "name": "Geographic Territory",
+      "type": "multiselect",
+      "description": "Where technology can be used",
+      "required": true,
+      "options": ["worldwide", "north_america", "europe", "asia", "specific_countries"]
+    },
+    {
+      "id": "training_required",
+      "name": "Training Required?",
+      "type": "boolean",
+      "description": "Will provider train recipient's personnel?",
+      "required": true
+    },
+    {
+      "id": "training_details",
+      "name": "Training Details",
+      "type": "textarea",
+      "description": "Number of people, duration, location",
+      "required": false,
+      "validation": {
+        "maxLength": 500
+      }
+    },
+    {
+      "id": "upfront_fee",
+      "name": "Initial Technology Fee ($)",
+      "type": "number",
+      "description": "Upfront payment for technology access",
+      "required": true,
+      "validation": {
+        "min": 0
+      }
+    },
+    {
+      "id": "milestone_payments",
+      "name": "Include Milestone Payments?",
+      "type": "boolean",
+      "description": "Payments tied to achievements",
+      "required": true
+    },
+    {
+      "id": "royalty_rate",
+      "name": "Royalty Rate (%)",
+      "type": "number",
+      "description": "Percentage of net sales (0 if none)",
+      "required": true,
+      "validation": {
+        "min": 0,
+        "max": 50
+      }
+    },
+    {
+      "id": "export_controlled",
+      "name": "Export Controlled?",
+      "type": "boolean",
+      "description": "Subject to export regulations (EAR/ITAR)",
+      "required": true
+    },
+    {
+      "id": "confidentiality_period",
+      "name": "Confidentiality Period (Years)",
+      "type": "number",
+      "description": "How long to maintain confidentiality",
+      "required": true,
+      "validation": {
+        "min": 1,
+        "max": 20
+      }
+    },
+    {
+      "id": "term_years",
+      "name": "Agreement Term (Years)",
+      "type": "number",
+      "description": "Duration of agreement",
+      "required": true,
+      "validation": {
+        "min": 1,
+        "max": 50
+      }
+    },
+    {
+      "id": "governing_law",
+      "name": "Governing Law",
+      "type": "select",
+      "description": "Which law governs the agreement",
+      "required": true,
+      "options": ["New York", "Delaware", "California", "England", "Singapore", "Other"]
+    }
+  ],
+  "sections": [
+    {
+      "id": "title",
+      "title": "Title",
+      "order": 1,
+      "required": true,
+      "content": "TECHNOLOGY TRANSFER AGREEMENT",
+      "firmCustomizable": false
+    },
+    {
+      "id": "parties",
+      "title": "Parties",
+      "order": 2,
+      "required": true,
+      "content": "This Technology Transfer Agreement (\"Agreement\") is entered into as of {{date effective_date \"MMMM DD, YYYY\"}} (\"Effective Date\") by and between:\n\n{{provider_name}} (\"Provider\"), a [corporation/university] organized under the laws of [JURISDICTION], and\n\n{{recipient_name}} (\"Recipient\"), a corporation organized under the laws of [JURISDICTION].\n\nProvider and Recipient may be referred to individually as a \"Party\" and collectively as the \"Parties.\"",
+      "firmCustomizable": true
+    },
+    {
+      "id": "recitals",
+      "title": "Recitals",
+      "order": 3,
+      "required": true,
+      "content": "WHEREAS, Provider has developed and owns certain technology in the field of {{technology_field}};\n\nWHEREAS, Recipient desires to obtain rights to such technology for commercialization{{#if field_of_use}} in the field of {{field_of_use}}{{/if}};\n\nWHEREAS, Provider is willing to transfer such technology and provide associated know-how and support;\n\nNOW, THEREFORE, in consideration of the mutual covenants contained herein, the Parties agree as follows:",
+      "firmCustomizable": true
+    },
+    {
+      "id": "definitions",
+      "title": "Definitions",
+      "order": 4,
+      "required": true,
+      "content": "1. DEFINITIONS\n\n1.1 \"Technology\" means {{technology_description}}, including all related {{#each transfer_components}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}.\n\n{{#if patents}}1.2 \"Patent Rights\" means: {{patent_list}} and any related continuations, divisionals, and foreign counterparts.{{/if}}\n\n1.3 \"Know-How\" means all technical information, data, materials, trade secrets, and expertise related to the Technology.\n\n1.4 \"Confidential Information\" means all non-public information disclosed by either Party.\n\n{{#if field_of_use}}1.5 \"Field of Use\" means: {{field_of_use}}.{{/if}}\n\n1.6 \"Territory\" means: {{#each territory}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}.",
+      "firmCustomizable": true,
+      "variables": {
+        "patents": {
+          "source": "transfer_components",
+          "transform": "includes:patents"
+        }
+      }
+    },
+    {
+      "id": "technology_transfer",
+      "title": "Technology Transfer",
+      "order": 5,
+      "required": true,
+      "content": "2. TECHNOLOGY TRANSFER\n\n2.1 Grant of Rights. Provider hereby {{#if assignment}}assigns{{else}}grants to Recipient {{#if exclusive}}an exclusive{{else}}a non-exclusive{{/if}} license to{{/if}} the Technology{{#if field_of_use}} in the Field of Use{{/if}} in the Territory.\n\n2.2 Delivery. Provider shall deliver to Recipient within [30] days:\n(a) All documentation related to the Technology;\n(b) {{#if software}}Source code and technical documentation;{{/if}}\n(c) {{#if materials}}Physical materials and samples;{{/if}}\n(d) Know-How in written and electronic form.\n\n2.3 Transfer Method. Delivery shall be made via [secure file transfer/physical shipment] with appropriate confidentiality protections.",
+      "firmCustomizable": true,
+      "variables": {
+        "assignment": {
+          "source": "transfer_type",
+          "transform": "equals:assignment"
+        },
+        "exclusive": {
+          "source": "transfer_type",
+          "transform": "equals:exclusive_license"
+        },
+        "software": {
+          "source": "transfer_components",
+          "transform": "includes:software"
+        },
+        "materials": {
+          "source": "transfer_components",
+          "transform": "includes:materials"
+        }
+      }
+    },
+    {
+      "id": "training_support",
+      "title": "Training and Support",
+      "order": 6,
+      "required": false,
+      "conditionalOn": {
+        "field": "training_required",
+        "value": true
+      },
+      "content": "3. TRAINING AND SUPPORT\n\n3.1 Training Program. Provider shall provide training as follows:\n{{training_details}}\n\n3.2 Technical Support. Provider shall provide reasonable technical support for [12] months after initial training.\n\n3.3 Documentation. Provider shall provide comprehensive technical documentation and updates during the support period.",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are structuring technology transfer training requirements.",
+        "user": "Create a detailed training plan based on: {{training_details}}",
+        "temperature": 0.3,
+        "maxTokens": 400
+      }
+    },
+    {
+      "id": "financial_terms",
+      "title": "Financial Terms",
+      "order": 7,
+      "required": true,
+      "content": "4. FINANCIAL TERMS\n\n4.1 Technology Transfer Fee. Recipient shall pay Provider ${{number upfront_fee}} within thirty (30) days of the Effective Date.\n\n{{#if milestone_payments}}4.2 Milestone Payments. Recipient shall pay the following milestone payments:\n(a) $[AMOUNT] upon [MILESTONE 1];\n(b) $[AMOUNT] upon [MILESTONE 2];\n(c) $[AMOUNT] upon [MILESTONE 3].{{/if}}\n\n{{#if royalties}}4.3 Royalties. Recipient shall pay Provider {{royalty_rate}}% of Net Sales of products incorporating the Technology.{{/if}}\n\n4.4 Payment Terms. All payments shall be made in US dollars via wire transfer. Late payments bear interest at 1.5% per month.",
+      "firmCustomizable": true,
+      "variables": {
+        "royalties": {
+          "source": "royalty_rate",
+          "transform": "greater_than:0"
+        }
+      }
+    },
+    {
+      "id": "acceptance",
+      "title": "Acceptance and Testing",
+      "order": 8,
+      "required": true,
+      "content": "5. ACCEPTANCE\n\n5.1 Acceptance Period. Recipient shall have [60] days after delivery to test and evaluate the Technology.\n\n5.2 Acceptance Criteria. The Technology shall be deemed accepted if it meets the specifications in Exhibit A.\n\n5.3 Remedies. If Technology fails acceptance, Provider shall have [30] days to cure deficiencies.\n\n5.4 Deemed Acceptance. Technology is deemed accepted if Recipient fails to provide written notice of deficiencies within the acceptance period.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "ip_provisions",
+      "title": "Intellectual Property",
+      "order": 9,
+      "required": true,
+      "content": "6. INTELLECTUAL PROPERTY\n\n6.1 Ownership. {{#if assignment}}All rights in the Technology transfer to Recipient upon payment of the Technology Transfer Fee.{{else}}Provider retains all ownership rights in the Technology.{{/if}}\n\n6.2 Improvements. {{#if exclusive}}Recipient owns all improvements made to the Technology. Provider receives a non-exclusive license back.{{else}}Each Party owns its improvements, with cross-licenses granted.{{/if}}\n\n6.3 No Other Rights. No other intellectual property rights are granted except as expressly stated herein.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "confidentiality",
+      "title": "Confidentiality",
+      "order": 10,
+      "required": true,
+      "content": "7. CONFIDENTIALITY\n\n7.1 Obligations. Each Party shall maintain the other's Confidential Information in strict confidence for {{confidentiality_period}} years.\n\n7.2 Exceptions. Obligations do not apply to information that:\n(a) Is publicly available;\n(b) Was rightfully known before disclosure;\n(c) Is independently developed;\n(d) Must be disclosed by law.\n\n7.3 Return. Upon termination, each Party shall return or destroy all Confidential Information.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "export_control",
+      "title": "Export Control",
+      "order": 11,
+      "required": false,
+      "conditionalOn": {
+        "field": "export_controlled",
+        "value": true
+      },
+      "content": "8. EXPORT CONTROL\n\n8.1 Compliance. Both Parties shall comply with all applicable export control laws and regulations.\n\n8.2 Classification. The Technology is classified as [EAR99/ECCN] under US export regulations.\n\n8.3 Restrictions. Recipient shall not export, re-export, or transfer the Technology without appropriate licenses.\n\n8.4 Certifications. Recipient certifies it is not on any prohibited party lists.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "warranties",
+      "title": "Warranties and Indemnification",
+      "order": 12,
+      "required": true,
+      "content": "9. WARRANTIES\n\n9.1 Provider Warranties. Provider warrants:\n(a) It has the right to transfer the Technology;\n(b) The Technology does not knowingly infringe third-party rights;\n(c) The Technology will perform materially as described.\n\n9.2 DISCLAIMER. EXCEPT AS STATED ABOVE, TECHNOLOGY IS PROVIDED \"AS IS\" WITHOUT ANY OTHER WARRANTIES.\n\n9.3 Indemnification. Each Party shall indemnify the other for breaches of its warranties and representations.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "term_termination",
+      "title": "Term and Termination",
+      "order": 13,
+      "required": true,
+      "content": "10. TERM AND TERMINATION\n\n10.1 Term. This Agreement continues for {{term_years}} years from the Effective Date.\n\n10.2 Termination. Either Party may terminate for material breach not cured within sixty (60) days' notice.\n\n10.3 Effect. Upon termination:\n(a) {{#if assignment}}Technology rights remain with Recipient{{else}}All licenses terminate{{/if}};\n(b) Confidentiality obligations survive;\n(c) Accrued payment obligations remain.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "general",
+      "title": "General Provisions",
+      "order": 14,
+      "required": true,
+      "content": "11. GENERAL PROVISIONS\n\n11.1 Governing Law. This Agreement is governed by the laws of {{governing_law}}, without regard to conflicts of law.\n\n11.2 Dispute Resolution. Disputes shall be resolved through binding arbitration under [ICC/AAA] rules.\n\n11.3 Entire Agreement. This Agreement constitutes the entire understanding between the Parties.\n\n11.4 Assignment. Neither Party may assign without the other's written consent, except to affiliates or successors.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "signatures",
+      "title": "Signatures",
+      "order": 15,
+      "required": true,
+      "content": "IN WITNESS WHEREOF, the Parties have executed this Agreement as of the Effective Date.\n\nPROVIDER:\n{{provider_name}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\nRECIPIENT:\n{{recipient_name}}\n\nBy: _____________________________\nName:\nTitle:\nDate:",
+      "firmCustomizable": false
+    }
+  ]
+} 

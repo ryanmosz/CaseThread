@@ -1,0 +1,305 @@
+{
+  "id": "patent-license-agreement",
+  "name": "Patent License Agreement",
+  "type": "agreement",
+  "version": "1.0.0",
+  "description": "Comprehensive patent license agreement with flexible royalty structures",
+  "complexity": "high",
+  "estimatedTime": "4-6 hours",
+  "metadata": {
+    "category": "patent",
+    "jurisdiction": "federal",
+    "lastUpdated": "2024-01-01",
+    "author": "CaseThread"
+  },
+  "requiredFields": [
+    {
+      "id": "licensor_name",
+      "name": "Licensor",
+      "type": "text",
+      "description": "Full legal name of the patent owner",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "licensee_name",
+      "name": "Licensee",
+      "type": "text",
+      "description": "Full legal name of the party receiving license",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "effective_date",
+      "name": "Effective Date",
+      "type": "date",
+      "description": "Date when license becomes effective",
+      "required": true
+    },
+    {
+      "id": "patent_numbers",
+      "name": "Patent Numbers",
+      "type": "textarea",
+      "description": "List of patent numbers (one per line, e.g., US 10,123,456)",
+      "required": true,
+      "validation": {
+        "minLength": 5
+      }
+    },
+    {
+      "id": "license_type",
+      "name": "License Type",
+      "type": "select",
+      "description": "Type of license grant",
+      "required": true,
+      "options": ["exclusive", "non-exclusive", "sole"]
+    },
+    {
+      "id": "field_of_use",
+      "name": "Field of Use",
+      "type": "textarea",
+      "description": "Specific field/industry limitations (leave blank for unrestricted)",
+      "required": false,
+      "validation": {
+        "maxLength": 500
+      }
+    },
+    {
+      "id": "territory",
+      "name": "Territory",
+      "type": "multiselect",
+      "description": "Geographic scope of license",
+      "required": true,
+      "options": ["Worldwide", "United States", "Europe", "Asia", "North America", "Other"]
+    },
+    {
+      "id": "royalty_structure",
+      "name": "Royalty Structure",
+      "type": "select",
+      "description": "How will royalties be calculated?",
+      "required": true,
+      "options": ["running_royalty", "paid_up", "milestone_based", "hybrid"]
+    },
+    {
+      "id": "royalty_rate",
+      "name": "Royalty Rate (%)",
+      "type": "number",
+      "description": "Percentage of net sales (if applicable)",
+      "required": false,
+      "validation": {
+        "min": 0.1,
+        "max": 50
+      }
+    },
+    {
+      "id": "upfront_payment",
+      "name": "Upfront Payment ($)",
+      "type": "number",
+      "description": "Initial license fee (0 if none)",
+      "required": true,
+      "validation": {
+        "min": 0
+      }
+    },
+    {
+      "id": "minimum_royalties",
+      "name": "Annual Minimum Royalties ($)",
+      "type": "number",
+      "description": "Minimum annual payment (0 if none)",
+      "required": true,
+      "validation": {
+        "min": 0
+      }
+    },
+    {
+      "id": "sublicense_rights",
+      "name": "Sublicensing Allowed?",
+      "type": "boolean",
+      "description": "Can licensee grant sublicenses?",
+      "required": true
+    },
+    {
+      "id": "improvements_rights",
+      "name": "Rights to Improvements",
+      "type": "select",
+      "description": "How are improvements handled?",
+      "required": true,
+      "options": ["licensor_owns", "licensee_owns", "joint_ownership", "separate_negotiation"]
+    },
+    {
+      "id": "term_years",
+      "name": "Term (Years)",
+      "type": "number",
+      "description": "License duration (0 for life of patents)",
+      "required": true,
+      "validation": {
+        "min": 0,
+        "max": 50
+      }
+    },
+    {
+      "id": "governing_state",
+      "name": "Governing Law",
+      "type": "select",
+      "description": "Which state's laws govern?",
+      "required": true,
+      "options": ["Delaware", "New York", "California", "Texas", "Other"]
+    }
+  ],
+  "sections": [
+    {
+      "id": "title",
+      "title": "Title",
+      "order": 1,
+      "required": true,
+      "content": "PATENT LICENSE AGREEMENT",
+      "firmCustomizable": false
+    },
+    {
+      "id": "parties",
+      "title": "Parties",
+      "order": 2,
+      "required": true,
+      "content": "This Patent License Agreement (\"Agreement\") is entered into as of {{date effective_date \"MMMM DD, YYYY\"}} (\"Effective Date\") by and between {{licensor_name}}, a corporation organized under the laws of [STATE] (\"Licensor\"), and {{licensee_name}}, a corporation organized under the laws of [STATE] (\"Licensee\").",
+      "firmCustomizable": true
+    },
+    {
+      "id": "recitals",
+      "title": "Recitals",
+      "order": 3,
+      "required": true,
+      "content": "WHEREAS, Licensor owns certain patents and patent applications relating to [TECHNOLOGY DESCRIPTION];\n\nWHEREAS, Licensee desires to obtain a license under such patents{{#if field_of_use}} in the field of {{field_of_use}}{{/if}};\n\nWHEREAS, Licensor is willing to grant such license on the terms and conditions set forth herein;\n\nNOW, THEREFORE, in consideration of the mutual covenants and agreements contained herein, the parties agree as follows:",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a patent attorney. Based on the patent numbers provided, create a brief technology description.",
+        "user": "Create a brief technology description for these patents: {{patent_numbers}}",
+        "temperature": 0.3,
+        "maxTokens": 100
+      }
+    },
+    {
+      "id": "definitions",
+      "title": "Definitions",
+      "order": 4,
+      "required": true,
+      "content": "1. DEFINITIONS\n\n1.1 \"Licensed Patents\" means: {{patent_numbers}} and any continuations, continuations-in-part, divisionals, reissues, reexaminations, and extensions thereof.\n\n1.2 \"Licensed Products\" means any product, process, or service that practices any claim of the Licensed Patents.\n\n1.3 \"Net Sales\" means the gross revenues received by Licensee from sales of Licensed Products, less: (a) trade, quantity, and cash discounts actually allowed; (b) sales, use, and other taxes; (c) transportation charges; and (d) allowances for returns.\n\n{{#if field_of_use}}1.4 \"Field of Use\" means: {{field_of_use}}.{{/if}}\n\n1.5 \"Territory\" means: {{#each territory}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "grant",
+      "title": "Grant of License",
+      "order": 5,
+      "required": true,
+      "content": "2. GRANT OF LICENSE\n\n2.1 License Grant. Subject to the terms and conditions of this Agreement, Licensor hereby grants to Licensee {{#if exclusive}}an exclusive{{else}}{{#if sole}}a sole{{else}}a non-exclusive{{/if}}{{/if}} license under the Licensed Patents to make, have made, use, sell, offer for sale, and import Licensed Products{{#if field_of_use}} solely within the Field of Use{{/if}} in the Territory.\n\n{{#if exclusive}}2.2 Exclusivity. During the term of this Agreement, Licensor shall not grant any other licenses under the Licensed Patents{{#if field_of_use}} in the Field of Use{{/if}} in the Territory.{{/if}}\n\n2.3 No Implied Licenses. No license or immunity is granted under this Agreement by implication, estoppel, or otherwise.\n\n{{#if sublicense_rights}}2.4 Sublicenses. Licensee may grant sublicenses under this Agreement, provided that: (a) each sublicense is consistent with this Agreement; (b) Licensee provides Licensor with a copy of each sublicense within thirty (30) days; and (c) Licensee remains responsible for all sublicensee obligations.{{/if}}",
+      "firmCustomizable": true,
+      "variables": {
+        "exclusive": {
+          "source": "license_type",
+          "transform": "equals:exclusive"
+        },
+        "sole": {
+          "source": "license_type",
+          "transform": "equals:sole"
+        }
+      }
+    },
+    {
+      "id": "royalties",
+      "title": "Royalties and Payments",
+      "order": 6,
+      "required": true,
+      "content": "3. ROYALTIES AND PAYMENTS\n\n{{#if upfront_payment}}3.1 Upfront Payment. Licensee shall pay Licensor a non-refundable license fee of ${{number upfront_payment}} within thirty (30) days of the Effective Date.{{/if}}\n\n{{#if running_royalty}}3.2 Running Royalties. Licensee shall pay Licensor a royalty of {{royalty_rate}}% of Net Sales of Licensed Products.{{/if}}\n\n{{#if minimum_royalties}}3.3 Minimum Annual Royalties. Licensee shall pay minimum annual royalties of ${{number minimum_royalties}}, creditable against running royalties for the same year.{{/if}}\n\n3.4 Payment Terms. Royalties shall be paid quarterly within forty-five (45) days after the end of each calendar quarter. All payments shall be in US dollars.\n\n3.5 Late Payments. Late payments shall bear interest at the rate of 1.5% per month or the maximum rate permitted by law, whichever is less.",
+      "firmCustomizable": true,
+      "variables": {
+        "running_royalty": {
+          "source": "royalty_structure",
+          "transform": "includes:running_royalty,hybrid"
+        }
+      }
+    },
+    {
+      "id": "reports_records",
+      "title": "Reports and Records",
+      "order": 7,
+      "required": true,
+      "conditionalOn": {
+        "field": "royalty_structure",
+        "value": ["running_royalty", "hybrid"]
+      },
+      "content": "4. REPORTS AND RECORDS\n\n4.1 Royalty Reports. With each royalty payment, Licensee shall provide a report showing: (a) gross revenues; (b) deductions; (c) Net Sales; (d) royalties due; and (e) units sold.\n\n4.2 Records. Licensee shall maintain complete and accurate records relating to Licensed Products for at least three (3) years.\n\n4.3 Audit Rights. Licensor may audit Licensee's records once per year upon thirty (30) days' notice. If any audit reveals underpayment exceeding 5%, Licensee shall pay the audit costs.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "patent_prosecution",
+      "title": "Patent Prosecution and Maintenance",
+      "order": 8,
+      "required": true,
+      "content": "5. PATENT PROSECUTION AND MAINTENANCE\n\n5.1 Maintenance. {{#if exclusive}}Licensee{{else}}Licensor{{/if}} shall be responsible for maintaining the Licensed Patents and paying all associated fees.\n\n5.2 Enforcement. {{#if exclusive}}Licensee shall have the first right{{else}}Licensor shall have the sole right{{/if}} to enforce the Licensed Patents against infringers.\n\n5.3 Notice. Each party shall promptly notify the other of any known or suspected infringement of the Licensed Patents.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "improvements",
+      "title": "Improvements",
+      "order": 9,
+      "required": true,
+      "content": "6. IMPROVEMENTS\n\n6.1 Ownership. {{#if licensor_owns}}All improvements to the Licensed Patents made by Licensee shall be owned by Licensor.{{/if}}{{#if licensee_owns}}All improvements to the Licensed Patents made by Licensee shall be owned by Licensee.{{/if}}{{#if joint_ownership}}All improvements to the Licensed Patents made by Licensee shall be jointly owned by the parties.{{/if}}{{#if separate_negotiation}}Ownership of improvements shall be subject to separate negotiation.{{/if}}\n\n6.2 Disclosure. Licensee shall promptly disclose to Licensor all improvements related to the Licensed Patents.",
+      "firmCustomizable": true,
+      "variables": {
+        "licensor_owns": {
+          "source": "improvements_rights",
+          "transform": "equals:licensor_owns"
+        },
+        "licensee_owns": {
+          "source": "improvements_rights",
+          "transform": "equals:licensee_owns"
+        },
+        "joint_ownership": {
+          "source": "improvements_rights",
+          "transform": "equals:joint_ownership"
+        },
+        "separate_negotiation": {
+          "source": "improvements_rights",
+          "transform": "equals:separate_negotiation"
+        }
+      }
+    },
+    {
+      "id": "warranties",
+      "title": "Representations and Warranties",
+      "order": 10,
+      "required": true,
+      "content": "7. REPRESENTATIONS AND WARRANTIES\n\n7.1 Mutual Warranties. Each party represents and warrants that: (a) it has full corporate power and authority to enter into this Agreement; and (b) this Agreement has been duly executed and constitutes a binding obligation.\n\n7.2 Licensor Warranties. Licensor represents and warrants that: (a) it owns or controls the Licensed Patents; and (b) it has the right to grant the licenses herein.\n\n7.3 DISCLAIMER. EXCEPT AS EXPRESSLY SET FORTH HEREIN, LICENSOR MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "term_termination",
+      "title": "Term and Termination",
+      "order": 11,
+      "required": true,
+      "content": "8. TERM AND TERMINATION\n\n8.1 Term. This Agreement shall commence on the Effective Date and continue for {{#if term_years}}{{term_years}} years{{else}}the life of the last-to-expire Licensed Patent{{/if}}, unless earlier terminated.\n\n8.2 Termination for Breach. Either party may terminate this Agreement upon sixty (60) days' written notice if the other party materially breaches and fails to cure within such period.\n\n{{#if exclusive}}8.3 Termination for Non-Performance. Licensor may terminate if Licensee fails to meet the minimum annual royalties for two consecutive years.{{/if}}\n\n8.4 Effect of Termination. Upon termination: (a) all licenses terminate; (b) Licensee may sell existing inventory for six (6) months; and (c) all accrued obligations survive.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "general_provisions",
+      "title": "General Provisions",
+      "order": 12,
+      "required": true,
+      "content": "9. GENERAL PROVISIONS\n\n9.1 Governing Law. This Agreement shall be governed by the laws of {{governing_state}}.\n\n9.2 Entire Agreement. This Agreement constitutes the entire agreement between the parties.\n\n9.3 Amendment. This Agreement may only be amended in writing signed by both parties.\n\n9.4 Assignment. Neither party may assign this Agreement without the prior written consent of the other party, except to an affiliate or in connection with a merger or sale of substantially all assets.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "signatures",
+      "title": "Signatures",
+      "order": 13,
+      "required": true,
+      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\nLICENSOR:\n{{licensor_name}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\nLICENSEE:\n{{licensee_name}}\n\nBy: _____________________________\nName:\nTitle:\nDate:",
+      "firmCustomizable": false
+    }
+  ]
+} 

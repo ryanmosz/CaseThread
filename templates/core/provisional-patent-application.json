@@ -1,0 +1,274 @@
+{
+  "id": "provisional-patent-application",
+  "name": "Provisional Patent Application",
+  "type": "application",
+  "version": "1.0.0",
+  "description": "Provisional patent application for establishing early filing date with USPTO",
+  "complexity": "medium",
+  "estimatedTime": "2-4 hours",
+  "metadata": {
+    "category": "patent",
+    "jurisdiction": "federal",
+    "lastUpdated": "2024-01-01",
+    "author": "CaseThread"
+  },
+  "requiredFields": [
+    {
+      "id": "invention_title",
+      "name": "Title of Invention",
+      "type": "text",
+      "description": "Descriptive title (avoid marketing language)",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 500,
+        "pattern": "^[A-Za-z0-9\\s\\-.,():]+$"
+      }
+    },
+    {
+      "id": "inventor_names",
+      "name": "Inventor Name(s)",
+      "type": "textarea",
+      "description": "Full legal names of all inventors (one per line)",
+      "required": true,
+      "validation": {
+        "minLength": 5
+      }
+    },
+    {
+      "id": "filing_date",
+      "name": "Filing Date",
+      "type": "date",
+      "description": "Date of filing with USPTO",
+      "required": true
+    },
+    {
+      "id": "technical_field",
+      "name": "Technical Field",
+      "type": "textarea",
+      "description": "Brief description of the technical field (2-3 sentences)",
+      "required": true,
+      "validation": {
+        "minLength": 50,
+        "maxLength": 500
+      }
+    },
+    {
+      "id": "invention_type",
+      "name": "Type of Invention",
+      "type": "select",
+      "description": "Primary category of your invention",
+      "required": true,
+      "options": ["software", "hardware", "method", "composition", "system"]
+    },
+    {
+      "id": "background_problems",
+      "name": "Background Problems",
+      "type": "textarea",
+      "description": "Problems your invention solves (avoid admitting prior art)",
+      "required": true,
+      "validation": {
+        "minLength": 100,
+        "maxLength": 2000
+      }
+    },
+    {
+      "id": "invention_summary",
+      "name": "Summary of Invention",
+      "type": "textarea",
+      "description": "Brief overview of your invention and how it works",
+      "required": true,
+      "validation": {
+        "minLength": 100,
+        "maxLength": 1000
+      }
+    },
+    {
+      "id": "detailed_description",
+      "name": "Detailed Description",
+      "type": "textarea",
+      "description": "Complete technical description enabling someone to make/use the invention",
+      "required": true,
+      "validation": {
+        "minLength": 500
+      }
+    },
+    {
+      "id": "has_drawings",
+      "name": "Include Drawings?",
+      "type": "boolean",
+      "description": "Will you be submitting drawings with this application?",
+      "required": true
+    },
+    {
+      "id": "drawing_descriptions",
+      "name": "Brief Description of Drawings",
+      "type": "textarea",
+      "description": "Description of each figure (e.g., 'FIG. 1 is a block diagram...')",
+      "required": false,
+      "validation": {
+        "minLength": 50
+      }
+    },
+    {
+      "id": "include_claims",
+      "name": "Include Claims?",
+      "type": "boolean",
+      "description": "Optional but recommended for provisional applications",
+      "required": true
+    },
+    {
+      "id": "claims_text",
+      "name": "Claims",
+      "type": "textarea",
+      "description": "Patent claims (numbered list)",
+      "required": false,
+      "validation": {
+        "minLength": 100
+      }
+    },
+    {
+      "id": "related_applications",
+      "name": "Related Applications",
+      "type": "textarea",
+      "description": "Any related patent applications (leave blank if none)",
+      "required": false
+    }
+  ],
+  "sections": [
+    {
+      "id": "title_page",
+      "title": "Title Page",
+      "order": 1,
+      "required": true,
+      "content": "PROVISIONAL PATENT APPLICATION\n\nTitle: {{uppercase invention_title}}\n\nInventor(s): {{inventor_names}}\n\nFiling Date: {{date filing_date \"MMMM DD, YYYY\"}}",
+      "firmCustomizable": false
+    },
+    {
+      "id": "cross_references",
+      "title": "Cross-Reference to Related Applications",
+      "order": 2,
+      "required": false,
+      "conditionalOn": {
+        "field": "related_applications",
+        "value": "not_empty"
+      },
+      "content": "CROSS-REFERENCE TO RELATED APPLICATIONS\n\n{{related_applications}}",
+      "firmCustomizable": true
+    },
+    {
+      "id": "technical_field_section",
+      "title": "Technical Field",
+      "order": 3,
+      "required": true,
+      "content": "TECHNICAL FIELD\n\n[0001] {{technical_field}}",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a patent attorney. Enhance the technical field description using standard patent classification terminology.",
+        "user": "Expand this technical field description to 2-3 sentences with appropriate patent classification context: {{technical_field}}",
+        "temperature": 0.3,
+        "maxTokens": 200
+      }
+    },
+    {
+      "id": "background",
+      "title": "Background",
+      "order": 4,
+      "required": true,
+      "content": "BACKGROUND\n\n[0002] {{background_problems}}",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a patent attorney drafting background section. Focus on problems without admitting prior art. Be careful not to make admissions against interest.",
+        "user": "Expand these background problems into 3-4 paragraphs, explaining the technical challenges and need for innovation: {{background_problems}}",
+        "temperature": 0.3,
+        "maxTokens": 500
+      }
+    },
+    {
+      "id": "summary",
+      "title": "Summary of the Invention",
+      "order": 5,
+      "required": true,
+      "content": "SUMMARY\n\n[0003] {{invention_summary}}\n\n[0004] Various embodiments and aspects of the invention will be described with reference to details discussed below, and the accompanying drawings will illustrate the various embodiments.",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a patent attorney. Summarize the invention clearly without limiting its scope unnecessarily.",
+        "user": "Expand this invention summary to 2-3 paragraphs, highlighting key innovative aspects: {{invention_summary}}",
+        "temperature": 0.3,
+        "maxTokens": 400
+      }
+    },
+    {
+      "id": "drawing_descriptions_section",
+      "title": "Brief Description of the Drawings",
+      "order": 6,
+      "required": false,
+      "conditionalOn": {
+        "field": "has_drawings",
+        "value": true
+      },
+      "content": "BRIEF DESCRIPTION OF THE DRAWINGS\n\n[0005] {{drawing_descriptions}}",
+      "firmCustomizable": true
+    },
+    {
+      "id": "detailed_description_section",
+      "title": "Detailed Description",
+      "order": 7,
+      "required": true,
+      "content": "DETAILED DESCRIPTION\n\n[0006] {{detailed_description}}",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are an expert patent attorney with deep technical knowledge. Focus on enabling disclosure - someone skilled in the art must be able to make and use the invention based on your description.",
+        "user": "Expand this detailed description for a {{invention_type}} invention. Add technical details, implementation specifics, and alternative embodiments. Ensure complete enablement: {{detailed_description}}",
+        "temperature": 0.4,
+        "maxTokens": 2000
+      }
+    },
+    {
+      "id": "advantages",
+      "title": "Advantages",
+      "order": 8,
+      "required": true,
+      "content": "ADVANTAGES OF THE INVENTION\n\n[0007] The present invention provides several technical advantages over existing solutions:",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a patent attorney. List technical advantages without marketing language or unsupported superlatives.",
+        "user": "Based on this invention, list 3-5 specific technical advantages: {{invention_summary}}",
+        "temperature": 0.3,
+        "maxTokens": 300
+      }
+    },
+    {
+      "id": "claims_section",
+      "title": "Claims",
+      "order": 9,
+      "required": false,
+      "conditionalOn": {
+        "field": "include_claims",
+        "value": true
+      },
+      "content": "CLAIMS\n\nWhat is claimed is:\n\n{{claims_text}}",
+      "firmCustomizable": true
+    },
+    {
+      "id": "abstract",
+      "title": "Abstract",
+      "order": 10,
+      "required": true,
+      "content": "ABSTRACT\n\n",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a patent attorney. Write an abstract under 150 words that summarizes the invention for search and classification purposes.",
+        "user": "Write a concise abstract (under 150 words) for this invention: {{invention_summary}}",
+        "temperature": 0.3,
+        "maxTokens": 200
+      }
+    }
+  ],
+  "variables": {
+    "not_empty": {
+      "source": "related_applications",
+      "transform": "not_empty"
+    }
+  }
+} 

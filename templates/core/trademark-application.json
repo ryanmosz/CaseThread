@@ -1,0 +1,249 @@
+{
+  "id": "trademark-application",
+  "name": "Trademark Application (TEAS Plus)",
+  "type": "application",
+  "version": "1.0.0",
+  "description": "Federal trademark application optimized for TEAS Plus filing",
+  "complexity": "medium",
+  "estimatedTime": "1-2 hours",
+  "metadata": {
+    "category": "trademark",
+    "jurisdiction": "federal",
+    "lastUpdated": "2024-01-01",
+    "author": "CaseThread"
+  },
+  "requiredFields": [
+    {
+      "id": "mark_text",
+      "name": "Mark Text",
+      "type": "text",
+      "description": "The exact wording of your trademark (standard characters)",
+      "required": true,
+      "validation": {
+        "minLength": 1,
+        "maxLength": 200,
+        "pattern": "^[A-Za-z0-9\\s\\-.,!?&'\"]+$"
+      }
+    },
+    {
+      "id": "mark_type",
+      "name": "Mark Type",
+      "type": "select",
+      "description": "Type of mark you're registering",
+      "required": true,
+      "options": ["standard_character", "stylized_design", "sound", "color", "trade_dress"]
+    },
+    {
+      "id": "applicant_name",
+      "name": "Applicant Name",
+      "type": "text",
+      "description": "Full legal name of individual or entity",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "applicant_type",
+      "name": "Applicant Entity Type",
+      "type": "select",
+      "description": "Legal structure of applicant",
+      "required": true,
+      "options": ["individual", "corporation", "llc", "partnership", "trust", "estate"]
+    },
+    {
+      "id": "applicant_state",
+      "name": "State of Formation",
+      "type": "select",
+      "description": "State where entity is organized (if applicable)",
+      "required": false,
+      "options": ["Delaware", "New York", "California", "Texas", "Florida", "Nevada", "Other"]
+    },
+    {
+      "id": "applicant_address",
+      "name": "Applicant Address",
+      "type": "textarea",
+      "description": "Complete mailing address",
+      "required": true,
+      "validation": {
+        "minLength": 10,
+        "maxLength": 300
+      }
+    },
+    {
+      "id": "filing_basis",
+      "name": "Filing Basis",
+      "type": "select",
+      "description": "Basis for filing application",
+      "required": true,
+      "options": ["use_based_1a", "intent_to_use_1b"]
+    },
+    {
+      "id": "first_use_anywhere",
+      "name": "Date of First Use Anywhere",
+      "type": "date",
+      "description": "First date mark was used anywhere",
+      "required": false
+    },
+    {
+      "id": "first_use_commerce",
+      "name": "Date of First Use in Commerce",
+      "type": "date",
+      "description": "First date mark was used in interstate commerce",
+      "required": false
+    },
+    {
+      "id": "goods_services_class",
+      "name": "International Class(es)",
+      "type": "multiselect",
+      "description": "Select all applicable classes (1-45)",
+      "required": true,
+      "options": ["009", "025", "035", "041", "042", "045"]
+    },
+    {
+      "id": "goods_services_description",
+      "name": "Goods/Services Description",
+      "type": "textarea",
+      "description": "Specific description of goods/services (must comply with ID Manual)",
+      "required": true,
+      "validation": {
+        "minLength": 10,
+        "maxLength": 1000
+      }
+    },
+    {
+      "id": "specimen_description",
+      "name": "Specimen Description",
+      "type": "textarea",
+      "description": "Description of how mark appears on specimen",
+      "required": false,
+      "validation": {
+        "maxLength": 500
+      }
+    },
+    {
+      "id": "attorney_name",
+      "name": "Attorney Name",
+      "type": "text",
+      "description": "Name of attorney filing application",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 100
+      }
+    },
+    {
+      "id": "attorney_email",
+      "name": "Attorney Email",
+      "type": "text",
+      "description": "Email for correspondence",
+      "required": true,
+      "validation": {
+        "pattern": "^[\\w.-]+@[\\w.-]+\\.\\w+$"
+      }
+    }
+  ],
+  "sections": [
+    {
+      "id": "title",
+      "title": "Title",
+      "order": 1,
+      "required": true,
+      "content": "TRADEMARK APPLICATION\nTEAS Plus Electronic Filing",
+      "firmCustomizable": false
+    },
+    {
+      "id": "mark_information",
+      "title": "Mark Information",
+      "order": 2,
+      "required": true,
+      "content": "MARK: {{mark_text}}\n\nMARK TYPE: {{#if standard_character}}Standard Character Mark{{/if}}{{#if stylized_design}}Stylized/Design Mark{{/if}}\n\n{{#if translation_required}}TRANSLATION: [If the mark includes non-English words, provide translation]{{/if}}\n\n{{#if disclaimer_required}}DISCLAIMER: [Apart from the mark as shown, no claim is made to the exclusive right to use \"[GENERIC TERM]\"]{{/if}}",
+      "firmCustomizable": true,
+      "variables": {
+        "standard_character": {
+          "source": "mark_type",
+          "transform": "equals:standard_character"
+        },
+        "stylized_design": {
+          "source": "mark_type",
+          "transform": "equals:stylized_design"
+        }
+      }
+    },
+    {
+      "id": "applicant_information",
+      "title": "Applicant Information",
+      "order": 3,
+      "required": true,
+      "content": "APPLICANT: {{applicant_name}}\n\nENTITY TYPE: {{applicant_type}}{{#if applicant_state}}, organized under the laws of {{applicant_state}}{{/if}}\n\nADDRESS: {{applicant_address}}\n\nCITIZENSHIP: [For individuals: country of citizenship]",
+      "firmCustomizable": true
+    },
+    {
+      "id": "goods_services",
+      "title": "Goods and Services",
+      "order": 4,
+      "required": true,
+      "content": "INTERNATIONAL CLASS(ES): {{#each goods_services_class}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}\n\nGOODS/SERVICES: {{goods_services_description}}",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a trademark attorney familiar with the USPTO Acceptable Identification of Goods and Services Manual (ID Manual).",
+        "user": "Convert this description to ID Manual-compliant language: {{goods_services_description}}. Ensure it follows USPTO format and uses approved terminology.",
+        "temperature": 0.2,
+        "maxTokens": 300
+      }
+    },
+    {
+      "id": "filing_basis_section",
+      "title": "Filing Basis",
+      "order": 5,
+      "required": true,
+      "content": "FILING BASIS: Section {{#if use_based}}1(a) - USE IN COMMERCE\n\nThe applicant is using the mark in commerce on or in connection with the goods/services identified above.\n\nDate of First Use Anywhere: {{date first_use_anywhere \"MM/DD/YYYY\"}}\nDate of First Use in Commerce: {{date first_use_commerce \"MM/DD/YYYY\"}}{{/if}}{{#if intent_based}}1(b) - INTENT TO USE\n\nThe applicant has a bona fide intention to use the mark in commerce on or in connection with the goods/services identified above.{{/if}}",
+      "firmCustomizable": true,
+      "variables": {
+        "use_based": {
+          "source": "filing_basis",
+          "transform": "equals:use_based_1a"
+        },
+        "intent_based": {
+          "source": "filing_basis",
+          "transform": "equals:intent_to_use_1b"
+        }
+      }
+    },
+    {
+      "id": "specimen_section",
+      "title": "Specimen",
+      "order": 6,
+      "required": false,
+      "conditionalOn": {
+        "field": "filing_basis",
+        "value": "use_based_1a"
+      },
+      "content": "SPECIMEN DESCRIPTION:\n\n{{specimen_description}}\n\nThe specimen shows the mark as used on or in connection with the goods/services in Class {{goods_services_class}}.",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a trademark attorney describing specimens for USPTO applications.",
+        "user": "Enhance this specimen description to clearly show how the mark is used with the goods/services: {{specimen_description}}",
+        "temperature": 0.3,
+        "maxTokens": 200
+      }
+    },
+    {
+      "id": "declaration",
+      "title": "Declaration",
+      "order": 7,
+      "required": true,
+      "content": "DECLARATION\n\nThe undersigned, being hereby warned that willful false statements and the like so made are punishable by fine or imprisonment, or both, under 18 U.S.C. §1001, and that such willful false statements may jeopardize the validity of the application or any resulting registration, declares that he/she is properly authorized to execute this application on behalf of the applicant; he/she believes the applicant to be the owner of the mark sought to be registered; {{#if use_based}}the mark is in use in commerce;{{/if}}{{#if intent_based}}the applicant has a bona fide intention to use the mark in commerce;{{/if}} and all statements made of his/her own knowledge are true and all statements made on information and belief are believed to be true.",
+      "firmCustomizable": false
+    },
+    {
+      "id": "signature_section",
+      "title": "Signature",
+      "order": 8,
+      "required": true,
+      "content": "SIGNATURE: /{{attorney_name}}/\n\nNAME: {{attorney_name}}\n\nDATE: {{date current_date \"MM/DD/YYYY\"}}\n\nATTORNEY OF RECORD\n\nEMAIL: {{attorney_email}}",
+      "firmCustomizable": false
+    }
+  ]
+} 

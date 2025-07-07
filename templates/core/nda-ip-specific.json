@@ -1,0 +1,179 @@
+{
+  "id": "nda-ip-specific",
+  "name": "Non-Disclosure Agreement (IP-Specific)",
+  "type": "agreement",
+  "version": "1.0.0",
+  "description": "Mutual or unilateral NDA for protecting confidential information during IP discussions",
+  "complexity": "low",
+  "estimatedTime": "30-60 minutes",
+  "metadata": {
+    "category": "general",
+    "jurisdiction": "federal",
+    "lastUpdated": "2024-01-01",
+    "author": "CaseThread"
+  },
+  "requiredFields": [
+    {
+      "id": "agreement_type",
+      "name": "Agreement Type",
+      "type": "select",
+      "description": "Is this a mutual or one-way NDA?",
+      "required": true,
+      "options": ["mutual", "unilateral"]
+    },
+    {
+      "id": "disclosing_party",
+      "name": "Disclosing Party",
+      "type": "text",
+      "description": "Full legal name of the party disclosing confidential information",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "receiving_party",
+      "name": "Receiving Party",
+      "type": "text",
+      "description": "Full legal name of the party receiving confidential information",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 200
+      }
+    },
+    {
+      "id": "purpose",
+      "name": "Purpose of Disclosure",
+      "type": "textarea",
+      "description": "Specific purpose for sharing confidential information (e.g., 'evaluating potential patent licensing opportunity')",
+      "required": true,
+      "validation": {
+        "minLength": 20,
+        "maxLength": 500
+      }
+    },
+    {
+      "id": "effective_date",
+      "name": "Effective Date",
+      "type": "date",
+      "description": "Date when the agreement becomes effective",
+      "required": true
+    },
+    {
+      "id": "term_years",
+      "name": "Term (Years)",
+      "type": "number",
+      "description": "How many years will the NDA remain in effect?",
+      "required": true,
+      "validation": {
+        "min": 1,
+        "max": 10
+      }
+    },
+    {
+      "id": "include_ip_provisions",
+      "name": "Include IP Ownership Provisions",
+      "type": "boolean",
+      "description": "Include clauses about intellectual property ownership?",
+      "required": true
+    },
+    {
+      "id": "governing_state",
+      "name": "Governing State",
+      "type": "select",
+      "description": "Which state's laws will govern this agreement?",
+      "required": true,
+      "options": ["California", "New York", "Delaware", "Texas", "Other"]
+    }
+  ],
+  "sections": [
+    {
+      "id": "title",
+      "title": "Title",
+      "order": 1,
+      "required": true,
+      "content": "{{#if mutual}}MUTUAL {{/if}}NON-DISCLOSURE AGREEMENT",
+      "firmCustomizable": false
+    },
+    {
+      "id": "parties",
+      "title": "Parties",
+      "order": 2,
+      "required": true,
+      "content": "This {{#if mutual}}Mutual {{/if}}Non-Disclosure Agreement (\"Agreement\") is entered into as of {{date effective_date \"MMMM DD, YYYY\"}} (\"Effective Date\") by and between {{disclosing_party}} (\"{{#if mutual}}First Party{{else}}Disclosing Party{{/if}}\") and {{receiving_party}} (\"{{#if mutual}}Second Party{{else}}Receiving Party{{/if}}\"){{#if mutual}}, collectively referred to as the \"Parties\" and individually as a \"Party\"{{/if}}.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "recitals",
+      "title": "Recitals",
+      "order": 3,
+      "required": true,
+      "content": "WHEREAS, {{#if mutual}}the Parties wish to explore{{else}}{{disclosing_party}} and {{receiving_party}} wish to explore{{/if}} {{purpose}} (the \"Purpose\");\n\nWHEREAS, in connection with the Purpose, {{#if mutual}}each Party may disclose{{else}}{{disclosing_party}} may disclose{{/if}} certain confidential and proprietary information{{#if include_ip_provisions}}, including intellectual property{{/if}};\n\nNOW, THEREFORE, in consideration of the mutual covenants and agreements contained herein, the {{#if mutual}}Parties{{else}}parties{{/if}} agree as follows:",
+      "firmCustomizable": true
+    },
+    {
+      "id": "confidential_information",
+      "title": "Confidential Information",
+      "order": 4,
+      "required": true,
+      "content": "\"Confidential Information\" means any and all non-public information disclosed by {{#if mutual}}one Party to the other Party{{else}}{{disclosing_party}} to {{receiving_party}}{{/if}}, whether orally, in writing, or in any other form, including but not limited to:\n\n(a) Technical information, inventions, discoveries, ideas, concepts, know-how, techniques, processes, formulas, designs, specifications, drawings, blueprints, diagrams, models, prototypes, samples, flow charts, data, computer programs, and documentation;\n\n(b) Business information, including customer lists, supplier lists, pricing information, cost information, profit information, sales information, business plans, marketing plans, and strategic plans;\n\n{{#if include_ip_provisions}}(c) Intellectual property, including patents, patent applications, trade secrets, trademarks, copyrights, and any related documentation or materials;\n\n{{/if}}({{#if include_ip_provisions}}d{{else}}c{{/if}}) Any other information that is marked as \"Confidential\" or that would reasonably be considered confidential under the circumstances.",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are an experienced IP attorney drafting an NDA. Focus on comprehensive but clear definitions.",
+        "user": "Enhance the confidential information definition based on the purpose: {{purpose}}. Add any industry-specific examples that would be relevant."
+      }
+    },
+    {
+      "id": "obligations",
+      "title": "Obligations",
+      "order": 5,
+      "required": true,
+      "content": "{{#if mutual}}Each Party receiving Confidential Information{{else}}{{receiving_party}}{{/if}} agrees to:\n\n(a) Maintain the Confidential Information in strict confidence;\n\n(b) Not disclose the Confidential Information to any third parties without the prior written consent of the {{#if mutual}}disclosing Party{{else}}{{disclosing_party}}{{/if}};\n\n(c) Use the Confidential Information solely for the Purpose;\n\n(d) Protect the Confidential Information using the same degree of care it uses to protect its own confidential information, but in no event less than reasonable care;\n\n(e) Limit access to the Confidential Information to employees, agents, and representatives who have a legitimate need to know and who are bound by confidentiality obligations at least as restrictive as those contained herein.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "ip_provisions",
+      "title": "Intellectual Property Provisions",
+      "order": 6,
+      "required": false,
+      "conditionalOn": {
+        "field": "include_ip_provisions",
+        "value": true
+      },
+      "content": "Nothing in this Agreement shall be construed as granting any rights, by license or otherwise, to any Confidential Information or any intellectual property rights of {{#if mutual}}a Party{{else}}{{disclosing_party}}{{/if}}, except as expressly set forth herein.\n\n{{#if mutual}}Each Party{{else}}{{receiving_party}}{{/if}} acknowledges that all right, title, and interest in and to any developments, enhancements, or derivatives of the Confidential Information shall remain with the {{#if mutual}}disclosing Party{{else}}{{disclosing_party}}{{/if}}.\n\nNo reverse engineering, disassembly, or decompilation of any prototypes, software, or other tangible objects that embody Confidential Information and are provided hereunder is permitted.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "term",
+      "title": "Term",
+      "order": 7,
+      "required": true,
+      "content": "This Agreement shall commence on the Effective Date and continue for {{term_years}} year{{#if term_years > 1}}s{{/if}}, unless earlier terminated by either party upon thirty (30) days' written notice. The obligations of confidentiality shall survive termination of this Agreement for a period of {{term_years}} year{{#if term_years > 1}}s{{/if}}.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "governing_law",
+      "title": "Governing Law",
+      "order": 8,
+      "required": true,
+      "content": "This Agreement shall be governed by and construed in accordance with the laws of the State of {{governing_state}}, without regard to its conflict of law provisions.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "signatures",
+      "title": "Signatures",
+      "order": 9,
+      "required": true,
+      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\n{{#if mutual}}FIRST PARTY:{{else}}DISCLOSING PARTY:{{/if}}\n\n{{disclosing_party}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\n{{#if mutual}}SECOND PARTY:{{else}}RECEIVING PARTY:{{/if}}\n\n{{receiving_party}}\n\nBy: _____________________________\nName:\nTitle:\nDate:",
+      "firmCustomizable": false
+    }
+  ],
+  "variables": {
+    "mutual": {
+      "source": "agreement_type",
+      "transform": "equals:mutual"
+    }
+  }
+} 

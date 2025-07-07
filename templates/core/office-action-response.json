@@ -1,0 +1,224 @@
+{
+  "id": "office-action-response",
+  "name": "Office Action Response",
+  "type": "response",
+  "version": "1.0.0",
+  "description": "Response to USPTO office action with amendments and arguments",
+  "complexity": "high",
+  "estimatedTime": "3-5 hours",
+  "metadata": {
+    "category": "patent",
+    "jurisdiction": "federal",
+    "lastUpdated": "2024-01-01",
+    "author": "CaseThread"
+  },
+  "requiredFields": [
+    {
+      "id": "application_number",
+      "name": "Application Number",
+      "type": "text",
+      "description": "Patent application serial number",
+      "required": true,
+      "validation": {
+        "pattern": "^[0-9]{2}/[0-9]{3},[0-9]{3}$"
+      }
+    },
+    {
+      "id": "examiner_name",
+      "name": "Examiner Name",
+      "type": "text",
+      "description": "Name of the patent examiner",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 100
+      }
+    },
+    {
+      "id": "art_unit",
+      "name": "Art Unit",
+      "type": "text",
+      "description": "USPTO art unit number",
+      "required": true,
+      "validation": {
+        "pattern": "^[0-9]{4}$"
+      }
+    },
+    {
+      "id": "office_action_date",
+      "name": "Office Action Mailed Date",
+      "type": "date",
+      "description": "Date the office action was mailed",
+      "required": true
+    },
+    {
+      "id": "rejection_types",
+      "name": "Types of Rejections",
+      "type": "multiselect",
+      "description": "Select all applicable rejection types",
+      "required": true,
+      "options": ["102_anticipation", "103_obviousness", "112a_written_description", "112b_indefiniteness", "101_eligibility", "double_patenting"]
+    },
+    {
+      "id": "amendment_strategy",
+      "name": "Response Strategy",
+      "type": "select",
+      "description": "Primary response approach",
+      "required": true,
+      "options": ["amend_claims", "argue_only", "amend_and_argue", "interview_first"]
+    },
+    {
+      "id": "claims_rejected",
+      "name": "Rejected Claims",
+      "type": "text",
+      "description": "List of rejected claims (e.g., 1-20)",
+      "required": true,
+      "validation": {
+        "minLength": 1,
+        "maxLength": 100
+      }
+    },
+    {
+      "id": "claims_to_amend",
+      "name": "Claims to Amend",
+      "type": "textarea",
+      "description": "List claims and brief description of amendments",
+      "required": false,
+      "validation": {
+        "maxLength": 1000
+      }
+    },
+    {
+      "id": "prior_art_references",
+      "name": "Prior Art References",
+      "type": "textarea",
+      "description": "List main references: Name (Patent No.)",
+      "required": false,
+      "validation": {
+        "maxLength": 500
+      }
+    },
+    {
+      "id": "interview_conducted",
+      "name": "Examiner Interview Conducted?",
+      "type": "boolean",
+      "description": "Was an examiner interview held?",
+      "required": true
+    },
+    {
+      "id": "interview_date",
+      "name": "Interview Date",
+      "type": "date",
+      "description": "Date of examiner interview",
+      "required": false
+    }
+  ],
+  "sections": [
+    {
+      "id": "header",
+      "title": "Header",
+      "order": 1,
+      "required": true,
+      "content": "IN THE UNITED STATES PATENT AND TRADEMARK OFFICE\n\nIn re Application of: [INVENTOR NAME]\nApplication No.: {{application_number}}\nFiled: [FILING DATE]\nFor: [INVENTION TITLE]\nExaminer: {{examiner_name}}\nArt Unit: {{art_unit}}\n\nRESPONSE TO OFFICE ACTION",
+      "firmCustomizable": true
+    },
+    {
+      "id": "introduction",
+      "title": "Introduction",
+      "order": 2,
+      "required": true,
+      "content": "Commissioner for Patents\nP.O. Box 1450\nAlexandria, VA 22313-1450\n\nDear Sir:\n\nIn response to the Office Action mailed {{date office_action_date \"MMMM DD, YYYY\"}}, please consider the following amendments and remarks.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "amendments_section",
+      "title": "Amendments to the Claims",
+      "order": 3,
+      "required": false,
+      "conditionalOn": {
+        "field": "amendment_strategy",
+        "value": ["amend_claims", "amend_and_argue"]
+      },
+      "content": "AMENDMENTS TO THE CLAIMS\n\nPlease amend the claims as follows:\n\n{{claims_to_amend}}",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a patent attorney formatting claim amendments in USPTO-compliant format. Use underlining for additions and [brackets] for deletions.",
+        "user": "Format these claim amendments properly: {{claims_to_amend}}",
+        "temperature": 0.2,
+        "maxTokens": 1000
+      }
+    },
+    {
+      "id": "status_of_claims",
+      "title": "Status of Claims",
+      "order": 4,
+      "required": true,
+      "content": "STATUS OF THE CLAIMS\n\nClaims {{claims_rejected}} were rejected in the Office Action.\n{{#if claims_to_amend}}Claims [AMENDED CLAIM NUMBERS] have been amended.{{/if}}\nNo claims have been cancelled.\nNo new claims have been added.\nClaims [ALL CLAIMS] are currently pending.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "interview_summary",
+      "title": "Interview Summary",
+      "order": 5,
+      "required": false,
+      "conditionalOn": {
+        "field": "interview_conducted",
+        "value": true
+      },
+      "content": "EXAMINER INTERVIEW\n\nAn interview was conducted with Examiner {{examiner_name}} on {{date interview_date \"MMMM DD, YYYY\"}}. During the interview, the Examiner indicated that [SUMMARY OF AGREEMENTS/SUGGESTIONS]. The amendments presented herein are consistent with the interview discussion.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "response_to_rejections",
+      "title": "Response to Rejections",
+      "order": 6,
+      "required": true,
+      "content": "RESPONSE TO REJECTIONS\n\n{{#if rejection_102}}I. Response to 35 U.S.C. § 102 Rejections\n\nClaims {{claims_rejected}} were rejected under 35 U.S.C. § 102 as anticipated by {{prior_art_references}}.\n\nApplicant respectfully traverses this rejection.{{/if}}\n\n{{#if rejection_103}}II. Response to 35 U.S.C. § 103 Rejections\n\nClaims {{claims_rejected}} were rejected under 35 U.S.C. § 103 as obvious over {{prior_art_references}}.\n\nApplicant respectfully traverses this rejection.{{/if}}\n\n{{#if rejection_112}}III. Response to 35 U.S.C. § 112 Rejections\n\nClaims {{claims_rejected}} were rejected under 35 U.S.C. § 112.\n\nApplicant respectfully submits that the amendments address the Examiner's concerns.{{/if}}",
+      "firmCustomizable": true,
+      "variables": {
+        "rejection_102": {
+          "source": "rejection_types",
+          "transform": "includes:102_anticipation"
+        },
+        "rejection_103": {
+          "source": "rejection_types",
+          "transform": "includes:103_obviousness"
+        },
+        "rejection_112": {
+          "source": "rejection_types",
+          "transform": "includes:112a_written_description,112b_indefiniteness"
+        }
+      }
+    },
+    {
+      "id": "detailed_arguments",
+      "title": "Detailed Arguments",
+      "order": 7,
+      "required": true,
+      "content": "REMARKS\n\n",
+      "firmCustomizable": true,
+      "prompts": {
+        "system": "You are a patent attorney crafting persuasive arguments to overcome USPTO rejections. Focus on technical distinctions and legal precedent.",
+        "user": "Create detailed arguments distinguishing the claims from {{prior_art_references}} for these rejections: {{rejection_types}}",
+        "temperature": 0.4,
+        "maxTokens": 2000
+      }
+    },
+    {
+      "id": "conclusion",
+      "title": "Conclusion",
+      "order": 8,
+      "required": true,
+      "content": "CONCLUSION\n\nIn view of the foregoing amendments and remarks, Applicant respectfully submits that all claims are in condition for allowance. Applicant believes that no outstanding issues remain, and respectfully requests that the Examiner indicate allowance of the application at the earliest convenience.\n\nIf the Examiner believes that a telephone interview would expedite prosecution of this application, the Examiner is invited to contact the undersigned at the telephone number provided below.",
+      "firmCustomizable": true
+    },
+    {
+      "id": "signature",
+      "title": "Signature",
+      "order": 9,
+      "required": true,
+      "content": "Respectfully submitted,\n\n/[ATTORNEY NAME]/\n[ATTORNEY NAME]\nRegistration No. [######]\n[FIRM NAME]\n[ADDRESS]\n[PHONE]\n[EMAIL]\n\nDate: {{date current_date \"MMMM DD, YYYY\"}}",
+      "firmCustomizable": true
+    }
+  ]
+} 
