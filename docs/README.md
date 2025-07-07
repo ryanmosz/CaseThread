@@ -9,6 +9,7 @@ This directory contains all project documentation following standard practices f
 - `/decisions/` - Architecture Decision Records (ADRs)
 - `/api/` - API documentation (when implemented)
 - `/guides/` - User and developer guides
+- `DEVELOPER-HANDOFF.md` - Current project status and next steps
 
 ## Documentation Standards
 
@@ -19,4 +20,10 @@ This directory contains all project documentation following standard practices f
 
 ## For Developers
 
-When making significant architectural decisions, please document them in `/decisions/` using the ADR format. 
+When making significant architectural decisions, please document them in `/decisions/` using the ADR format.
+
+## Quick Links
+
+- [Developer Handoff](./DEVELOPER-HANDOFF.md) - Current status and next steps
+- [Project Planning](./planning/) - Original planning documents
+- [Template Documentation](../templates/) - Template system documentation 
