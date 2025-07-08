@@ -4,30 +4,31 @@
 CaseThread is a CLI proof of concept for generating legal documents using OpenAI's API and a template system. The project combines JSON templates, explanation files, and YAML input data to generate professional legal documents.
 
 ## Current Status
-- **Current Branch**: `feature/task-3.0-cli-argument-parser`
-- **Current Parent Task**: 3.0 - Create CLI argument parser (STARTING)
-- **Previous Task**: 2.0 - Initialize TypeScript project ✅ COMPLETE & MERGED
-- **Next Parent Task**: 4.0 - Implement core services (template, YAML, logging)
+- **Current Branch**: `feature/task-4.0-openai-integration`
+- **Current Parent Task**: 4.0 - Implement OpenAI integration (STARTING)
+- **Previous Task**: 3.0 - Implement core services ✅ COMPLETE & MERGED
+- **Next Parent Task**: 5.0 - Build CLI interface with Commander
 
 ## Recent Changes
-1. **Task 3.0 Core Services - Phase 1 & 2 Complete**:
+1. **Task 3.0 Core Services - COMPLETE & MERGED**:
+   - Implemented all core services with full test coverage (153 tests passing)
+   - Merged to main branch and pushed to GitHub
+   - Updated README.md and project roadmap to reflect completion
+   - Created new feature branch for task 4.0
+
+2. **Task 3.0 Implementation Details**:
    - Created comprehensive TypeScript type definitions (DocumentType, YamlData, Template, etc.)
    - Implemented validator utility with SUPPORTED_TYPES array and validation functions
    - Built Winston-based logger with console and file transports
    - Created Ora-wrapped spinner utility with TTY fallback
-   - All code compiles successfully with TypeScript strict mode
-   - Updated plan-parent.md to use individual detail files per subtask
+   - Implemented template service with JSON/markdown loading and validation
+   - Implemented YAML service with parsing, validation, and error formatting
+   - Created comprehensive unit tests across 5 test files
 
-2. **Task 2.0 Previously Completed & Merged**:
+3. **Task 2.0 Previously Completed & Merged**:
    - Complete TypeScript project initialization
-   - Merged to main via PARENT-COMPLETE workflow
-   - All changes pushed to GitHub
-   - README.md updated to mark CLI framework setup as complete
-
-3. **Task 1.0 Previously Completed**:
-   - Docker development environment setup
-   - Container `casethread-dev` running with Node.js v20.19.0
-   - Volume mounts configured for development
+   - All dependencies installed and configured
+   - npm scripts configured for development workflow
 
 ## Task 2.0 Results ✅ MERGED TO MAIN
 - [x] 2.1 Created package.json with `casethread-poc` name
@@ -81,14 +82,17 @@ Located in `docs/devops/`:
 3. Git operations: Follow workflows in `git-workflow.md`
 
 ## Next Steps
-Task 3.0 is now COMPLETE! Ready to move to:
+Task 4.0 is ready to start! Focus on:
 - Task 4.0: Implement OpenAI integration
-  - Create OpenAI service with API client
-  - Build prompt generation logic
-  - Implement document generation flow
-  - Add retry logic and error handling
-- Task 5.0: Build CLI interface with Commander
-- Task 6.0: Create comprehensive test suite
+  - 4.1 Create src/services/openai.ts with OpenAI client initialization
+  - 4.2 Implement buildPrompt function to combine template, explanation, and YAML data
+  - 4.3 Create generateDocument function with error handling and retry logic
+  - 4.4 Add timeout handling for long-running API calls (60 second timeout)
+  - 4.5 Implement response validation to ensure valid markdown output
+  - 4.6 Add cost estimation based on token count (optional logging)
+  - 4.7 Create mock OpenAI service for testing purposes
+- Future: Task 5.0: Build CLI interface with Commander
+- Future: Task 6.0: Create comprehensive test suite
 
 ## Session History
 - Initial session: Document review and test scenario creation
