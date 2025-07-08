@@ -25,6 +25,8 @@ Licensed IP attorneys in small to mid-sized firms who need efficient document ge
 
 ## 🚀 Getting Started
 
+> **Quick Start**: Want to get running in 5 minutes? Check out [QUICKSTART.md](QUICKSTART.md)
+
 ### Prerequisites
 - Docker and Docker Compose
 - OpenAI API key (with access to o3 model)
