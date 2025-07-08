@@ -12,6 +12,68 @@ casethread-poc generate <document-type> <input-yaml-path> [options]
 casethread-poc generate patent-assignment ./test-data/tfs-01-patent-assignment.yaml --output ./output/
 ```
 
+## Docker Development Environment
+
+### Docker Setup
+The entire development will be done within a Docker container to ensure consistency across environments.
+
+#### Dockerfile
+```dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install development tools
+RUN apk add --no-cache git bash
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Set up development environment
+CMD ["npm", "run", "dev"]
+```
+
+#### docker-compose.yml
+```yaml
+version: '3.8'
+
+services:
+  casethread-cli:
+    build: .
+    container_name: casethread-poc
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env
+    command: npm run dev
+    tty: true
+    stdin_open: true
+```
+
+#### Development Commands
+```bash
+# Build and start container
+docker-compose up -d
+
+# Run CLI inside container
+docker exec -it casethread-poc npm run cli -- generate patent-assignment test.yaml
+
+# Run tests
+docker exec -it casethread-poc npm test
+
+# Access container shell
+docker exec -it casethread-poc /bin/bash
+```
+
 ## Technical Architecture
 
 ### 1. Core Components
@@ -207,6 +269,23 @@ DEBUG_LOG_PATH=./debug.log
 ```
 [document-type]-[timestamp].md
 Example: patent-assignment-2024-01-15-143052.md
+```
+
+### 11. NPM Scripts
+```json
+{
+  "scripts": {
+    "dev": "nodemon --watch src --exec ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "cli": "ts-node src/index.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  }
+}
 ```
 
 ## Implementation Steps
