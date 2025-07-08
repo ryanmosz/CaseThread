@@ -7,7 +7,7 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { Template } from '../types';
+import { Template, TemplateLoadError } from '../types';
 import { logger } from '../utils/logger';
 
 /**
@@ -75,12 +75,68 @@ export async function loadTemplate(documentType: string): Promise<Template> {
   try {
     const content = await fs.readFile(templatePath, 'utf-8');
     logger.debug(`Template file read successfully, size: ${content.length} bytes`);
-    const template = JSON.parse(content);
+    
+    let template: any;
+    try {
+      template = JSON.parse(content);
+    } catch (parseError) {
+      throw new TemplateLoadError(
+        'Invalid JSON in template file',
+        documentType,
+        templatePath
+      );
+    }
+    
+    // Validate template structure
+    if (!template.id || !template.name || !template.version || !template.description) {
+      throw new TemplateLoadError(
+        'Template file does not match expected schema',
+        documentType,
+        templatePath
+      );
+    }
+    
+    if (!template.requiredFields || template.requiredFields.length === 0) {
+      throw new TemplateLoadError(
+        'Template must have at least one required field',
+        documentType,
+        templatePath
+      );
+    }
+    
+    if (!template.sections || template.sections.length === 0) {
+      throw new TemplateLoadError(
+        'Template must have at least one section',
+        documentType,
+        templatePath
+      );
+    }
+    
     logger.debug(`Template parsed successfully, sections: ${template.sections?.length || 0}`);
     return template;
   } catch (error: any) {
     logger.debug(`Failed to load template: ${error.message}`);
-    throw error;
+    
+    // If it's already a TemplateLoadError, re-throw it
+    if (error instanceof TemplateLoadError) {
+      throw error;
+    }
+    
+    // Handle file not found
+    if (error.code === 'ENOENT') {
+      throw new TemplateLoadError(
+        'Template file not found',
+        documentType,
+        templatePath
+      );
+    }
+    
+    // Handle other errors
+    throw new TemplateLoadError(
+      `Failed to load template: ${error.message}`,
+      documentType,
+      templatePath
+    );
   }
 }
 
@@ -105,10 +161,38 @@ export async function loadExplanation(documentType: string): Promise<string> {
     logger.debug(`Attempting to read explanation from: ${explanationPath}`);
     const content = await fs.readFile(explanationPath, 'utf-8');
     logger.debug(`Explanation file read successfully, size: ${content.length} bytes`);
+    
+    // Check if file is empty or whitespace only
+    if (!content || !content.trim()) {
+      throw new TemplateLoadError(
+        'Explanation file is empty',
+        documentType,
+        explanationPath
+      );
+    }
+    
     return content;
-  } catch (error) {
-    logger.debug(`Failed to load explanation: ${(error as Error).message}`);
-    throw new Error(`Explanation file not found for document type: ${documentType}`);
+  } catch (error: any) {
+    logger.debug(`Failed to load explanation: ${error.message}`);
+    
+    // If it's already a TemplateLoadError, re-throw it
+    if (error instanceof TemplateLoadError) {
+      throw error;
+    }
+    
+    // Handle file not found
+    if (error.code === 'ENOENT') {
+      throw new TemplateLoadError(
+        'Explanation file not found',
+        documentType
+      );
+    }
+    
+    // Handle other errors
+    throw new TemplateLoadError(
+      `Failed to load explanation: ${error.message}`,
+      documentType
+    );
   }
 }
 

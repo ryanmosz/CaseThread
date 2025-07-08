@@ -1,47 +1,49 @@
-import { generateCommand } from '../../src/commands/generate';
-import { createSpinner } from '../../src/utils/spinner';
-import { logger } from '../../src/utils/logger';
-import * as templateService from '../../src/services/template';
-import * as yamlService from '../../src/services/yaml';
-import { generateDocument } from '../../src/services/openai';
-import * as path from 'path';
-
-// Import validator to get the mocked version
-const validator = require('../../src/utils/validator');
-
-// Add file writer mocks
-jest.mock('../../src/services/file-writer');
-jest.mock('../../src/utils/file-naming');
-jest.mock('../../src/utils/error-handler');
-
-import * as fileWriter from '../../src/services/file-writer';
-import * as fileNaming from '../../src/utils/file-naming';
-import { handleError } from '../../src/utils/error-handler';
-
-// Mock ora before other modules that use it
+// Set up all mocks BEFORE any imports
 jest.mock('ora');
-
-// Mock dotenv to prevent logging
 jest.mock('dotenv', () => ({
   config: jest.fn()
 }));
 
-// Mock fs promises
-jest.mock('fs', () => {
-  const mockAccess = jest.fn();
-  const mockMkdir = jest.fn();
-  return {
-    promises: {
-      access: mockAccess,
-      mkdir: mockMkdir,
-      constants: {
-        W_OK: 2
-      }
-    }
-  };
-});
+// Mock winston before logger can use it
+jest.mock('winston', () => ({
+  format: {
+    timestamp: jest.fn().mockReturnValue({ format: jest.fn() }),
+    printf: jest.fn(),
+    combine: jest.fn(),
+    colorize: jest.fn(),
+    simple: jest.fn(),
+    json: jest.fn(),
+    errors: jest.fn().mockReturnValue({ format: jest.fn() })
+  },
+  transports: {
+    Console: jest.fn().mockImplementation(() => ({})),
+    File: jest.fn().mockImplementation(() => ({}))
+  },
+  createLogger: jest.fn().mockReturnValue({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    level: 'info'
+  })
+}));
 
-// Mock modules before importing
+// Mock fs before it's used
+jest.mock('fs', () => ({
+  existsSync: jest.fn().mockReturnValue(true),
+  mkdirSync: jest.fn(),
+  promises: {
+    readFile: jest.fn(),
+    writeFile: jest.fn(),
+    access: jest.fn(),
+    mkdir: jest.fn(),
+    constants: {
+      W_OK: 2
+    }
+  }
+}));
+
+// Mock all other modules
 jest.mock('../../src/utils/spinner');
 jest.mock('../../src/utils/logger');
 jest.mock('../../src/utils/validator', () => ({
@@ -51,9 +53,27 @@ jest.mock('../../src/utils/validator', () => ({
 jest.mock('../../src/services/template');
 jest.mock('../../src/services/yaml');
 jest.mock('../../src/services/openai');
+jest.mock('../../src/services/file-writer');
+jest.mock('../../src/utils/file-naming');
+jest.mock('../../src/utils/error-handler');
+
+// Now it's safe to import
+import { generateCommand } from '../../src/commands/generate';
+import { createSpinner } from '../../src/utils/spinner';
+import { logger } from '../../src/utils/logger';
+import * as templateService from '../../src/services/template';
+import * as yamlService from '../../src/services/yaml';
+import { generateDocument } from '../../src/services/openai';
+import * as path from 'path';
+import * as fileWriter from '../../src/services/file-writer';
+import * as fileNaming from '../../src/utils/file-naming';
+import { handleError } from '../../src/utils/error-handler';
+import { promises as fs } from 'fs';
+
+// Import validator to get the mocked version
+const validator = require('../../src/utils/validator');
 
 // Get fs mocks after they're created
-import { promises as fs } from 'fs';
 const mockAccess = fs.access as jest.Mock;
 const mockMkdir = fs.mkdir as jest.Mock;
 
@@ -451,7 +471,7 @@ describe('Generate Command - Error Handling', () => {
     });
     
     // Mock the generate command's error handler to use our mock spinner
-    (handleError as jest.Mock).mockImplementation((error, spinner) => {
+    (handleError as unknown as jest.Mock).mockImplementation((error, spinner) => {
       spinner.fail(error.message);
       process.exit(1);
     });
