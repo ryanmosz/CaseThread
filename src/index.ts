@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { generateCommand } from './commands/generate';
+import { learnCommand } from './commands/learn';
 import { logger } from './utils/logger';
 
 // Create the main program instance
@@ -24,8 +25,9 @@ program
     }
   });
 
-// Add the generate command
+// Add commands
 program.addCommand(generateCommand);
+program.addCommand(learnCommand);
 
 // Parse command line arguments
 program.parse(); 

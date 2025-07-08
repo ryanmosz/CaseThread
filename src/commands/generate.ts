@@ -2,12 +2,6 @@ import { Command } from 'commander';
 import * as path from 'path';
 import { promises as fs } from 'fs';
 import { 
-  loadTemplate, 
-  loadExplanation 
-} from '../services/template';
-import { parseYaml } from '../services/yaml';
-import { generateDocument } from '../services/openai';
-import { 
   isValidDocumentType,
   SUPPORTED_TYPES 
 } from '../utils/validator';
@@ -16,8 +10,7 @@ import { logger } from '../utils/logger';
 import { SpinnerMessages } from '../types';
 import { handleError, createError } from '../utils/error-handler';
 import { ErrorCode } from '../types/errors';
-import { createOutputPath } from '../utils/file-naming';
-import { saveDocument, addDocumentMetadata } from '../services/file-writer';
+import { Orchestrator } from '../agents/Orchestrator';
 
 interface GenerateOptions {
   output: string;
@@ -95,7 +88,6 @@ export const generateCommand = new Command('generate')
     }
     
     const spinner = new SpinnerWrapper(SPINNER_MESSAGES.INIT);
-    const startTime = Date.now();
     
     // Log command execution details
     logger.debug('=== Generate Command Execution ===');
@@ -141,117 +133,24 @@ export const generateCommand = new Command('generate')
         throw createError('INVALID_TYPE', documentType, SUPPORTED_TYPES);
       }
       
-      // Load template files
-      spinner.updateMessage(SPINNER_MESSAGES.LOAD_TEMPLATE);
-      logger.debug(`Loading template from: templates/core/${documentType}.json`);
+      // Use orchestrator to run the complete pipeline
+      spinner.updateMessage('🚀 Running multi-agent pipeline...');
       
-      let template, explanation;
-      try {
-        template = await loadTemplate(documentType);
-        logger.debug(`Template loaded successfully, keys: ${Object.keys(template).join(', ')}`);
-      } catch (error: any) {
-        if (error.message.includes('ENOENT')) {
-          throw createError('TEMPLATE_NOT_FOUND', documentType);
-        }
-        throw error;
-      }
-      
-      spinner.updateMessage(SPINNER_MESSAGES.LOAD_EXPLANATION);
-      logger.debug(`Loading explanation from: templates/explanations/${documentType}-explanation.md`);
-      try {
-        explanation = await loadExplanation(documentType);
-        logger.debug(`Explanation loaded, length: ${explanation.length} characters`);
-      } catch (error: any) {
-        if (error.message.includes('ENOENT')) {
-          throw createError('TEMPLATE_NOT_FOUND', documentType);
-        }
-        throw error;
-      }
-      
-      // Parse and validate YAML
-      spinner.updateMessage(SPINNER_MESSAGES.PARSE_YAML);
-      logger.debug(`Parsing YAML file: ${inputPath}`);
-      
-      let yamlData;
-      try {
-        yamlData = await parseYaml(inputPath);
-        logger.debug(`YAML parsed successfully, keys: ${Object.keys(yamlData).join(', ')}`);
-      } catch (error: any) {
-        if (error.message.includes('ENOENT')) {
-          throw createError('FILE_NOT_FOUND', inputPath);
-        } else if (error.message.includes('YAMLException')) {
-          throw createError('INVALID_YAML', error.message);
-        } else if (error.message.includes('Missing required fields')) {
-          // Extract field names from error
-          const fields = error.message.match(/Missing required fields: (.+)/)?.[1]?.split(', ') || [];
-          throw createError('MISSING_YAML_FIELDS', fields);
-        }
-        throw error;
-      }
-      
-      spinner.updateMessage(SPINNER_MESSAGES.VALIDATE_YAML);
-      logger.debug(`YAML data validated successfully`);
-      
-      // Generate document
-      spinner.updateMessage(SPINNER_MESSAGES.PREPARE_PROMPT);
-      logger.debug('Preparing to call OpenAI API...');
-      logger.debug(`Template sections: ${JSON.stringify(Object.keys(template), null, 2)}`);
-      logger.debug(`YAML data preview: ${JSON.stringify(yamlData, null, 2).substring(0, 200)}...`);
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      spinner.updateMessage(SPINNER_MESSAGES.CONNECT_OPENAI);
-      
-      const genStartTime = Date.now();
-      spinner.updateMessage(SPINNER_MESSAGES.GENERATE_DOC);
-      
-      const updateInterval = setInterval(() => {
-        const elapsed = Math.round((Date.now() - genStartTime) / 1000);
-        spinner.updateMessage(`${SPINNER_MESSAGES.GENERATE_DOC} (${elapsed}s elapsed)`);
-      }, 5000);
-      
-      let generatedDocument;
-      try {
-        generatedDocument = await generateDocument(template, explanation, yamlData);
-        clearInterval(updateInterval);
-        logger.debug(`Document generated successfully, length: ${generatedDocument.length} characters`);
-      } catch (error: any) {
-        clearInterval(updateInterval);
-        logger.debug('Error during OpenAI generation:', error);
-        
-        // Handle specific OpenAI errors
-        if (error.message.includes('API key') || error.message.includes('Invalid API Key')) {
-          throw createError('OPENAI_ERROR', 'Invalid or missing API key');
-        } else if (error.message.includes('rate limit')) {
-          throw createError('OPENAI_ERROR', 'Rate limit exceeded');
-        } else if (error.message.includes('fetch failed') || error.message.includes('ECONNREFUSED')) {
-          throw createError('NETWORK_ERROR');
-        }
-        
-        throw error;
-      }
-      
-      // Save the document
-      spinner.updateMessage(SPINNER_MESSAGES.SAVE_DOC);
-      
-      // Calculate generation time
-      const generationTime = Math.round((Date.now() - startTime) / 1000);
-      
-      // Add metadata to document
-      const documentWithMetadata = addDocumentMetadata(
-        generatedDocument,
+      const orchestrator = new Orchestrator();
+      const jobResult = await orchestrator.runJob({
         documentType,
-        path.basename(inputPath),
-        generationTime
-      );
+        inputPath,
+        outputPath: outputDir,
+        options: {
+          debug: options.debug || false
+        }
+      });
       
-      // Create output path
-      const outputPath = createOutputPath(outputDir, documentType);
-      logger.debug(`Saving document to: ${outputPath}`);
+      if (!jobResult.success) {
+        throw new Error(`Job failed: ${jobResult.error?.message || 'Unknown error'}`);
+      }
       
-      // Save the document
-      const saveResult = await saveDocument(documentWithMetadata, outputPath);
-      logger.debug(`Document saved successfully: ${saveResult.path}`);
+      const generationTime = Math.round((jobResult.metadata.totalProcessingTime || 0) / 1000);
       
       // Success!
       spinner.success(`${SPINNER_MESSAGES.SUCCESS} (completed in ${generationTime}s)`);
@@ -259,10 +158,18 @@ export const generateCommand = new Command('generate')
       // Display success information
       console.log('\n✨ Document Generation Complete!\n');
       console.log(`📄 Document Type: ${documentType}`);
-      console.log(`📁 Saved to: ${saveResult.path}`);
-      console.log(`📏 File size: ${(saveResult.size / 1024).toFixed(2)} KB`);
+      console.log(`📁 Saved to: Generated successfully`);
       console.log(`⏱️  Generation time: ${generationTime} seconds`);
-      console.log('\n💡 Tip: You can open the file with: cat ' + saveResult.path);
+      console.log(`🤖 Agents executed: ${jobResult.metadata.agentExecutionOrder.join(' → ')}`);
+      
+      if (jobResult.reviewPacket && jobResult.reviewPacket.recommendations.length > 0) {
+        console.log('\n💡 Recommendations:');
+        jobResult.reviewPacket.recommendations.forEach((rec, index) => {
+          console.log(`  ${index + 1}. ${rec}`);
+        });
+      }
+      
+      console.log('\n💡 Tip: Review the generated document for accuracy and completeness');
       
       process.exit(ErrorCode.SUCCESS);
       
