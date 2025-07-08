@@ -1,0 +1,54 @@
+{
+  "clientId": "TFS-2023-001",
+  "companyName": "TechFlow Solutions, Inc.",
+  "type": "C Corporation",
+  "incorporated": "2019",
+  "state": "Delaware",
+  "industry": "Enterprise Software / Cloud Infrastructure",
+  "size": "50-100 employees",
+  "contact": {
+    "primary": {
+      "name": "David Park",
+      "title": "CEO & Co-Founder",
+      "email": "dpark@techflowsolutions.com",
+      "phone": "(415) 555-2100"
+    },
+    "technical": {
+      "name": "Dr. Lisa Wang",
+      "title": "CTO & Co-Founder",
+      "email": "lwang@techflowsolutions.com",
+      "phone": "(415) 555-2101"
+    }
+  },
+  "address": {
+    "street": "1200 Market Street, Suite 500",
+    "city": "San Francisco",
+    "state": "CA",
+    "zip": "94102"
+  },
+  "description": "TechFlow Solutions develops enterprise-grade distributed caching and data optimization platforms for cloud-native applications. Their flagship product uses machine learning to predict cache access patterns and optimize data locality in multi-region deployments.",
+  "technologies": [
+    "Distributed Systems",
+    "Machine Learning",
+    "Predictive Caching",
+    "Cloud Infrastructure",
+    "Edge Computing"
+  ],
+  "ipPortfolio": {
+    "patents": 3,
+    "patentsPending": 2,
+    "trademarks": 2,
+    "tradesecrets": "Multiple"
+  },
+  "relationshipStart": "2023-03-01",
+  "matters": [
+    {
+      "matterId": "TFS-2023-001",
+      "description": "Predictive Cache Patent Portfolio",
+      "status": "Active",
+      "leadAttorney": "Sarah Chen"
+    }
+  ],
+  "billingArrangement": "Hourly with patent prosecution caps",
+  "notes": "Fast-growing startup with strong technical team. Focused on building defensive patent portfolio before Series B funding. Very responsive to office actions and technical queries."
+} 

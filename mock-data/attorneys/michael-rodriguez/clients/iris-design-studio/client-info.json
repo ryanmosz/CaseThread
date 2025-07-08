@@ -1,0 +1,60 @@
+{
+  "clientId": "IDS-2023-002",
+  "companyName": "Iris Design Studio",
+  "type": "Sole Proprietorship",
+  "established": "2015",
+  "owner": "Samantha Lee",
+  "industry": "Graphic Design / Branding",
+  "size": "5-10 employees",
+  "contact": {
+    "primary": {
+      "name": "Samantha Lee",
+      "title": "Owner & Creative Director",
+      "email": "sam@irisdesignstudio.com",
+      "phone": "(408) 555-7500"
+    },
+    "business": {
+      "name": "Marcus Chen",
+      "title": "Business Manager",
+      "email": "marcus@irisdesignstudio.com",
+      "phone": "(408) 555-7501"
+    }
+  },
+  "address": {
+    "street": "789 Creative Way, Studio B",
+    "city": "San Jose",
+    "state": "CA",
+    "zip": "95110"
+  },
+  "description": "Iris Design Studio is a boutique branding agency specializing in logo design, visual identity systems, and user interface design for tech startups and established brands. Known for minimalist, impactful designs that translate across digital and print media.",
+  "services": [
+    "Logo Design",
+    "Brand Identity",
+    "UI/UX Design",
+    "Packaging Design",
+    "Digital Marketing Assets"
+  ],
+  "notableClients": [
+    "Tech startups",
+    "Local restaurants",
+    "Non-profit organizations",
+    "E-commerce brands"
+  ],
+  "ipPortfolio": {
+    "trademarks": 5,
+    "copyrights": 50,
+    "designPatents": 2,
+    "pendingMarks": 2
+  },
+  "relationshipStart": "2023-02-01",
+  "matters": [
+    {
+      "matterId": "IDS-2023-002",
+      "description": "Brand Protection Portfolio",
+      "status": "Active",
+      "leadAttorney": "Michael Rodriguez"
+    }
+  ],
+  "billingArrangement": "Fixed fee for trademark work, hourly for disputes",
+  "notes": "Creative professional who values clear communication. Expanding from local to national clients. Recent issue with competitor copying designs led to increased focus on IP protection. Very visual in communication style."
+} 

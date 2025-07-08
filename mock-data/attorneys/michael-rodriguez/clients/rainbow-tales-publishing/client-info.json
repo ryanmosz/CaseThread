@@ -1,0 +1,60 @@
+{
+  "clientId": "RTP-2022-005",
+  "companyName": "Rainbow Tales Publishing",
+  "type": "S Corporation",
+  "incorporated": "2020",
+  "state": "California",
+  "industry": "Children's Publishing / Educational Content",
+  "size": "10-20 employees",
+  "contact": {
+    "primary": {
+      "name": "Jennifer Walsh",
+      "title": "Founder & Author",
+      "email": "jwalsh@rainbowtales.com",
+      "phone": "(650) 555-8900"
+    },
+    "business": {
+      "name": "Thomas Park",
+      "title": "Publishing Director",
+      "email": "tpark@rainbowtales.com",
+      "phone": "(650) 555-8901"
+    }
+  },
+  "address": {
+    "street": "2100 University Avenue, Suite 200",
+    "city": "Palo Alto",
+    "state": "CA",
+    "zip": "94301"
+  },
+  "description": "Rainbow Tales Publishing creates inclusive, educational children's books featuring diverse characters and STEM themes. Their flagship series 'Cosmic Cat' has won multiple awards and is used in elementary schools nationwide. Expanding into digital interactive content and educational apps.",
+  "publications": [
+    "Cosmic Cat Series (12 books)",
+    "Little Engineers Collection",
+    "Diversity Dragons Series",
+    "Nature Explorers Books"
+  ],
+  "distribution": [
+    "Major bookstore chains",
+    "Amazon",
+    "School districts",
+    "Libraries",
+    "Direct-to-consumer"
+  ],
+  "ipPortfolio": {
+    "copyrights": 45,
+    "trademarks": 8,
+    "characterMarks": 4,
+    "pendingMarks": 3
+  },
+  "relationshipStart": "2022-08-01",
+  "matters": [
+    {
+      "matterId": "RTP-2022-005",
+      "description": "Publishing IP Portfolio & Licensing",
+      "status": "Active",
+      "leadAttorney": "Michael Rodriguez"
+    }
+  ],
+  "billingArrangement": "Monthly retainer with project-based additions",
+  "notes": "Family-friendly client focused on educational impact. Recent success has led to licensing opportunities and need for stronger IP protection. Very concerned about unauthorized use of characters on YouTube. Interested in international expansion."
+} 

@@ -1,0 +1,78 @@
+{
+  "attorneyId": "SC-001",
+  "name": "Sarah Chen",
+  "title": "Partner",
+  "email": "schen@peninsulaip.com",
+  "phone": "(650) 555-4102",
+  "barAdmissions": [
+    {
+      "state": "California",
+      "barNumber": "287654",
+      "year": "2012"
+    },
+    {
+      "court": "U.S. Patent and Trademark Office",
+      "registrationNumber": "75,432",
+      "year": "2013"
+    }
+  ],
+  "education": [
+    {
+      "degree": "J.D.",
+      "school": "Stanford Law School",
+      "year": "2012",
+      "honors": "Order of the Coif"
+    },
+    {
+      "degree": "Ph.D. Computer Science",
+      "school": "MIT",
+      "year": "2009",
+      "thesis": "Distributed Systems Architecture"
+    },
+    {
+      "degree": "B.S. Computer Engineering",
+      "school": "UC Berkeley",
+      "year": "2004",
+      "honors": "Summa Cum Laude"
+    }
+  ],
+  "practiceAreas": [
+    "Software Patents",
+    "AI/ML Patents",
+    "Chemical Patents",
+    "Patent Prosecution",
+    "Patent Portfolio Strategy",
+    "Technology Licensing"
+  ],
+  "technicalExpertise": [
+    "Artificial Intelligence",
+    "Distributed Systems",
+    "Cloud Computing",
+    "Polymer Chemistry",
+    "Green Chemistry"
+  ],
+  "writingStyle": {
+    "characteristics": [
+      "Highly technical and precise",
+      "Extensive use of numbered lists and subsections",
+      "Detailed technical specifications",
+      "Formal academic tone",
+      "Emphasis on technical advantages"
+    ],
+    "preferredPhrases": [
+      "In accordance with",
+      "As will be appreciated by those skilled in the art",
+      "In various embodiments",
+      "The present disclosure relates to",
+      "It should be understood that"
+    ]
+  },
+  "clientApproach": "Dr. Chen brings deep technical expertise to complex patent matters, translating cutting-edge innovations into strong patent protection. Her dual background in computer science and law enables her to work closely with engineering teams.",
+  "notableAchievements": [
+    "Secured over 200 patents for tech clients",
+    "Named 'Rising Star' by Super Lawyers 2020-2023",
+    "Published 15+ articles on AI patent strategy"
+  ],
+  "currentClients": ["techflow-solutions", "cheminnovate-labs"],
+  "languages": ["English", "Mandarin Chinese"]
+} 

@@ -1,0 +1,52 @@
+{
+  "firmName": "Peninsula IP Partners",
+  "type": "Boutique IP Law Firm",
+  "founded": "2018",
+  "location": {
+    "address": "2500 Sand Hill Road, Suite 200",
+    "city": "Palo Alto",
+    "state": "CA",
+    "zip": "94025"
+  },
+  "contact": {
+    "phone": "(650) 555-4100",
+    "fax": "(650) 555-4101",
+    "email": "info@peninsulaip.com",
+    "website": "www.peninsulaip.com"
+  },
+  "practiceAreas": [
+    "Patent Prosecution",
+    "Patent Litigation",
+    "Trademark Registration",
+    "Copyright Protection",
+    "Trade Secret Counseling",
+    "IP Licensing",
+    "Technology Transfer"
+  ],
+  "industries": [
+    "Software & Technology",
+    "Biotechnology & Chemistry",
+    "Creative Arts & Design",
+    "Publishing & Media"
+  ],
+  "attorneys": [
+    {
+      "name": "Sarah Chen",
+      "title": "Partner",
+      "barNumber": "CA 287654",
+      "email": "schen@peninsulaip.com"
+    },
+    {
+      "name": "Michael Rodriguez",
+      "title": "Partner",
+      "barNumber": "CA 298765",
+      "email": "mrodriguez@peninsulaip.com"
+    }
+  ],
+  "firmPhilosophy": "Peninsula IP Partners combines Silicon Valley innovation expertise with personalized service to protect and monetize intellectual property assets. We believe in building long-term partnerships with our clients, from startups to established companies.",
+  "billing": {
+    "structure": "Hourly with alternative fee arrangements available",
+    "partnerRate": "$750/hour",
+    "associateRate": "$450/hour"
+  }
+} 

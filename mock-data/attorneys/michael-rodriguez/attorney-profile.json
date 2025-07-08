@@ -1,0 +1,83 @@
+{
+  "attorneyId": "MR-001",
+  "name": "Michael Rodriguez",
+  "title": "Partner",
+  "email": "mrodriguez@peninsulaip.com",
+  "phone": "(650) 555-4103",
+  "barAdmissions": [
+    {
+      "state": "California",
+      "barNumber": "298765",
+      "year": "2014"
+    },
+    {
+      "court": "U.S. Patent and Trademark Office",
+      "registrationNumber": "78,901",
+      "year": "2015"
+    }
+  ],
+  "education": [
+    {
+      "degree": "J.D.",
+      "school": "UCLA School of Law",
+      "year": "2014",
+      "activities": "Entertainment Law Journal, Editor"
+    },
+    {
+      "degree": "M.F.A. Design",
+      "school": "California Institute of the Arts",
+      "year": "2010"
+    },
+    {
+      "degree": "B.A. Communications",
+      "school": "USC",
+      "year": "2007",
+      "honors": "Magna Cum Laude"
+    }
+  ],
+  "practiceAreas": [
+    "Trademark Law",
+    "Copyright Protection",
+    "Design Patents",
+    "Brand Protection",
+    "Entertainment Law",
+    "Publishing Agreements"
+  ],
+  "industryExpertise": [
+    "Creative Services",
+    "Publishing",
+    "Digital Media",
+    "Brand Development",
+    "User Interface Design"
+  ],
+  "writingStyle": {
+    "characteristics": [
+      "Clear and accessible language",
+      "Client-friendly explanations",
+      "Visual examples and metaphors",
+      "Focus on business objectives",
+      "Practical problem-solving approach"
+    ],
+    "preferredPhrases": [
+      "To put it simply",
+      "The key consideration here is",
+      "From a business perspective",
+      "This means that your brand",
+      "Let me illustrate with an example"
+    ]
+  },
+  "clientApproach": "Michael believes in making IP law accessible to creative professionals. He translates complex legal concepts into clear, actionable advice that helps artists and entrepreneurs protect their creative work while building successful businesses.",
+  "notableAchievements": [
+    "Successfully defended 50+ trademark disputes",
+    "Helped launch 100+ creative brands",
+    "Speaker at Design + Law Conference 2022-2023",
+    "Pro bono work for arts nonprofits"
+  ],
+  "currentClients": ["iris-design-studio", "rainbow-tales-publishing"],
+  "languages": ["English", "Spanish"],
+  "specialInterests": [
+    "Intersection of law and design",
+    "Digital rights management",
+    "International brand protection"
+  ]
+} 

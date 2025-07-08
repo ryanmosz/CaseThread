@@ -1,0 +1,54 @@
+{
+  "clientId": "CIL-2022-003",
+  "companyName": "ChemInnovate Labs, LLC",
+  "type": "Limited Liability Company",
+  "incorporated": "2018",
+  "state": "California",
+  "industry": "Specialty Chemicals / Green Chemistry",
+  "size": "25-50 employees",
+  "contact": {
+    "primary": {
+      "name": "Dr. Robert Martinez",
+      "title": "President",
+      "email": "rmartinez@cheminnovatelabs.com",
+      "phone": "(510) 555-3200"
+    },
+    "technical": {
+      "name": "Dr. Priya Sharma",
+      "title": "Director of R&D",
+      "email": "psharma@cheminnovatelabs.com",
+      "phone": "(510) 555-3201"
+    }
+  },
+  "address": {
+    "street": "4500 Research Drive",
+    "city": "Berkeley",
+    "state": "CA",
+    "zip": "94710"
+  },
+  "description": "ChemInnovate Labs specializes in developing biodegradable polymers and green chemistry solutions for packaging and agricultural applications. They focus on sustainable alternatives to traditional plastics with enhanced performance characteristics.",
+  "technologies": [
+    "Biodegradable Polymers",
+    "UV-Stable Compounds",
+    "Green Chemistry",
+    "Sustainable Materials",
+    "Agricultural Films"
+  ],
+  "ipPortfolio": {
+    "patents": 8,
+    "patentsPending": 4,
+    "trademarks": 3,
+    "tradesecrets": "Extensive"
+  },
+  "relationshipStart": "2022-11-01",
+  "matters": [
+    {
+      "matterId": "CIL-2022-003",
+      "description": "Biodegradable Polymer Patent Family",
+      "status": "Active",
+      "leadAttorney": "Sarah Chen"
+    }
+  ],
+  "billingArrangement": "Blended hourly with success fees for licensing",
+  "notes": "Established R&D company with strong focus on sustainability. Multiple government grants. Looking to expand international patent protection for key technologies. Very detailed in technical disclosures."
+} 
