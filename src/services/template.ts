@@ -100,50 +100,16 @@ export async function loadTemplate(documentType: string): Promise<Template> {
 export async function loadExplanation(documentType: string): Promise<string> {
   logger.debug(`loadExplanation called with type: ${documentType}`);
   
-  // Try different naming patterns
-  const patterns = [
-    `${documentType}-explanation.md`,
-    `${getExplanationNumber(documentType)}-${documentType}-explanation.md`,
-    // Try shortened names for some document types
-    `${getExplanationNumber(documentType)}-${documentType.replace('-agreement', '')}-explanation.md`
-  ];
-  
-  for (const pattern of patterns) {
-    const explanationPath = path.join('templates', 'explanations', pattern);
+  try {
+    const explanationPath = getExplanationPath(documentType);
     logger.debug(`Attempting to read explanation from: ${explanationPath}`);
-    
-    try {
-      const content = await fs.readFile(explanationPath, 'utf-8');
-      logger.debug(`Explanation file read successfully, size: ${content.length} bytes`);
-      return content;
-    } catch (error) {
-      logger.debug(`Failed to read ${pattern}: ${(error as Error).message}`);
-      // Continue to next pattern
-    }
+    const content = await fs.readFile(explanationPath, 'utf-8');
+    logger.debug(`Explanation file read successfully, size: ${content.length} bytes`);
+    return content;
+  } catch (error) {
+    logger.debug(`Failed to load explanation: ${(error as Error).message}`);
+    throw new Error(`Explanation file not found for document type: ${documentType}`);
   }
-  
-  throw new Error(`Explanation file not found for document type: ${documentType}`);
-}
-
-/**
- * Get the explanation file number based on document type
- */
-function getExplanationNumber(documentType: string): string {
-  logger.debug(`Getting explanation number for type: ${documentType}`);
-  const mapping: Record<string, string> = {
-    'provisional-patent-application': '01',
-    'nda-ip-specific': '02',
-    'patent-license-agreement': '03',
-    'trademark-application': '04',
-    'patent-assignment-agreement': '05',
-    'office-action-response': '06',
-    'cease-and-desist-letter': '07',
-    'technology-transfer-agreement': '08'
-  };
-  
-  const number = mapping[documentType] || '';
-  logger.debug(`Explanation number for ${documentType}: ${number || 'none'}`);
-  return number;
 }
 
 /**
