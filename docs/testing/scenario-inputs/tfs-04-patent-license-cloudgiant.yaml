@@ -1,0 +1,81 @@
+# Metadata
+client: "TechFlow Solutions"
+attorney: "Sarah Chen"
+document_type: "patent-license-agreement"
+template: "patent-license-agreement.json"
+
+# Document Parameters
+licensor:
+  name: "TechFlow Solutions, Inc."
+  state: "Delaware"
+  address: "1234 Innovation Way, San Francisco, CA 94107"
+  representative: "David Park"
+  title: "CEO"
+
+licensee:
+  name: "CloudGiant Inc."
+  state: "Delaware"
+  address: "1 Cloud Way, Seattle, WA 98101"
+  representative: "Jennifer Smith"
+  title: "VP of Technology"
+  nasdaq: "CGNT"
+
+effective_date: "2024-03-01"
+
+licensed_patents:
+  - application_number: "17/234,567"
+    title: "System and Method for Predictive Cache Optimization"
+    status: "Pending"
+    priority_date: "2023-04-20"
+
+licensed_technology: "Predictive cache optimization system using LSTM neural networks and modified Raft consensus protocol"
+
+grant_type: "Non-exclusive"
+transferable: false
+territory: "Worldwide"
+
+field_of_use: "Internal use in CloudGiant data centers only"
+
+financial_terms:
+  upfront_fee: "500000"
+  annual_fee: "100000"
+  payment_terms: "Net 30"
+  cpi_adjustment: true
+  cpi_cap: "3"
+
+optional_expansions:
+  exclusive_field: "2000000"
+  source_code_access: "1000000"
+  additional_territories: "Negotiable"
+
+technology_delivery:
+  documentation: "30 days"
+  reference_implementation: "Binary only"
+  support_hours: "40"
+  training_sessions: "2"
+
+performance_requirements:
+  cache_hit_rate: "85"
+  latency_improvement: "100ms"
+  uptime: "99.9"
+
+no_challenge_clause: true
+
+improvements:
+  licensor_improvements: "Included automatically"
+  licensee_improvements: "Non-exclusive feedback license"
+
+term:
+  initial: "5 years"
+  renewal: "Mutual agreement"
+  
+termination:
+  for_cause: "60-day cure period"
+  patent_invalidity: "50% fee reduction if not granted"
+
+indemnification:
+  scope: "Third-party patent claims"
+  cap: "Annual fees paid"
+  exclusions: "Licensee modifications"
+
+matter_number: "TFS-2024-LIC01" 

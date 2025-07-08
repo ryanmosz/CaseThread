@@ -1,0 +1,67 @@
+# Metadata
+client: "TechFlow Solutions"
+attorney: "Sarah Chen"
+document_type: "patent-assignment-agreement"
+template: "patent-assignment-agreement.json"
+
+# Document Parameters
+assignors:
+  - name: "David Park"
+    title: "CEO & Co-Founder"
+    address: "123 Founder Way, San Francisco, CA 94107"
+    contribution: "System architecture, business method claims"
+    equity_position: "35%"
+    consideration: "1000"
+  - name: "Dr. Lisa Wang"
+    title: "CTO & Co-Founder"
+    address: "456 Tech Drive, San Francisco, CA 94107"
+    contribution: "Core LSTM algorithms, technical implementation"
+    equity_position: "35%"
+    consideration: "1000"
+  - name: "Kevin Zhang"
+    title: "Principal Engineer"
+    address: "789 Code Lane, San Francisco, CA 94107"
+    contribution: "Consensus protocol modifications, performance optimizations"
+    equity_position: "5%"
+    consideration: "1000"
+
+assignee:
+  name: "TechFlow Solutions, Inc."
+  state_of_incorporation: "Delaware"
+  address: "1234 Innovation Way, San Francisco, CA 94107"
+
+patents:
+  - provisional_number: "63/234,567"
+    title: "Predictive Cache Optimization System"
+    filing_date: "2023-04-20"
+  - invention_disclosure: "TFS-2019-001"
+    title: "LSTM Neural Network Architecture for Cache Prediction"
+  - invention_disclosure: "TFS-2020-003"
+    title: "Modified Raft Consensus Protocol for Distributed Systems"
+
+technology_scope: "All inventions relating to predictive cache optimization, distributed systems, and machine learning applications developed from company inception through present"
+
+effective_date: "2023-06-15"
+
+special_provisions:
+  retroactive: true
+  retroactive_date: "2019-01-01"
+  open_source_carveout:
+    applies_to: "Kevin Zhang"
+    excluded_projects:
+      - "Apache Raft contributions (pre-2019)"
+      - "Redis cache library (MIT licensed)"
+
+cooperation_obligations:
+  - "Execute USPTO assignment documents"
+  - "Provide invention disclosures"
+  - "Assist with patent prosecution"
+  - "Maintain confidentiality"
+
+equity_acceleration: "6-month vesting acceleration upon execution"
+
+urgency: "Series B due diligence requirement"
+deadline: "2023-06-20"
+
+governing_law: "Delaware"
+matter_number: "TFS-2023-PAT01" 

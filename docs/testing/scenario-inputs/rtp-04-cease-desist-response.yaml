@@ -1,0 +1,58 @@
+# Metadata
+client: "Rainbow Tales Publishing"
+attorney: "Michael Rodriguez"
+document_type: "cease-and-desist-response"
+template: "cease-and-desist-letter.json"
+
+# Document Parameters
+sender:
+  name: "Rainbow Tales Publishing LLC"
+  address: "321 Story Lane, Los Angeles, CA 90028"
+  representative: "Michael Rodriguez"
+  firm: "Peninsula IP Partners"
+
+recipient:
+  name: "Galaxy Books Inc."
+  address: "789 Publisher Row, Chicago, IL 60601"
+  attention: "Robert Chen, General Counsel"
+
+date: "2024-02-20"
+
+subject: "Response to Cease and Desist Letter dated February 10, 2024 - 'Galactic Kitten' Allegations"
+
+our_work:
+  title: "Cosmic Cat Educational Adventures"
+  creation_date: "January 2021"
+  first_publication: "June 2021"
+  copyright_registration: "TX 8-901-234"
+
+their_work:
+  title: "Galactic Kitten"
+  alleged_publication: "March 2023"
+  
+dispute_type: "Copyright and Trademark Infringement"
+
+defenses:
+  - "Prior creation and publication by two years"
+  - "Substantial differences in characters and storylines"
+  - "Different target audiences (educational vs entertainment)"
+  - "No access to allegedly infringed work"
+  - "Independent creation with documented development"
+
+evidence:
+  - "Copyright registration predating their work"
+  - "Development notes and drafts from 2020"
+  - "Publishing contracts from early 2021"
+  - "Social media posts showing character development"
+
+counter_demands:
+  - "Acknowledge Rainbow Tales' prior rights"
+  - "Cease false accusations of infringement"
+  - "Retract demand letters sent to retailers"
+  - "Provide written apology"
+
+settlement_interest: true
+settlement_proposal: "Coexistence agreement with clear market differentiation"
+
+response_deadline: "2024-03-06"
+matter_number: "RTP-2024-DEF01" 

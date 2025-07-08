@@ -1,0 +1,37 @@
+# Metadata
+client: "Iris Design Studio"
+attorney: "Michael Rodriguez"
+document_type: "trademark-amendment"
+template: "trademark-application.json"
+
+# Document Parameters
+application_number: "97/123,456"
+filing_date: "2023-03-15"
+applicant:
+  name: "Iris Design Studio, LLC"
+  entity_type: "Limited Liability Company"
+  state: "California"
+  address: "789 Creative Way, San Francisco, CA 94110"
+
+mark:
+  text: "IRIS DESIGN STUDIO"
+  type: "Standard Character Mark"
+  description: "Stylized text with modern sans-serif font"
+
+goods_services:
+  class: "042"
+  description: "Graphic design services; Logo design services; Brand identity design services; Digital design consulting"
+
+amendment_type: "Response to Office Action"
+amendment_details:
+  add_color_claim: true
+  colors:
+    - "Purple (Pantone 2685C)"
+    - "Gold (Pantone 7406C)"
+  color_description: "The mark consists of the words IRIS DESIGN STUDIO where IRIS appears in purple and DESIGN STUDIO appears in gold"
+  clarify_services: "Graphic design services, namely, creating corporate logos and brand identities for others"
+
+examiner: "J. Smith"
+law_office: "Law Office 107"
+response_deadline: "2024-02-10"
+matter_number: "IDS-2023-TM01" 

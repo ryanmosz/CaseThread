@@ -1,0 +1,52 @@
+# Metadata
+client: "Iris Design Studio"
+attorney: "Michael Rodriguez"
+document_type: "opposition-response"
+template: "cease-and-desist-letter.json"
+
+# Document Parameters
+sender:
+  name: "Iris Design Studio, LLC"
+  address: "789 Creative Way, San Francisco, CA 94110"
+  representative: "Michael Rodriguez"
+  firm: "Peninsula IP Partners"
+
+recipient:
+  name: "Iris Creative Group, Inc."
+  address: "456 Madison Avenue, New York, NY 10022"
+  attention: "Jonathan Park, CEO"
+
+date: "2024-02-05"
+
+subject: "Response to Trademark Opposition - Application No. 97/123,456"
+
+our_mark:
+  name: "IRIS DESIGN STUDIO"
+  application_number: "97/123,456"
+  filing_date: "2023-03-15"
+  classes: ["042"]
+
+their_mark:
+  name: "IRIS CREATIVE"
+  registration_number: "5,123,456"
+  registration_date: "2019-06-01"
+
+opposition_details:
+  number: "91234567"
+  filed_date: "2023-12-01"
+  grounds: "Likelihood of confusion under Section 2(d)"
+
+defenses:
+  - "Marks are sufficiently distinct"
+  - "Different geographic markets"
+  - "Different service offerings"
+  - "No evidence of actual confusion"
+  - "Good faith adoption"
+
+demands:
+  - "Withdraw opposition within 30 days"
+  - "Agree to coexistence terms"
+  - "Cease harassment of our business"
+
+response_deadline: "2024-03-07"
+matter_number: "IDS-2023-TM01" 

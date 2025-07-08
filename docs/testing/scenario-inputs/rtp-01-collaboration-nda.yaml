@@ -1,0 +1,54 @@
+# Metadata
+client: "Rainbow Tales Publishing"
+attorney: "Michael Rodriguez"
+document_type: "nda-collaboration"
+template: "nda-ip-specific.json"
+
+# Document Parameters
+party1:
+  name: "Rainbow Tales Publishing LLC"
+  type: "Limited Liability Company"
+  state: "California"
+  address: "321 Story Lane, Los Angeles, CA 90028"
+  representative: "Sophie Martinez"
+  title: "Founder and CEO"
+
+party2:
+  name: "Stellar Stories Entertainment Inc."
+  type: "Corporation"
+  state: "California"
+  address: "555 Animation Blvd, Burbank, CA 91505"
+  representative: "David Kim"
+  title: "President"
+
+effective_date: "2024-02-15"
+purpose: "Exploring potential collaboration for animated adaptations and joint ventures"
+
+confidential_information:
+  - "Character designs and storylines"
+  - "Unpublished manuscripts"
+  - "Marketing strategies and sales data"
+  - "Animation techniques and workflows"
+  - "Distribution agreements and terms"
+  - "Financial projections"
+
+exclusions:
+  - "Published works"
+  - "Publicly available information"
+  - "Information independently created"
+
+mutual: true
+
+term:
+  duration: "3 years"
+  survival_period: "5 years"
+
+permitted_use: "Evaluation of potential collaboration opportunities including animated series, merchandise, and co-publishing ventures"
+
+special_provisions:
+  - "Return of materials within 30 days if no agreement reached"
+  - "No reverse engineering of creative works"
+  - "Acknowledgment of pre-existing IP rights"
+
+governing_law: "California"
+matter_number: "RTP-2024-COLLAB" 

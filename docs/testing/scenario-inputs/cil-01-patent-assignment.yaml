@@ -1,0 +1,54 @@
+# Metadata
+client: "ChemInnovate Labs"
+attorney: "Sarah Chen"
+document_type: "patent-assignment-agreement"
+template: "patent-assignment-agreement.json"
+
+# Document Parameters
+assignor:
+  name: "Dr. Elena Vasquez"
+  title: "Research Scientist"
+  address: "1234 University Avenue, Palo Alto, CA 94301"
+  citizenship: "United States"
+
+assignee:
+  name: "ChemInnovate Labs, Inc."
+  state_of_incorporation: "Delaware"
+  address: "456 Innovation Drive, Menlo Park, CA 94025"
+
+patents:
+  - application_number: "17/123,456"
+    title: "Biodegradable Polymer Compositions and Methods of Manufacture"
+    filing_date: "2023-01-15"
+    inventors: ["Dr. Elena Vasquez", "Dr. Michael Chang"]
+  - provisional_number: "63/456,789"
+    title: "Enhanced Biodegradation Additives for Polymer Applications"
+    filing_date: "2022-07-20"
+
+technology_description: "Biodegradable polymer technology including BioPoly-X™ formulations and related manufacturing processes"
+
+consideration:
+  monetary_amount: "50000"
+  additional_consideration: "10% royalty on net sales of products incorporating the assigned technology"
+  milestone_payments:
+    - trigger: "First commercial sale"
+      amount: "25000"
+    - trigger: "$1M in cumulative sales"
+      amount: "50000"
+
+effective_date: "2024-01-15"
+
+warranties:
+  sole_inventor: false
+  co_inventors_assigned: true
+  no_prior_assignments: true
+  no_government_rights: true
+
+cooperation_obligations:
+  - "Execute formal USPTO assignment documents"
+  - "Provide technical assistance for patent prosecution"
+  - "Assist with inventor declarations"
+  - "Maintain confidentiality of proprietary improvements"
+
+governing_law: "California"
+matter_number: "CIL-2024-PAT01" 

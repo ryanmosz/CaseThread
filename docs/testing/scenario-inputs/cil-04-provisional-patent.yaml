@@ -1,0 +1,60 @@
+# Metadata
+client: "ChemInnovate Labs"
+attorney: "Sarah Chen"
+document_type: "provisional-patent-application"
+template: "provisional-patent-application.json"
+
+# Document Parameters
+title: "Biodegradable Polymer Compositions for Agricultural Mulch Films with Enhanced UV Stability"
+
+inventors:
+  - name: "Dr. Michael Chang"
+    citizenship: "United States"
+    residence: "Palo Alto, California"
+  - name: "Dr. Sarah Kim"
+    citizenship: "South Korea"
+    residence: "Menlo Park, California"
+
+applicant:
+  name: "ChemInnovate Labs, Inc."
+  entity_status: "Large Entity"
+  address: "456 Innovation Drive, Menlo Park, CA 94025"
+
+priority_claim: false
+foreign_filing_planned: true
+
+technical_field: "Biodegradable polymers for agricultural applications"
+
+background_problem: "Conventional plastic mulch films create environmental waste requiring costly removal and disposal"
+
+invention_summary: "Modified BioPoly-X™ formulation with UV stabilizers enabling 6-month field life followed by complete biodegradation"
+
+key_features:
+  - "PHA-based polymer with 5-10% starch blend"
+  - "Novel UV stabilizer package (0.5-2% by weight)"
+  - "Controlled degradation triggered by soil microbes"
+  - "Maintains 80% tensile strength for 6 months"
+  - "Complete biodegradation within 12 months per ISO 17556"
+
+advantages:
+  - "Eliminates plastic waste in agricultural fields"
+  - "No removal labor required"
+  - "Improves soil health through biodegradation byproducts"
+  - "Cost-competitive with conventional films"
+
+examples:
+  - title: "Example 1: Base formulation"
+    description: "85% PHA, 10% corn starch, 3% plasticizer, 2% UV stabilizer"
+  - title: "Example 2: Enhanced strength variant"
+    description: "80% PHA, 8% starch, 7% natural fiber, 3% plasticizer, 2% UV stabilizer"
+
+testing_data:
+  field_trials: "6-month trials in California strawberry fields"
+  biodegradation: "ISO 17556 testing shows 95% degradation in 10 months"
+  mechanical_properties: "Tensile strength 25 MPa, elongation 300%"
+
+filing_date: "2024-02-28"
+urgent: true
+urgency_reason: "Competitor patent publication expected; need priority date before agricultural trade show"
+
+matter_number: "CIL-2024-PROV01" 

@@ -1,0 +1,48 @@
+# Metadata
+client: "Rainbow Tales Publishing"
+attorney: "Michael Rodriguez"
+document_type: "trademark-application"
+template: "trademark-application.json"
+
+# Document Parameters
+applicant:
+  name: "Rainbow Tales Publishing LLC"
+  entity_type: "Limited Liability Company"
+  state: "California"
+  address: "321 Story Lane, Los Angeles, CA 90028"
+  email: "legal@rainbowtales.com"
+
+mark:
+  text: "COSMIC CAT EDUCATIONAL ADVENTURES"
+  type: "Standard Character Mark"
+  
+basis_for_filing:
+  type: "Use in Commerce"
+  first_use_date: "2021-06-01"
+  first_use_commerce_date: "2021-09-15"
+
+goods_services:
+  - class: "009"
+    description: "Downloadable electronic books featuring children's educational stories; downloadable mobile applications featuring interactive children's stories"
+  - class: "016"  
+    description: "Children's books; printed educational materials in the field of early childhood learning; coloring books"
+  - class: "041"
+    description: "Entertainment services, namely, providing online non-downloadable children's stories; educational services for children"
+
+specimen:
+  type: "Screenshot of mobile app"
+  description: "Screenshot showing COSMIC CAT EDUCATIONAL ADVENTURES as displayed on app store listing"
+
+priority_claim: false
+
+correspondence:
+  name: "Michael Rodriguez"
+  firm: "Peninsula IP Partners"
+  address: "2500 Sand Hill Road, Suite 200, Palo Alto, CA 94025"
+  email: "mrodriguez@peninsulaip.com"
+
+declaration_signatory:
+  name: "Sophie Martinez"
+  title: "CEO"
+  
+matter_number: "RTP-2024-TM01" 

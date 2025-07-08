@@ -1,0 +1,51 @@
+# Metadata
+client: "Iris Design Studio"
+attorney: "Michael Rodriguez"
+document_type: "nda-settlement"
+template: "nda-ip-specific.json"
+
+# Document Parameters
+party1:
+  name: "Iris Design Studio, LLC"
+  type: "Limited Liability Company"
+  state: "California"
+  address: "789 Creative Way, San Francisco, CA 94110"
+  representative: "Emma Chen"
+  title: "Owner"
+
+party2:
+  name: "Iris Creative Group, Inc."
+  type: "Corporation"
+  state: "New York"
+  address: "456 Madison Avenue, New York, NY 10022"
+  representative: "Jonathan Park"
+  title: "CEO"
+
+effective_date: "2024-02-01"
+purpose: "Settlement discussions regarding trademark opposition proceedings"
+
+confidential_information:
+  - "Settlement terms and proposals"
+  - "Financial information"
+  - "Business strategies"
+  - "Customer lists and relationships"
+  - "Coexistence agreement terms"
+
+exclusions:
+  - "Information already public"
+  - "Information independently developed"
+  - "Information received from third parties without restriction"
+
+term:
+  duration: "2 years"
+  survival_period: "5 years"
+
+permitted_use: "Solely for evaluating and negotiating potential settlement of trademark opposition"
+
+dispute_reference:
+  type: "USPTO Opposition"
+  number: "91234567"
+  mark: "IRIS DESIGN STUDIO"
+
+governing_law: "California"
+matter_number: "IDS-2023-TM01" 

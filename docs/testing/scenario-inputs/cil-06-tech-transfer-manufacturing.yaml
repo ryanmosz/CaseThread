@@ -1,0 +1,82 @@
+# Metadata
+client: "ChemInnovate Labs"
+attorney: "Sarah Chen"
+document_type: "technology-transfer-agreement"
+template: "technology-transfer-agreement.json"
+
+# Document Parameters
+transferor:
+  name: "ChemInnovate Labs, Inc."
+  type: "Corporation"
+  state: "Delaware"
+  address: "456 Innovation Drive, Menlo Park, CA 94025"
+  representative: "Dr. James Liu"
+  title: "CEO"
+
+transferee:
+  name: "EcoWrap Industries, LLC"
+  type: "Limited Liability Company"
+  state: "Texas"
+  address: "789 Packaging Blvd, Houston, TX 77001"
+  representative: "Maria Santos"
+  title: "President"
+
+effective_date: "2024-03-15"
+
+technology_description:
+  - "Manufacturing process for BioPoly-X™ polymer production"
+  - "Quality control protocols and specifications"
+  - "Extrusion parameters for film production"
+  - "Formulation adjustments for different applications"
+  - "Troubleshooting guides and best practices"
+
+know_how_components:
+  - "Temperature profiles for twin-screw extrusion (proprietary)"
+  - "Catalyst preparation methods"
+  - "Moisture control techniques"
+  - "Additive mixing sequences"
+  - "Scale-up parameters from pilot to production"
+
+deliverables:
+  - item: "Complete process documentation package"
+    format: "Encrypted digital files"
+    deadline: "30 days from effective date"
+  - item: "On-site training for technical staff"
+    duration: "2 weeks"
+    deadline: "60 days from effective date"
+  - item: "Remote support and troubleshooting"
+    duration: "6 months"
+    deadline: "Ongoing from training completion"
+
+training_provisions:
+  location: "EcoWrap facility in Houston"
+  trainees_limit: "8 technical staff"
+  topics:
+    - "Equipment operation and maintenance"
+    - "Process optimization"
+    - "Quality testing procedures"
+    - "Safety protocols"
+
+confidentiality_term: "10 years"
+
+financial_terms:
+  technology_fee: "750000"
+  payment_schedule:
+    - amount: "250000"
+      due: "Upon execution"
+    - amount: "250000"
+      due: "Upon delivery of documentation"
+    - amount: "250000"
+      due: "Upon completion of training"
+
+performance_standards:
+  - "Achieve 95% yield within 3 production runs"
+  - "Meet all BioPoly-X™ specifications"
+  - "Pass ChemInnovate quality audit"
+
+liability_provisions:
+  warranty_period: "1 year"
+  indemnification: "Mutual for third-party claims"
+  limitation: "Direct damages only, capped at technology fee"
+
+matter_number: "CIL-2024-TECH01" 

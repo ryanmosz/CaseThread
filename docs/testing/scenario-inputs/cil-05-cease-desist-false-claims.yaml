@@ -1,0 +1,65 @@
+# Metadata
+client: "ChemInnovate Labs"
+attorney: "Sarah Chen"
+document_type: "cease-and-desist-letter"
+template: "cease-and-desist-letter.json"
+
+# Document Parameters
+sender:
+  name: "ChemInnovate Labs, Inc."
+  address: "456 Innovation Drive, Menlo Park, CA 94025"
+  representative: "Sarah Chen"
+  firm: "Peninsula IP Partners"
+
+recipient:
+  name: "GreenPack Solutions LLC"
+  address: "321 Eco Street, Portland, OR 97201"
+  attention: "David Thompson, CEO"
+
+date: "2024-03-01"
+
+subject: "False Advertising and Unfair Competition - Immediate Cessation Required"
+
+violation_type: "False Advertising and Patent Misrepresentation"
+
+our_rights:
+  patents:
+    - number: "US Patent Application 17/123,456"
+      title: "Biodegradable Polymer Compositions"
+  trademarks:
+    - mark: "BioPoly-X"
+      registration: "Pending"
+  trade_dress: "Distinctive green and blue packaging design"
+
+infringing_activities:
+  - "Claims of 'full compatibility with BioPoly-X systems'"
+  - "Statement: 'Drop-in replacement for ChemInnovate products'"
+  - "Use of confusingly similar 'BioPolyMax' name"
+  - "False claim of '100% biodegradable in 30 days'"
+  - "Misrepresentation of patent pending status"
+
+evidence:
+  - "Website screenshots dated February 25, 2024"
+  - "Trade show materials from PackExpo 2024"
+  - "Customer confusion reports (3 incidents)"
+  - "Testing showing only 40% degradation at 90 days"
+
+harm:
+  - "Lost sales to confused customers"
+  - "Reputation damage from inferior product performance"
+  - "Dilution of BioPoly-X brand"
+
+demands:
+  - "Immediately cease all false compatibility claims"
+  - "Remove all references to BioPoly-X from materials"
+  - "Correct biodegradability claims to accurate data"
+  - "Provide written assurance within 10 days"
+  - "Account for all sales made using false claims"
+
+legal_basis:
+  - "Lanham Act Section 43(a) - False Advertising"
+  - "California Business & Professions Code § 17500"
+  - "Common law unfair competition"
+
+deadline: "March 15, 2024"
+matter_number: "CIL-2024-ENF01" 

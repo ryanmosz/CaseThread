@@ -1,0 +1,60 @@
+# Metadata
+client: "ChemInnovate Labs"
+attorney: "Sarah Chen"
+document_type: "office-action-response"
+template: "office-action-response.json"
+
+# Document Parameters
+application_number: "17/123,456"
+filing_date: "2023-01-15"
+title: "Biodegradable Polymer Compositions and Methods of Manufacture"
+
+applicant:
+  name: "ChemInnovate Labs, Inc."
+  address: "456 Innovation Drive, Menlo Park, CA 94025"
+
+inventors:
+  - "Dr. Elena Vasquez"
+  - "Dr. Michael Chang"
+
+office_action:
+  mailing_date: "2024-01-25"
+  response_deadline: "2024-07-25"
+  examiner: "Dr. Patricia Williams"
+  art_unit: "1762"
+
+rejections:
+  - type: "35 U.S.C. 112(a) - Enablement"
+    claims: ["1-20"]
+    basis: "Specification fails to enable full scope of biodegradation in marine environments"
+  - type: "35 U.S.C. 103 - Obviousness"
+    claims: ["1-10"]
+    prior_art: ["Thompson (US 9,123,456)", "Garcia et al. (WO 2019/123456)"]
+
+amendments:
+  claim_1:
+    type: "Narrowing"
+    change: "Added limitation requiring specific molecular weight range of 50,000-150,000 Daltons"
+  claim_11:
+    type: "New dependent claim"
+    content: "The composition of claim 1, wherein biodegradation occurs within 180 days in marine environment per ASTM D6691"
+
+arguments:
+  enablement:
+    - "Specification provides 15 working examples"
+    - "Table 3 shows biodegradation data for various environments"
+    - "Prophetic examples properly enabled per MPEP 2164.02"
+  obviousness:
+    - "Thompson teaches different polymer backbone (PLA vs our PHA)"
+    - "Garcia requires toxic catalyst incompatible with biodegradation"
+    - "Unexpected 73% faster degradation rate (see Declaration)"
+
+evidence_submitted:
+  - "Declaration of Dr. Elena Vasquez with test data"
+  - "Comparative testing results (Exhibit A)"
+  - "ASTM D6691 marine biodegradation data (Exhibit B)"
+
+interview_request: true
+proposed_examiner_amendment: "Willing to discuss dependent claims 15-20"
+
+matter_number: "CIL-2024-PAT02" 

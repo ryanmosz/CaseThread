@@ -1,0 +1,48 @@
+# Metadata
+client: "Iris Design Studio"
+attorney: "Michael Rodriguez"
+document_type: "office-action-response"
+template: "office-action-response.json"
+
+# Document Parameters
+application_number: "97/123,456"
+mark: "IRIS DESIGN STUDIO"
+applicant:
+  name: "Iris Design Studio, LLC"
+  address: "789 Creative Way, San Francisco, CA 94110"
+
+office_action:
+  mailing_date: "2024-01-10"
+  response_deadline: "2024-07-10"
+  examiner: "J. Smith"
+  law_office: "107"
+
+rejections:
+  - type: "Section 2(e)(1) - Merely Descriptive"
+    basis: "DESIGN STUDIO merely describes applicant's services"
+    
+amendments:
+  - type: "Claim of Acquired Distinctiveness"
+    section: "2(f)"
+    evidence:
+      - "5 years continuous use"
+      - "Annual revenue exceeding $2 million"
+      - "Industry recognition and awards"
+      - "Customer testimonials"
+
+arguments:
+  - point: "Mark has acquired distinctiveness"
+    support: "Continuous exclusive use since 2018"
+  - point: "IRIS creates unique commercial impression"
+    support: "IRIS is arbitrary for design services"
+  - point: "Mark functions as source identifier"
+    support: "Consumer recognition surveys show 73% recognition"
+
+evidence_submitted:
+  - "Declaration of Emma Chen"
+  - "Sales figures 2018-2024"
+  - "Industry awards documentation"
+  - "15 customer declarations"
+  - "Advertising expenditure records"
+
+matter_number: "IDS-2023-TM01" 

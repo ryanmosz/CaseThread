@@ -1,0 +1,72 @@
+# Metadata
+client: "Rainbow Tales Publishing"
+attorney: "Michael Rodriguez"
+document_type: "technology-transfer-agreement"
+template: "technology-transfer-agreement.json"
+
+# Document Parameters
+transferor:
+  name: "Rainbow Tales Publishing LLC"
+  type: "Limited Liability Company"
+  state: "California"
+  address: "321 Story Lane, Los Angeles, CA 90028"
+  representative: "Sophie Martinez"
+  title: "CEO"
+
+transferee:
+  name: "Stellar Stories Entertainment Inc."
+  type: "Corporation"
+  state: "California"
+  address: "555 Animation Blvd, Burbank, CA 91505"
+  representative: "David Kim"
+  title: "President"
+
+effective_date: "2024-03-01"
+
+technology_description:
+  - "Character designs for Cosmic Cat series"
+  - "Story outlines and scripts for 26 episodes"
+  - "Brand guidelines and style guides"
+  - "Voice character descriptions"
+  - "Educational curriculum integration materials"
+
+intellectual_property:
+  copyrights:
+    - "Cosmic Cat character designs"
+    - "Story manuscripts"
+    - "Illustration artwork"
+  trademarks:
+    - "COSMIC CAT"
+    - "COSMIC CAT EDUCATIONAL ADVENTURES"
+
+rights_granted:
+  - "Exclusive animation rights for North America"
+  - "Non-exclusive merchandise rights"
+  - "Sublicense rights for broadcast distribution"
+
+financial_terms:
+  upfront_payment: "50000"
+  royalty_rate: "15"
+  minimum_guarantee: "200000"
+  payment_schedule: "Quarterly"
+
+term:
+  duration: "5 years"
+  renewal_option: "Two 3-year renewal terms"
+  
+deliverables:
+  - item: "Character design bible"
+    deadline: "30 days from effective date"
+  - item: "Story scripts (first 13 episodes)"
+    deadline: "60 days from effective date"
+  - item: "Brand guidelines"
+    deadline: "45 days from effective date"
+
+quality_standards: "Maintain educational value and age-appropriate content for 3-8 year olds"
+
+termination_rights:
+  - "Material breach with 30-day cure period"
+  - "Failure to meet minimum guarantee"
+  - "Bankruptcy or insolvency"
+
+matter_number: "RTP-2024-TECH01" 

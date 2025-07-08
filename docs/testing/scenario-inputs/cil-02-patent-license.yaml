@@ -1,0 +1,68 @@
+# Metadata
+client: "ChemInnovate Labs"
+attorney: "Sarah Chen"
+document_type: "patent-license-agreement"
+template: "patent-license-agreement.json"
+
+# Document Parameters
+licensor:
+  name: "ChemInnovate Labs, Inc."
+  state: "Delaware"
+  address: "456 Innovation Drive, Menlo Park, CA 94025"
+  representative: "Dr. James Liu"
+  title: "CEO"
+
+licensee:
+  name: "EcoWrap Industries, LLC"
+  state: "Texas"
+  address: "789 Packaging Blvd, Houston, TX 77001"
+  representative: "Maria Santos"
+  title: "President"
+
+effective_date: "2024-02-01"
+
+licensed_patents:
+  - application_number: "17/123,456"
+    title: "Biodegradable Polymer Compositions and Methods of Manufacture"
+    status: "Pending"
+  - application_number: "17/234,567"
+    title: "Methods for Accelerated Biodegradation of Polymer Films"
+    status: "Pending"
+
+licensed_technology: "BioPoly-X™ biodegradable polymer technology for food packaging applications"
+
+grant_type: "Exclusive"
+field_of_use: "Food packaging and food service products"
+territory: "United States, Canada, and Mexico"
+
+financial_terms:
+  upfront_fee: "500000"
+  annual_minimum: "250000"
+  royalty_rate: "7"
+  milestone_payments:
+    - event: "FDA approval for food contact"
+      amount: "1000000"
+    - event: "$10M annual sales"
+      amount: "500000"
+
+performance_requirements:
+  - "Launch commercial products within 18 months"
+  - "Minimum annual sales of $5M by year 3"
+  - "Maintain quality standards per specifications"
+
+sublicense_rights: "Permitted with prior written consent and 50% royalty sharing"
+
+improvements:
+  licensor_improvements: "Included in license"
+  licensee_improvements: "Non-exclusive grantback to licensor"
+
+term:
+  initial_term: "10 years"
+  renewal: "5-year automatic renewals unless terminated"
+
+termination_events:
+  - "Failure to meet minimum sales"
+  - "Material breach with 60-day cure period"
+  - "Challenge to licensed patents"
+
+matter_number: "CIL-2024-LIC01" 
