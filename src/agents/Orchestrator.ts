@@ -2,8 +2,7 @@
  * Orchestrator - Manages the multi-agent pipeline flow
  */
 
-import { JobConfig, JobResult, AgentLogEntry, CheckpointResult } from '../types/agents';
-import { IntakeAgent } from './IntakeAgent';
+import { JobConfig, JobResult, AgentLogEntry, CheckpointResult, MatterContext } from '../types/agents';
 import { DraftingAgent } from './DraftingAgent';
 import { ContextBuilderAgent } from './ContextBuilderAgent';
 import { loadTemplate } from '../services/template';
@@ -11,19 +10,19 @@ import { logger } from '../utils/logger';
 import { saveDocument, addDocumentMetadata } from '../services/file-writer';
 import { createOutputPath } from '../utils/file-naming';
 import * as path from 'path';
+import { parseYaml } from '../services/yaml';
+import { isValidDocumentType } from '../utils/validator';
 
 export class Orchestrator {
-  private intakeAgent: IntakeAgent;
   private draftingAgent: DraftingAgent;
   private contextBuilderAgent: ContextBuilderAgent;
 
   constructor() {
-    this.intakeAgent = new IntakeAgent();
     this.draftingAgent = new DraftingAgent();
     this.contextBuilderAgent = new ContextBuilderAgent();
     
     logger.info('Orchestrator initialized with agents:', {
-      agents: [this.intakeAgent.name, this.draftingAgent.name, this.contextBuilderAgent.name]
+      agents: [this.draftingAgent.name, this.contextBuilderAgent.name]
     });
   }
 
@@ -43,30 +42,33 @@ export class Orchestrator {
     });
 
     try {
-      // Stage 1: Intake Agent
-      logger.debug('Stage 1: Running Intake Agent');
-      executionOrder.push('IntakeAgent');
-      
-      const intakeResult = await this.intakeAgent.process({
-        yamlFilePath: config.inputPath,
-        documentType: config.documentType
-      });
+      // Validate job configuration
+      this.validateJobConfig(config);
 
-      if (!intakeResult.success) {
-        throw new Error(`Intake Agent failed: ${intakeResult.error?.message}`);
-      }
-
-      // Collect metadata from intake
-      agentLogs.push(...(intakeResult.metadata?.agentLogs || []));
-      checkpointResults.push(...(intakeResult.metadata?.checkpoints || []));
-
-      const { matterContext } = intakeResult.data;
+      // Parse YAML file directly
+      logger.debug('Parsing YAML input file');
+      const yamlData = await parseYaml(config.inputPath);
       
       // Load template for drafting
+      logger.debug('Loading document template');
       const template = await loadTemplate(config.documentType);
 
-      // Stage 2: Context Builder Agent
-      logger.debug('Stage 2: Running Context Builder Agent');
+      // Create matter context directly
+      const matterContext: MatterContext = {
+        documentType: config.documentType,
+        client: yamlData.client,
+        attorney: yamlData.attorney,
+        template: template.id,
+        yamlData: {
+          ...yamlData, // Use all YAML data
+          document_type: config.documentType // Ensure document_type is set
+        },
+        validationResults: [],
+        normalizedData: yamlData
+      };
+
+      // Stage 1: Context Builder Agent
+      logger.debug('Running Context Builder Agent');
       executionOrder.push('ContextBuilderAgent');
       
       const contextResult = await this.contextBuilderAgent.process({
@@ -96,8 +98,8 @@ export class Orchestrator {
 
       const { contextBundle } = contextResult.data;
 
-      // Stage 3: Drafting Agent
-      logger.debug('Stage 3: Running Drafting Agent');
+      // Stage 2: Drafting Agent
+      logger.debug('Running Drafting Agent');
       executionOrder.push('DraftingAgent');
       
       const draftingResult = await this.draftingAgent.process({
@@ -207,12 +209,12 @@ export class Orchestrator {
     return {
       agents: [
         {
-          name: this.intakeAgent.name,
-          description: this.intakeAgent.description
-        },
-        {
           name: this.draftingAgent.name,
           description: this.draftingAgent.description
+        },
+        {
+          name: this.contextBuilderAgent.name,
+          description: this.contextBuilderAgent.description
         }
       ]
     };
@@ -232,6 +234,10 @@ export class Orchestrator {
     
     if (!config.outputPath) {
       throw new Error('Output path is required');
+    }
+
+    if (!isValidDocumentType(config.documentType)) {
+      throw new Error(`Invalid document type: ${config.documentType}`);
     }
   }
 } 
