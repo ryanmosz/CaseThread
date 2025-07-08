@@ -57,14 +57,14 @@
   - [x] 3.6 Create src/utils/spinner.ts wrapper around Ora with updateMessage method
   - [x] 3.7 Write unit tests for validator, template service, and yaml service
 
-- [ ] 4.0 Implement OpenAI integration
-  - [ ] 4.1 Create src/services/openai.ts with OpenAI client initialization
-  - [ ] 4.2 Implement buildPrompt function to combine template, explanation, and YAML data
-  - [ ] 4.3 Create generateDocument function with error handling and retry logic
-  - [ ] 4.4 Add timeout handling for long-running API calls (60 second timeout)
-  - [ ] 4.5 Implement response validation to ensure valid markdown output
-  - [ ] 4.6 Add cost estimation based on token count (optional logging)
-  - [ ] 4.7 Create mock OpenAI service for testing purposes
+- [x] 4.0 Implement OpenAI integration
+  - [x] 4.1 Create src/services/openai.ts with OpenAI client initialization
+  - [x] 4.2 Implement buildPrompt function to combine template, explanation, and YAML data
+  - [x] 4.3 Create generateDocument function with error handling and retry logic
+  - [x] 4.4 Add timeout handling for long-running API calls (60 second timeout)
+  - [x] 4.5 Implement response validation to ensure valid markdown output
+  - [x] 4.6 Add cost estimation based on token count (optional logging)
+  - [x] 4.7 Create mock OpenAI service for testing purposes
 
 - [ ] 5.0 Build CLI interface with Commander
   - [ ] 5.1 Create src/index.ts with shebang and Commander setup
