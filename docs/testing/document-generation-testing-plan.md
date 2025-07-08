@@ -22,9 +22,11 @@ mock-data/
 │   │       └── cheminnovate-labs/     (Chemical company)
 │   └── michael-rodriguez/ (Accessible, friendly style)
 │       └── clients/
-│           ├── iris-design-studio/    (Logo designer)
-│           └── rainbow-tales-publishing/ (Children's author)
+│           ├── iris-design-studio/    (Logo designer - trademark dispute)
+│           └── rainbow-tales-publishing/ (Children's author - copyright dispute)
 ```
+
+Both Michael Rodriguez clients include complete dispute scenarios with external correspondence, meeting memos, and settlement negotiations.
 
 ## Test Scenarios by Document Type
 
@@ -91,7 +93,12 @@ Test with:
 Test generating multiple related documents:
 ```bash
 casethread generate batch --client iris-design-studio --sequence trademark-dispute
+casethread generate batch --client rainbow-tales-publishing --sequence settlement-docs
 ```
+
+Refer to client-specific test scenarios:
+- `docs/testing/iris-design-studio-test-scenarios.md`
+- `docs/testing/rainbow-tales-publishing-test-scenarios.md`
 
 ## Success Criteria
 
@@ -128,9 +135,15 @@ casethread generate batch --client iris-design-studio --sequence trademark-dispu
 ## Known Test Scenarios
 
 1. **Iris Design Studio**: Trademark dispute requiring various documents
-2. **TechFlow Solutions**: Patent portfolio with technical complexity
-3. **ChemInnovate Labs**: International filing considerations
-4. **Rainbow Tales**: Copyright and character trademark needs
+   - Test scenarios available in `docs/testing/iris-design-studio-test-scenarios.md`
+   - 4 scenarios covering trademark lifecycle from application to enforcement
+   
+2. **Rainbow Tales Publishing**: Copyright/trademark infringement and settlement
+   - Test scenarios available in `docs/testing/rainbow-tales-publishing-test-scenarios.md`
+   - 4 scenarios covering settlement, collaboration, and brand protection
+   
+3. **TechFlow Solutions**: Patent portfolio with technical complexity
+4. **ChemInnovate Labs**: International filing considerations
 
 ## Regression Testing
 
