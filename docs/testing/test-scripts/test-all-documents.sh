@@ -2,6 +2,7 @@
 
 # CaseThread CLI Test Script - Tests all 8 document types
 # This script runs the CLI for each document type and reports success/failure
+# Updated for multi-agent system with ChromaDB
 
 echo "================================================"
 echo "CaseThread CLI - Full Document Generation Test"
@@ -14,10 +15,20 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Test output directory
-OUTPUT_DIR="test-output-$(date +%Y%m%d-%H%M%S)"
+# Test output directory with proper path
+OUTPUT_DIR="docs/testing/test-results/test-output-$(date +%Y%m%d-%H%M%S)"
 FAILED_TESTS=0
 PASSED_TESTS=0
+TOTAL_TIME=0
+
+# Check ChromaDB health first
+echo "Checking ChromaDB health..."
+if curl -s http://localhost:8000/api/v1/heartbeat > /dev/null 2>&1; then
+    echo -e "${GREEN}✓ ChromaDB is running${NC}"
+else
+    echo -e "${YELLOW}⚠ ChromaDB is not responding - tests will run without context retrieval${NC}"
+fi
+echo ""
 
 # Create output directory
 echo "Creating test output directory: $OUTPUT_DIR"
@@ -35,9 +46,16 @@ run_test() {
     echo "Input File: $input_file"
     echo -n "Running... "
     
-    # Run the command and capture output
-    if npm run cli -- generate "$doc_type" "$input_file" --output "./$OUTPUT_DIR" > "$OUTPUT_DIR/$doc_type.log" 2>&1; then
-        echo -e "${GREEN}✓ PASSED${NC}"
+    # Track timing
+    local start_time=$(date +%s)
+    
+    # Run the command using docker exec and capture output
+    if docker exec casethread-dev npm run cli -- generate "$doc_type" "$input_file" --output "$OUTPUT_DIR" > "$OUTPUT_DIR/$doc_type.log" 2>&1; then
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        TOTAL_TIME=$((TOTAL_TIME + duration))
+        
+        echo -e "${GREEN}✓ PASSED${NC} (${duration}s)"
         echo "Generated file saved to $OUTPUT_DIR/"
         PASSED_TESTS=$((PASSED_TESTS + 1))
     else
@@ -99,6 +117,10 @@ echo "Test Summary"
 echo "=================================="
 echo -e "Passed: ${GREEN}$PASSED_TESTS${NC}"
 echo -e "Failed: ${RED}$FAILED_TESTS${NC}"
+echo -e "Total Time: ${TOTAL_TIME}s"
+if [ $PASSED_TESTS -gt 0 ]; then
+    echo -e "Average Time: $((TOTAL_TIME / (PASSED_TESTS + FAILED_TESTS)))s per document"
+fi
 echo ""
 
 if [ $FAILED_TESTS -eq 0 ]; then
