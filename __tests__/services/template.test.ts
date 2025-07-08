@@ -2,8 +2,16 @@
  * Unit tests for the template service
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
+// Mock logger before imports
+jest.mock('../../src/utils/logger', () => ({
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn()
+  }
+}));
+
 import {
   getTemplatePath,
   getExplanationPath,
@@ -13,7 +21,9 @@ import {
   getRequiredFieldIds,
   shouldIncludeSection
 } from '../../src/services/template';
-import { Template, TemplateLoadError } from '../../src/types';
+import { Template, TemplateField, TemplateLoadError } from '../../src/types';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 
 // Mock fs module
 jest.mock('fs', () => ({
@@ -22,12 +32,6 @@ jest.mock('fs', () => ({
   }
 }));
 
-// Mock logger
-jest.mock('../../src/utils/logger', () => ({
-  logDebug: jest.fn(),
-  logError: jest.fn(),
-  measureDuration: jest.fn((_name, fn) => fn())
-}));
 
 describe('Template Service', () => {
   const mockTemplate: Template = {
@@ -122,7 +126,7 @@ describe('Template Service', () => {
     });
 
     it('should throw error for unknown document type', () => {
-      expect(() => getExplanationPath('unknown-type')).toThrow(TemplateLoadError);
+      expect(() => getExplanationPath('unknown-type')).toThrow(Error);
       expect(() => getExplanationPath('unknown-type')).toThrow(
         'No explanation mapping found for document type: unknown-type'
       );

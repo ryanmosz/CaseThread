@@ -39,10 +39,13 @@ jest.mock('fs', () => {
   };
 });
 
-// Mock all dependencies
+// Mock modules before importing
 jest.mock('../../src/utils/spinner');
 jest.mock('../../src/utils/logger');
-jest.mock('../../src/utils/validator');
+jest.mock('../../src/utils/validator', () => ({
+  isValidDocumentType: jest.fn(),
+  SUPPORTED_TYPES: ['patent-assignment', 'nda-ip-specific', 'office-action-response']
+}));
 jest.mock('../../src/services/template');
 jest.mock('../../src/services/yaml');
 jest.mock('../../src/services/openai');
@@ -110,7 +113,7 @@ describe('Generate Command', () => {
 
   it('should successfully generate a document with valid inputs', async () => {
     // Setup mocks
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation content');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
@@ -145,7 +148,7 @@ describe('Generate Command', () => {
   });
 
   it('should handle invalid document type', async () => {
-    (validator.isValidDocumentType as any).mockReturnValue(false);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(false);
     (validator.SUPPORTED_TYPES as any) = ['patent-assignment', 'nda'];
 
     try {
@@ -163,7 +166,7 @@ describe('Generate Command', () => {
 
   it('should use current directory when output not specified', async () => {
     // Setup successful mocks
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
@@ -177,7 +180,7 @@ describe('Generate Command', () => {
 
   it('should use custom output directory when specified', async () => {
     // Setup successful mocks
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
@@ -199,7 +202,7 @@ describe('Generate Command', () => {
     mockAccess.mockRejectedValueOnce(new Error('ENOENT'));
     
     // Setup successful mocks
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
@@ -226,7 +229,7 @@ describe('Generate Command', () => {
     // Second access fails (no write permission)
     mockAccess.mockRejectedValueOnce(new Error('EACCES'));
 
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
 
     try {
       await generateCommand.parseAsync([
@@ -286,7 +289,7 @@ describe('Generate Command - Spinner Updates', () => {
 
   it('should show all spinner messages in correct order', async () => {
     // Setup all mocks for success
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
@@ -315,7 +318,7 @@ describe('Generate Command - Spinner Updates', () => {
 
   it('should update spinner with elapsed time during generation', async () => {
     // Setup mocks
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
@@ -350,7 +353,7 @@ describe('Generate Command - Spinner Updates', () => {
     mockAccess.mockRejectedValueOnce(new Error('ENOENT'));
     
     // Setup other mocks
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
@@ -366,7 +369,7 @@ describe('Generate Command - Spinner Updates', () => {
   });
 
   it('should include timing in error message', async () => {
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockRejectedValue(
       new Error('Template not found')
     );
@@ -389,7 +392,7 @@ describe('Generate Command - Spinner Updates', () => {
   });
 
   it('should clear interval on error during generation', async () => {
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
@@ -412,7 +415,7 @@ describe('Generate Command - Spinner Updates', () => {
     mockAccess.mockResolvedValueOnce(undefined);
     
     // Setup other mocks
-    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
