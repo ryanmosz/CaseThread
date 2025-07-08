@@ -45,21 +45,21 @@
   - [x] 3.3.5 Create logger factory function
   - [x] 3.3.6 Export logger instance and utility functions
 
-- [ ] 3.4 Implement template service (Details: tasks-parent-3.4-detailed.md)
-  - [ ] 3.4.1 Create src/services/template.ts file
-  - [ ] 3.4.2 Implement loadTemplate function with error handling
-  - [ ] 3.4.3 Implement loadExplanation function for markdown files
-  - [ ] 3.4.4 Add template schema validation
-  - [ ] 3.4.5 Create getTemplatePath helper function
-  - [ ] 3.4.6 Add comprehensive error messages
+- [x] 3.4 Implement template service (Details: tasks-parent-3.4-detailed.md)
+  - [x] 3.4.1 Create src/services/template.ts file
+  - [x] 3.4.2 Implement loadTemplate function with error handling
+  - [x] 3.4.3 Implement loadExplanation function for markdown files
+  - [x] 3.4.4 Add template schema validation
+  - [x] 3.4.5 Create getTemplatePath helper function
+  - [x] 3.4.6 Add comprehensive error messages
 
-- [ ] 3.5 Implement YAML service (Details: tasks-parent-3.5-detailed.md)
-  - [ ] 3.5.1 Create src/services/yaml.ts file
-  - [ ] 3.5.2 Implement parseYaml function using js-yaml
-  - [ ] 3.5.3 Add validateYamlData function for type checking
-  - [ ] 3.5.4 Create detailed validation error formatting
-  - [ ] 3.5.5 Handle malformed YAML with helpful errors
-  - [ ] 3.5.6 Export typed parsing functions
+- [x] 3.5 Implement YAML service (Details: tasks-parent-3.5-detailed.md)
+  - [x] 3.5.1 Create src/services/yaml.ts file
+  - [x] 3.5.2 Implement parseYaml function using js-yaml
+  - [x] 3.5.3 Add validateYamlData function for type checking
+  - [x] 3.5.4 Create detailed validation error formatting
+  - [x] 3.5.5 Handle malformed YAML with helpful errors
+  - [x] 3.5.6 Export typed parsing functions
 
 - [x] 3.6 Create spinner utility (Details: tasks-parent-3.6-detailed.md)
   - [x] 3.6.1 Create src/utils/spinner.ts wrapping Ora
@@ -69,10 +69,10 @@
   - [x] 3.6.5 Add non-TTY fallback behavior
   - [x] 3.6.6 Export spinner types and interfaces
 
-- [ ] 3.7 Write comprehensive unit tests (Details: tasks-parent-3.7-detailed.md)
-  - [ ] 3.7.1 Create __tests__/utils/validator.test.ts with full coverage
-  - [ ] 3.7.2 Create __tests__/utils/logger.test.ts with mock transports
-  - [ ] 3.7.3 Create __tests__/utils/spinner.test.ts with TTY mocking
-  - [ ] 3.7.4 Create __tests__/services/template.test.ts with file system mocks
-  - [ ] 3.7.5 Create __tests__/services/yaml.test.ts with various scenarios
-  - [ ] 3.7.6 Verify >90% code coverage across all modules 
+- [x] 3.7 Write comprehensive unit tests (Details: tasks-parent-3.7-detailed.md)
+  - [x] 3.7.1 Create __tests__/utils/validator.test.ts with full coverage
+  - [x] 3.7.2 Create __tests__/utils/logger.test.ts with mock transports
+  - [x] 3.7.3 Create __tests__/utils/spinner.test.ts with TTY mocking
+  - [x] 3.7.4 Create __tests__/services/template.test.ts with file system mocks
+  - [x] 3.7.5 Create __tests__/services/yaml.test.ts with various scenarios
+  - [x] 3.7.6 Verify >90% code coverage across all modules 

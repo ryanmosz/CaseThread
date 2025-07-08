@@ -48,14 +48,14 @@
   - [x] 2.6 Configure npm scripts in package.json (dev, build, start, cli, test, lint, format)
   - [x] 2.7 Create .env.example with OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE placeholders
 
-- [ ] 3.0 Implement core services (template, YAML, logging)
-  - [ ] 3.1 Create src/types/index.ts with TypeScript interfaces for DocumentType, YamlData, Template
-  - [ ] 3.2 Implement src/utils/validator.ts with isValidDocumentType function and SUPPORTED_TYPES constant
-  - [ ] 3.3 Create src/utils/logger.ts using Winston with file and console transports
-  - [ ] 3.4 Implement src/services/template.ts with loadTemplate and loadExplanation functions
-  - [ ] 3.5 Implement src/services/yaml.ts with parseYaml and validateYamlFields functions
-  - [ ] 3.6 Create src/utils/spinner.ts wrapper around Ora with updateMessage method
-  - [ ] 3.7 Write unit tests for validator, template service, and yaml service
+- [x] 3.0 Implement core services (template, YAML, logging)
+  - [x] 3.1 Create src/types/index.ts with TypeScript interfaces for DocumentType, YamlData, Template
+  - [x] 3.2 Implement src/utils/validator.ts with isValidDocumentType function and SUPPORTED_TYPES constant
+  - [x] 3.3 Create src/utils/logger.ts using Winston with file and console transports
+  - [x] 3.4 Implement src/services/template.ts with loadTemplate and loadExplanation functions
+  - [x] 3.5 Implement src/services/yaml.ts with parseYaml and validateYamlFields functions
+  - [x] 3.6 Create src/utils/spinner.ts wrapper around Ora with updateMessage method
+  - [x] 3.7 Write unit tests for validator, template service, and yaml service
 
 - [ ] 4.0 Implement OpenAI integration
   - [ ] 4.1 Create src/services/openai.ts with OpenAI client initialization
