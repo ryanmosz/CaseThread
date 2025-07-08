@@ -70,7 +70,7 @@ npm run cli
 ## 📈 Development Roadmap
 
 ### Phase 1: CLI MVP (Weeks 1-6)
-- [ ] CLI framework setup
+- [x] CLI framework setup
 - [ ] Template rendering engine
 - [ ] OpenAI integration
 - [ ] Database schema
