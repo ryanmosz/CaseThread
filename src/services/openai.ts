@@ -91,8 +91,7 @@ export class OpenAIService {
                 content: prompt
               }
             ],
-            temperature: this.config.temperature,
-            max_tokens: this.config.maxTokens || 4000,
+            max_completion_tokens: this.config.maxTokens || 4000,
           });
 
           // Apply timeout
