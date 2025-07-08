@@ -9,7 +9,7 @@ We've created a comprehensive mock law firm data set for testing CLI tools and L
 - **Peninsula IP Partners** - Boutique IP firm in Palo Alto, CA
 - 2 partners with distinct specialties and writing styles
 - 4 clients across diverse industries
-- 13 documents showing realistic workflows including disputes
+- 17 documents showing realistic workflows including disputes and commercialization
 
 ### Attorneys & Clients
 
@@ -20,6 +20,10 @@ We've created a comprehensive mock law firm data set for testing CLI tools and L
 
 2. **ChemInnovate Labs** - Chemical company  
    - Mutual NDA
+   - Patent assignment agreement (Dr. Vasquez)
+   - Patent license negotiation memo (EcoWrap Industries)
+   - Office action response strategy
+   - Provisional patent application (agricultural use)
 
 #### Michael Rodriguez (Creative IP)
 1. **Iris Design Studio** - Logo designer
@@ -50,6 +54,12 @@ We've created a comprehensive mock law firm data set for testing CLI tools and L
 3. Response asserting prior creation and proposing collaboration
 4. Settlement negotiation reducing demand to $25K
 
+### ChemInnovate Labs BioPoly-X™ Commercialization
+1. Patent assignment from inventor before licensing deal
+2. Major patent license negotiation ($2M upfront + royalties)
+3. Office action response strategy for core patent
+4. Urgent provisional filing for new agricultural application
+
 ## Key Features Demonstrated
 
 ### Writing Styles
@@ -59,12 +69,16 @@ We've created a comprehensive mock law firm data set for testing CLI tools and L
 ### Document Variety
 - Legal memos and consultations
 - Patent applications (provisional)
+- Patent assignment agreements
+- Patent license agreements
+- Office action response strategies
 - NDAs (mutual)
 - Trademark searches and opposition proceedings
 - Copyright registrations
 - Infringement claims and responses
 - Settlement negotiations
 - External correspondence
+- Technology commercialization documents
 
 ### Realistic Elements
 - Consistent matter numbers (e.g., IDS-2023-TM01, RTP-2023-INF)

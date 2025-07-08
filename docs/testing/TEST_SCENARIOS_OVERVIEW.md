@@ -39,14 +39,43 @@ This document provides a high-level overview of all test scenarios created for t
 - Brand evolution (adding "Educational Adventures")
 - Enforcement after being defendant
 
+---
+
+### 3. ChemInnovate Labs Test Scenarios
+**File**: `cheminnovate-labs-test-scenarios.md`  
+**Context**: Chemical company commercializing BioPoly-X™ biodegradable polymer technology
+
+**Scenarios**:
+1. **Patent Assignment Agreement** - From inventor Dr. Vasquez
+2. **Patent License Agreement** - Exclusive deal with EcoWrap Industries
+3. **Office Action Response** - Overcoming obviousness rejection
+4. **Provisional Patent Application** - Urgent filing for agricultural use
+5. **Cease and Desist Letter** - Against false compatibility claims
+6. **Technology Transfer Agreement** - Manufacturing know-how to EcoWrap
+
+**Key Testing Points**:
+- Attorney style consistency (Sarah Chen's formal, technical approach)
+- Complex commercialization workflow
+- Technical depth for chemical inventions
+- Urgent filing scenarios
+- Multi-document dependencies
+
 ## Common Themes Across Test Suites
 
 ### Attorney Style Consistency
-Both suites test Michael Rodriguez's distinctive style:
+Each suite tests the assigned attorney's distinctive style:
+
+**Michael Rodriguez** (Iris Design Studio, Rainbow Tales):
 - Accessible, friendly tone
 - Visual formatting (bullet points, sections)
 - Business-focused approach
 - Relationship-building language
+
+**Sarah Chen** (ChemInnovate Labs):
+- Formal, technical writing
+- Numbered sections and subsections
+- Detailed legal analysis
+- Scientific precision
 
 ### Document Relationships
 Each suite includes documents that reference:
@@ -64,13 +93,16 @@ Documents progress from simple to complex:
 
 ## Testing Matrix
 
-| Document Type | Iris Design Studio | Rainbow Tales Publishing |
-|---------------|-------------------|-------------------------|
-| Trademark Application | Amendment (Scenario 1) | New filing (Scenario 2) |
-| NDA | Settlement discussions (Scenario 2) | Mutual for collaboration (Scenario 1) |
-| Cease & Desist | Against opposer (Scenario 3) | Against copycat (Scenario 4) |
-| Office Action Response | USPTO response (Scenario 4) | N/A |
-| Technology Transfer | N/A | Collaboration agreement (Scenario 3) |
+| Document Type | Iris Design Studio | Rainbow Tales Publishing | ChemInnovate Labs |
+|---------------|-------------------|-------------------------|-------------------|
+| Trademark Application | Amendment (Scenario 1) | New filing (Scenario 2) | N/A |
+| NDA | Settlement discussions (Scenario 2) | Mutual for collaboration (Scenario 1) | Included in mock data |
+| Cease & Desist | Against opposer (Scenario 3) | Against copycat (Scenario 4) | False advertising (Scenario 5) |
+| Office Action Response | USPTO response (Scenario 4) | N/A | Patent response (Scenario 3) |
+| Technology Transfer | N/A | Collaboration agreement (Scenario 3) | Manufacturing transfer (Scenario 6) |
+| Patent Assignment | N/A | N/A | Inventor assignment (Scenario 1) |
+| Patent License | N/A | N/A | EcoWrap exclusive (Scenario 2) |
+| Provisional Patent | N/A | N/A | Agricultural use (Scenario 4) |
 
 ## Expected System Behaviors
 
@@ -112,8 +144,10 @@ Generated documents should:
 
 ## Future Enhancements
 
-1. Add test scenarios for Sarah Chen's clients (TechFlow, ChemInnovate)
+1. Add test scenarios for TechFlow Solutions (Sarah Chen's other client)
 2. Create cross-attorney collaboration scenarios
-3. Test international filing documents
+3. Test international filing documents (PCT, foreign filing)
 4. Add litigation document scenarios
-5. Test batch generation with dependencies 
+5. Test batch generation with dependencies
+6. Create scenarios testing patent-trademark overlap
+7. Add trade secret protection scenarios 

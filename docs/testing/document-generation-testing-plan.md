@@ -142,8 +142,12 @@ Refer to client-specific test scenarios:
    - Test scenarios available in `docs/testing/rainbow-tales-publishing-test-scenarios.md`
    - 4 scenarios covering settlement, collaboration, and brand protection
    
-3. **TechFlow Solutions**: Patent portfolio with technical complexity
-4. **ChemInnovate Labs**: International filing considerations
+3. **ChemInnovate Labs**: BioPoly-X™ technology commercialization
+   - Test scenarios available in `docs/testing/cheminnovate-labs-test-scenarios.md`
+   - 6 scenarios covering full commercialization lifecycle
+   - Tests patent assignment, licensing, prosecution, and technology transfer
+   
+4. **TechFlow Solutions**: Patent portfolio with technical complexity (scenarios pending)
 
 ## Regression Testing
 
