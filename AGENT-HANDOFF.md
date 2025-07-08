@@ -4,38 +4,33 @@
 CaseThread is a CLI proof of concept for generating legal documents using OpenAI's API and a template system. The project combines JSON templates, explanation files, and YAML input data to generate professional legal documents.
 
 ## Current Status
-- **Current Branch**: `feature/task-2.0-typescript-init`
-- **Current Parent Task**: 2.0 - Initialize TypeScript project with dependencies ✅ COMPLETE
-- **Previous Task**: 1.0 - Set up Docker development environment ✅ COMPLETE & MERGED
-- **Next Parent Task**: 3.0 - Implement core services (template, YAML, logging)
+- **Current Branch**: `feature/task-3.0-cli-argument-parser`
+- **Current Parent Task**: 3.0 - Create CLI argument parser (STARTING)
+- **Previous Task**: 2.0 - Initialize TypeScript project ✅ COMPLETE & MERGED
+- **Next Parent Task**: 4.0 - Implement core services (template, YAML, logging)
 
 ## Recent Changes
-1. **Task 1.0 Completed**:
-   - Complete Docker development environment setup
+1. **Task 2.0 Completed & Merged**:
+   - Complete TypeScript project initialization
    - Merged to main via PARENT-COMPLETE workflow
    - All changes pushed to GitHub
+   - README.md updated to mark CLI framework setup as complete
 
-2. **Docker Environment Ready**:
+2. **TypeScript Environment Ready**:
+   - package.json created with name "casethread-poc"
+   - TypeScript v5.7.3 installed with strict configuration
+   - All core dependencies installed (Commander, OpenAI SDK, etc.)
+   - All dev dependencies installed (Jest, ESLint, Prettier, Nodemon)
+   - Comprehensive npm scripts configured
+   - Jest testing framework configured
+   - All tests passing: build, test, and CLI execution
+
+3. **Task 1.0 Previously Completed**:
+   - Docker development environment setup
    - Container `casethread-dev` running with Node.js v20.19.0
    - Volume mounts configured for development
-   - Non-root user (nodejs) for security
 
-3. **Development Workflow Files Updated**:
-   - Adapted `plan-parent.md` for CaseThread (moved to `docs/devops/`)
-   - Maintains reusability with "Not applicable" markers
-   - Updated all project references while keeping structure intact
-   - Added CaseThread-specific context notes
-   - Restored parent task references in `prompt.md`
-
-4. **Task 2.0 Completed**:
-   - Created package.json with proper metadata
-   - Installed all dependencies (TypeScript, Jest, Commander, OpenAI SDK, etc.)
-   - Configured tsconfig.json with strict mode and ES2022 target
-   - Set up Jest for testing
-   - Created npm scripts for development workflow
-   - Fixed node_modules permissions issue
-
-## Task 2.0 Results ✅
+## Task 2.0 Results ✅ MERGED TO MAIN
 - [x] 2.1 Created package.json with `casethread-poc` name
 - [x] 2.2 Installed TypeScript v5.7.3 and @types/node
 - [x] 2.3 Created tsconfig.json with CommonJS module system
@@ -43,6 +38,15 @@ CaseThread is a CLI proof of concept for generating legal documents using OpenAI
 - [x] 2.5 Installed dev dependencies: jest, ts-jest, eslint, prettier, nodemon
 - [x] 2.6 Configured all npm scripts (dev, build, test, lint, format)
 - [x] 2.7 .env.example already exists as mentioned
+
+## Task 3.0 Starting (CLI Argument Parser)
+Ready to begin implementation of:
+- [ ] 3.1 Set up commander program with name, version, description
+- [ ] 3.2 Add document type command with enum choices
+- [ ] 3.3 Add input file argument with .yaml validation
+- [ ] 3.4 Implement help display functionality
+- [ ] 3.5 Add error handling for invalid arguments
+- [ ] 3.6 Create tests for CLI parsing
 
 ## Verification Tests Passed ✅
 - `npm run build` - TypeScript compiles successfully
@@ -77,9 +81,11 @@ Located in `docs/devops/`:
 3. Git operations: Follow workflows in `git-workflow.md`
 
 ## Next Steps
-Task 2.0 is complete! Ready to proceed with:
-- Git workflow: PARENT-COMPLETE to merge to main and create branch for task 3.0
-- Task 3.0: Implement core services (template, YAML, logging)
+Task 3.0 just started! Ready to:
+- Implement Commander.js CLI structure in src/index.ts
+- Add command for document type selection
+- Add argument for YAML input file
+- Create comprehensive tests for CLI parsing
 
 ## Session History
 - Initial session: Document review and test scenario creation
@@ -87,13 +93,9 @@ Task 2.0 is complete! Ready to proceed with:
 - Session 3: Generated YAML input files for test scenarios
 - Session 4: Created CLI POC plan and task list
 - Session 5: Docker setup implementation (task 1.0) - COMPLETE & MERGED
-- Current session: TypeScript project initialization (task 2.0) - COMPLETE
+- Session 6: TypeScript project initialization (task 2.0) - COMPLETE & MERGED
+- Current session: Starting CLI argument parser (task 3.0)
 
-Total commits in this session: 7
-- Dockerfile creation
-- prompt.md update and relocation  
-- Project structure reorganization
-- docker-compose.yml creation
-- Docker environment completion (task 1.0 final)
-- AGENT-HANDOFF update for task 2.0 start
-- Development workflow files adaptation 
+Total commits this session: 2
+- Task 2.0 completion commit
+- README.md update marking CLI framework as complete 
