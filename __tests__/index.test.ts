@@ -3,13 +3,18 @@ import { logger } from '../src/utils/logger';
 
 // Mock modules before importing
 jest.mock('../src/utils/logger');
-jest.mock('../src/commands/generate', () => ({
-  generateCommand: {
-    name: jest.fn().mockReturnValue('generate'),
-    parse: jest.fn(),
-    parseAsync: jest.fn()
-  }
-}));
+jest.mock('../src/commands/generate', () => {
+  const { Command } = require('commander');
+  const mockGenerateCommand = new Command('generate');
+  mockGenerateCommand.description('Generate a legal document from template and input data');
+  mockGenerateCommand.argument('<document-type>', 'Type of legal document to generate');
+  mockGenerateCommand.argument('<input-path>', 'Path to YAML input file');
+  mockGenerateCommand.parse = jest.fn();
+  mockGenerateCommand.parseAsync = jest.fn();
+  return {
+    generateCommand: mockGenerateCommand
+  };
+});
 
 describe('CLI Entry Point', () => {
   let originalArgv: string[];

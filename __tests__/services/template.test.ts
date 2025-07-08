@@ -33,17 +33,10 @@ describe('Template Service', () => {
   const mockTemplate: Template = {
     id: 'test-template',
     name: 'Test Template',
-    type: 'test',
-    version: '1.0.0',
     description: 'Test description',
-    complexity: 'low',
-    estimatedTime: '10 minutes',
-    metadata: {
-      category: 'general',
-      jurisdiction: 'federal',
-      lastUpdated: '2024-01-01',
-      author: 'Test'
-    },
+    version: '1.0.0',
+    category: 'general',
+    jurisdiction: 'federal',
     requiredFields: [
       {
         id: 'field1',
@@ -75,7 +68,14 @@ describe('Template Service', () => {
         required: false,
         content: 'Test content 2'
       }
-    ]
+    ],
+    metadata: {
+      category: 'general',
+      jurisdiction: 'federal',
+      lastUpdated: '2024-01-01',
+      author: 'Test',
+      tags: []
+    }
   };
 
   beforeEach(() => {

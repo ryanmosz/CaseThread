@@ -2,7 +2,20 @@
  * Unit tests for the YAML service
  */
 
-import { promises as fs } from 'fs';
+// Mock logger before importing yaml service
+jest.mock('../../src/utils/logger', () => ({
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn()
+  },
+  logDebug: jest.fn(),
+  logError: jest.fn(),
+  logWarning: jest.fn(),
+  logInfo: jest.fn()
+}));
+
 import {
   parseYamlContent,
   validateYamlData,
@@ -13,19 +26,13 @@ import {
   mergeWithDefaults
 } from '../../src/services/yaml';
 import { YamlData, YamlParseError, ValidationError } from '../../src/types';
+import { promises as fs } from 'fs';
 
 // Mock fs module
 jest.mock('fs', () => ({
   promises: {
     readFile: jest.fn()
   }
-}));
-
-// Mock logger
-jest.mock('../../src/utils/logger', () => ({
-  logDebug: jest.fn(),
-  logError: jest.fn(),
-  measureDuration: jest.fn((_name, fn) => fn())
 }));
 
 describe('YAML Service', () => {

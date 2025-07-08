@@ -32,17 +32,10 @@ describe('OpenAIService', () => {
   const mockTemplate: Template = {
     id: 'test-template',
     name: 'Test Template',
-    type: 'test',
-    version: '1.0',
     description: 'A test template',
-    complexity: 'low',
-    estimatedTime: '10 minutes',
-    metadata: {
-      category: 'general',
-      jurisdiction: 'federal',
-      lastUpdated: '2024-01-01',
-      author: 'Test Author'
-    },
+    version: '1.0',
+    category: 'general',
+    jurisdiction: 'federal',
     requiredFields: [
       {
         id: 'field1',
@@ -58,10 +51,16 @@ describe('OpenAIService', () => {
         title: 'Section 1',
         order: 1,
         required: true,
-        content: 'This is section 1 with {{field1}}',
-        firmCustomizable: false
+        content: 'This is section 1 with {{field1}}'
       }
-    ]
+    ],
+    metadata: {
+      category: 'general',
+      jurisdiction: 'federal',
+      lastUpdated: '2024-01-01',
+      author: 'Test Author',
+      tags: []
+    }
   };
 
   const mockYamlData: YamlData = {

@@ -4,7 +4,7 @@ import { logger } from '../../src/utils/logger';
 import * as validator from '../../src/utils/validator';
 import * as templateService from '../../src/services/template';
 import * as yamlService from '../../src/services/yaml';
-import { OpenAIService } from '../../src/services/openai';
+import { generateDocument } from '../../src/services/openai';
 import * as path from 'path';
 
 // Add file writer mocks
@@ -14,8 +14,7 @@ jest.mock('../../src/utils/error-handler');
 
 import * as fileWriter from '../../src/services/file-writer';
 import * as fileNaming from '../../src/utils/file-naming';
-import { handleError, createError } from '../../src/utils/error-handler';
-import { ERROR_MESSAGES, ErrorCode } from '../../src/types/errors';
+import { handleError } from '../../src/utils/error-handler';
 
 // Mock ora before other modules that use it
 jest.mock('ora');
@@ -70,10 +69,7 @@ describe('Generate Command', () => {
     (createSpinner as jest.Mock).mockReturnValue(mockSpinner);
 
     // Setup OpenAI mock
-    const mockGenerateDocument = jest.fn();
-    (OpenAIService as jest.MockedClass<typeof OpenAIService>).mockImplementation(() => ({
-      generateDocument: mockGenerateDocument
-    } as any));
+    (generateDocument as jest.Mock).mockResolvedValue('Generated document content');
 
     // Setup process.exit mock
     mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
@@ -119,12 +115,7 @@ describe('Generate Command', () => {
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation content');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
     
-    const mockOpenAIInstance = new (OpenAIService as any)();
-    mockOpenAIInstance.generateDocument.mockResolvedValue({ 
-      content: 'Generated document content',
-      usage: {},
-      metadata: {}
-    });
+    (generateDocument as jest.Mock).mockResolvedValue('Generated document content');
 
     // Execute command
     await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
@@ -141,7 +132,7 @@ describe('Generate Command', () => {
     expect(yamlService.parseYaml).toHaveBeenCalledWith('test.yaml');
     
     expect(mockSpinner.updateMessage).toHaveBeenCalledWith('Generating document (this may take 30-60 seconds)...');
-    expect(mockOpenAIInstance.generateDocument).toHaveBeenCalledWith(
+    expect(generateDocument).toHaveBeenCalledWith(
       { template: 'data' },
       'explanation content',
       { yaml: 'data' }
@@ -177,8 +168,7 @@ describe('Generate Command', () => {
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
     
-    const mockOpenAIInstance = new (OpenAIService as any)();
-    mockOpenAIInstance.generateDocument.mockResolvedValue({ content: 'Generated content' });
+    (generateDocument as jest.Mock).mockResolvedValue('Generated content');
 
     await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
 
@@ -192,8 +182,7 @@ describe('Generate Command', () => {
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
     
-    const mockOpenAIInstance = new (OpenAIService as any)();
-    mockOpenAIInstance.generateDocument.mockResolvedValue({ content: 'Generated content' });
+    (generateDocument as jest.Mock).mockResolvedValue('Generated content');
 
     await generateCommand.parseAsync([
       'node', 'test', 'patent-assignment', 'test.yaml', 
@@ -215,8 +204,7 @@ describe('Generate Command', () => {
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
     
-    const mockOpenAIInstance = new (OpenAIService as any)();
-    mockOpenAIInstance.generateDocument.mockResolvedValue({ content: 'Generated content' });
+    (generateDocument as jest.Mock).mockResolvedValue('Generated content');
 
     await generateCommand.parseAsync([
       'node', 'test', 'patent-assignment', 'test.yaml',
@@ -277,10 +265,7 @@ describe('Generate Command - Spinner Updates', () => {
     (createSpinner as jest.Mock).mockReturnValue(mockSpinner);
 
     // Setup OpenAI mock
-    const mockGenerateDocument = jest.fn();
-    (OpenAIService as jest.MockedClass<typeof OpenAIService>).mockImplementation(() => ({
-      generateDocument: mockGenerateDocument
-    } as any));
+    (generateDocument as jest.Mock).mockResolvedValue('Generated document content');
 
     // Setup interval spies
     mockSetInterval = jest.spyOn(global, 'setInterval');
@@ -306,8 +291,7 @@ describe('Generate Command - Spinner Updates', () => {
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
     
-    const mockOpenAIInstance = new (OpenAIService as any)();
-    mockOpenAIInstance.generateDocument.mockResolvedValue({ content: 'Generated content' });
+    (generateDocument as jest.Mock).mockResolvedValue('Generated content');
 
     await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
 
@@ -337,9 +321,8 @@ describe('Generate Command - Spinner Updates', () => {
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
     
     // Make generateDocument take time
-    const mockOpenAIInstance = new (OpenAIService as any)();
-    mockOpenAIInstance.generateDocument.mockImplementation(
-      () => new Promise(resolve => setTimeout(() => resolve({ content: 'Generated' }), 15000))
+    (generateDocument as jest.Mock).mockImplementation(
+      () => new Promise(resolve => setTimeout(() => resolve('Generated'), 15000))
     );
 
     const promise = generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
@@ -372,8 +355,7 @@ describe('Generate Command - Spinner Updates', () => {
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
     
-    const mockOpenAIInstance = new (OpenAIService as any)();
-    mockOpenAIInstance.generateDocument.mockResolvedValue({ content: 'Generated' });
+    (generateDocument as jest.Mock).mockResolvedValue('Generated');
 
     await generateCommand.parseAsync([
       'node', 'test', 'patent-assignment', 'test.yaml',
@@ -412,8 +394,7 @@ describe('Generate Command - Spinner Updates', () => {
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
     
-    const mockOpenAIInstance = new (OpenAIService as any)();
-    mockOpenAIInstance.generateDocument.mockRejectedValue(new Error('API error'));
+    (generateDocument as jest.Mock).mockRejectedValue(new Error('API error'));
 
     try {
       await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
@@ -436,8 +417,7 @@ describe('Generate Command - Spinner Updates', () => {
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
     
-    const mockOpenAIInstance = new (OpenAIService as any)();
-    mockOpenAIInstance.generateDocument.mockResolvedValue({ content: 'Generated' });
+    (generateDocument as jest.Mock).mockResolvedValue('Generated');
 
     await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
 
@@ -548,7 +528,7 @@ describe('Generate Command - Error Handling', () => {
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
-    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (generateDocument as jest.Mock).mockResolvedValue('Generated');
     (fileNaming.createOutputPath as jest.Mock).mockReturnValue('/output/test.md');
     (fileWriter.addDocumentMetadata as jest.Mock).mockImplementation((content) => `<!-- metadata -->\n${content}`);
     (fileWriter.saveDocument as jest.Mock).mockResolvedValue({
@@ -596,7 +576,7 @@ describe('Generate Command - Debug Flag', () => {
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
-    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (generateDocument as jest.Mock).mockResolvedValue('Generated');
     (fileNaming.createOutputPath as jest.Mock).mockReturnValue('/output/test.md');
     (fileWriter.addDocumentMetadata as jest.Mock).mockImplementation((content) => content);
     (fileWriter.saveDocument as jest.Mock).mockResolvedValue({
@@ -623,7 +603,7 @@ describe('Generate Command - Debug Flag', () => {
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
-    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (generateDocument as jest.Mock).mockResolvedValue('Generated');
     (fileNaming.createOutputPath as jest.Mock).mockReturnValue('/output/test.md');
     (fileWriter.addDocumentMetadata as jest.Mock).mockImplementation((content) => content);
     (fileWriter.saveDocument as jest.Mock).mockResolvedValue({
@@ -678,7 +658,7 @@ describe('Generate Command - File Saving', () => {
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
-    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated document content');
+    (generateDocument as jest.Mock).mockResolvedValue('Generated document content');
 
     try {
       await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
@@ -716,7 +696,7 @@ describe('Generate Command - File Saving', () => {
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
-    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (generateDocument as jest.Mock).mockResolvedValue('Generated');
 
     try {
       await generateCommand.parseAsync([
@@ -741,7 +721,7 @@ describe('Generate Command - File Saving', () => {
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
-    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (generateDocument as jest.Mock).mockResolvedValue('Generated');
 
     try {
       await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
@@ -764,7 +744,7 @@ describe('Generate Command - File Saving', () => {
     (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
     (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
     (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
-    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (generateDocument as jest.Mock).mockResolvedValue('Generated');
     (fileWriter.saveDocument as jest.Mock).mockRejectedValue(
       new Error('Failed to save document: Permission denied')
     );

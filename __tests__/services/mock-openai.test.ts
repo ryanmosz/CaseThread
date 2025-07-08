@@ -27,17 +27,10 @@ describe('MockOpenAIService', () => {
   const mockTemplate: Template = {
     id: 'test-template',
     name: 'Test Legal Document',
-    type: 'test',
-    version: '1.0',
     description: 'A test template',
-    complexity: 'low',
-    estimatedTime: '10 minutes',
-    metadata: {
-      category: 'general',
-      jurisdiction: 'federal',
-      lastUpdated: '2024-01-01',
-      author: 'Test Author'
-    },
+    version: '1.0',
+    category: 'general',
+    jurisdiction: 'federal',
     requiredFields: [
       {
         id: 'field1',
@@ -53,18 +46,23 @@ describe('MockOpenAIService', () => {
         title: 'Introduction',
         order: 1,
         required: true,
-        content: 'This agreement is between {{client}} and {{attorney}}.',
-        firmCustomizable: false
+        content: 'This agreement is between {{client}} and {{attorney}}.'
       },
       {
         id: 'section2',
         title: 'Terms',
         order: 2,
         required: true,
-        content: 'The terms of this agreement are as follows: {{field1}}',
-        firmCustomizable: false
+        content: 'The terms of this agreement are as follows: {{field1}}'
       }
-    ]
+    ],
+    metadata: {
+      category: 'general',
+      jurisdiction: 'federal',
+      lastUpdated: '2024-01-01',
+      author: 'Test Author',
+      tags: []
+    }
   };
 
   const mockYamlData: YamlData = {
@@ -194,15 +192,14 @@ describe('MockOpenAIService', () => {
     });
 
     it('should add legal language to short sections', async () => {
-      const shortTemplate: Template = {
+      const         shortTemplate: Template = {
         ...mockTemplate,
         sections: [{
           id: 'short',
           title: 'Short Section',
           order: 1,
           required: true,
-          content: 'Brief content.',
-          firmCustomizable: false
+          content: 'Brief content.'
         }]
       };
 
