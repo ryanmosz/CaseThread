@@ -1,11 +1,13 @@
 import { generateCommand } from '../../src/commands/generate';
 import { createSpinner } from '../../src/utils/spinner';
 import { logger } from '../../src/utils/logger';
-import * as validator from '../../src/utils/validator';
 import * as templateService from '../../src/services/template';
 import * as yamlService from '../../src/services/yaml';
 import { generateDocument } from '../../src/services/openai';
 import * as path from 'path';
+
+// Import validator to get the mocked version
+const validator = require('../../src/utils/validator');
 
 // Add file writer mocks
 jest.mock('../../src/services/file-writer');

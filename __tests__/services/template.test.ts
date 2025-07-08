@@ -21,7 +21,7 @@ import {
   getRequiredFieldIds,
   shouldIncludeSection
 } from '../../src/services/template';
-import { Template, TemplateField, TemplateLoadError } from '../../src/types';
+import { Template, TemplateLoadError } from '../../src/types';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
