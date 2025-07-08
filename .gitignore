@@ -44,3 +44,8 @@ coverage/
 *.temp
 .cache/ 
 scratch.md
+
+# Generated output files
+output/
+output*/
+*.generated.md
