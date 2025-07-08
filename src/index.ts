@@ -1,10 +1,27 @@
 #!/usr/bin/env node
+import { Command } from 'commander';
+import { generateCommand } from './commands/generate';
+import { logger } from './utils/logger';
 
-/**
- * CaseThread CLI POC
- * Main entry point for the command-line interface
- */
+// Create the main program instance
+const program = new Command();
 
-console.log('CaseThread CLI POC - Coming soon!');
+// Configure the CLI program
+program
+  .name('casethread-poc')
+  .description('CaseThread CLI Proof of Concept - Generate legal documents using AI')
+  .version('0.1.0')
+  .option('-d, --debug', 'Enable debug logging');
 
-// TODO: Implement CLI with Commander.js in next task 
+// Add the generate command
+program.addCommand(generateCommand);
+
+// Parse command line arguments
+program.parse();
+
+// Handle debug flag globally
+const options = program.opts();
+if (options.debug) {
+  logger.level = 'debug';
+  logger.debug('Debug logging enabled');
+} 
