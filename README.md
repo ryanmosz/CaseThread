@@ -71,6 +71,7 @@ npm run cli
 
 ### Phase 1: CLI MVP (Weeks 1-6)
 - [x] CLI framework setup
+- [x] Core services (logging, YAML parsing, template loading)
 - [ ] Template rendering engine
 - [ ] OpenAI integration
 - [ ] Database schema
