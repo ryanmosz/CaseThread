@@ -1,9 +1,0 @@
-document_type: patent-assignment-agreement
-client: TestClient
-attorney: TestAttorney
-template: patent-assignment-agreement.json
-assignor_name: TestAssignor
-assignee_name: TestAssignee
-patent_title: Test Patent
-filing_date: 2024-01-01
-
