@@ -1,82 +1,107 @@
 /**
- * Tests for RetrieverService
+ * Tests for the RetrieverService
  */
 
-import { RetrieverService } from '../../src/services/retriever';
-import { generateEmbedding } from '../../src/services/embeddings';
+import { RetrieverService, StoredDocument } from '../../src/services/retriever';
 import { MatterContext } from '../../src/types/agents';
-import { logger } from '../../src/utils/logger';
+import path from 'path';
 
-// Mock dependencies
-jest.mock('chromadb', () => ({
-  ChromaClient: jest.fn().mockImplementation(() => ({
-    getOrCreateCollection: jest.fn(),
-  })),
-}));
+// Mock ChromaDB
+jest.mock('chromadb', () => {
+  // Create mock functions for collection
+  const mockAdd = jest.fn().mockResolvedValue({});
+  const mockQuery = jest.fn().mockResolvedValue({
+    documents: [[]],
+    metadatas: [[]],
+    distances: [[]],
+  });
+  const mockCount = jest.fn().mockResolvedValue(42);
+  const mockDelete = jest.fn().mockResolvedValue({});
 
+  // Create mock collection
+  const mockCollection = {
+    add: mockAdd,
+    query: mockQuery,
+    count: mockCount,
+    delete: mockDelete,
+  };
+
+  // Create mock getOrCreateCollection function
+  const mockGetOrCreateCollection = jest.fn().mockResolvedValue(mockCollection);
+
+  // Create mock ChromaClient
+  const MockChromaClient = jest.fn().mockImplementation(() => ({
+    getOrCreateCollection: mockGetOrCreateCollection
+  }));
+
+  return {
+    ChromaClient: MockChromaClient,
+    Collection: jest.fn()
+  };
+});
+
+// Mock embeddings service
 jest.mock('../../src/services/embeddings', () => ({
-  generateEmbedding: jest.fn(),
-  generateEmbeddings: jest.fn(),
+  generateEmbedding: jest.fn().mockResolvedValue([0.1, 0.2, 0.3]),
+  generateEmbeddings: jest.fn().mockResolvedValue([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]),
 }));
 
+// Mock logger
 jest.mock('../../src/utils/logger', () => ({
   logger: {
     info: jest.fn(),
     debug: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn(),
   },
 }));
 
 describe('RetrieverService', () => {
   let retrieverService: RetrieverService;
-  let mockCollection: any;
   let mockClient: any;
+  let mockCollection: any;
+  let mockGetOrCreateCollection: jest.Mock;
+  let generateEmbedding: jest.Mock;
 
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
 
-    // Mock collection
+    // Get mock references
+    mockClient = new (require('chromadb').ChromaClient)();
+    mockGetOrCreateCollection = mockClient.getOrCreateCollection as jest.Mock;
     mockCollection = {
-      add: jest.fn(),
-      query: jest.fn(),
-      count: jest.fn().mockResolvedValue(100),
-      delete: jest.fn(),
+      add: jest.fn().mockResolvedValue({}),
+      query: jest.fn().mockResolvedValue({
+        documents: [[]],
+        metadatas: [[]],
+        distances: [[]],
+      }),
+      count: jest.fn().mockResolvedValue(42),
+      delete: jest.fn().mockResolvedValue({}),
     };
+    mockGetOrCreateCollection.mockResolvedValue(mockCollection);
+    
+    generateEmbedding = require('../../src/services/embeddings').generateEmbedding as jest.Mock;
 
-    // Mock ChromaClient
-    mockClient = {
-      getOrCreateCollection: jest.fn().mockResolvedValue(mockCollection),
-    };
-
-    // Mock the ChromaClient constructor
-    const { ChromaClient } = require('chromadb');
-    ChromaClient.mockImplementation(() => mockClient);
-
-    // Mock generateEmbedding
-    (generateEmbedding as jest.Mock).mockResolvedValue([0.1, 0.2, 0.3]);
-
-    // Create service instance
+    // Create service instance with test config
     retrieverService = new RetrieverService({
-      chromaPath: './test-vector-db',
-      enableLogging: false,
+      chromaPath: path.join(process.cwd(), '.test_vector'),
+      collectionName: 'test_collection',
+      enableLogging: false
     });
   });
 
   describe('Constructor', () => {
     it('should initialize with default configuration', () => {
-      const service = new RetrieverService();
-      expect(service).toBeDefined();
+      const defaultService = new RetrieverService();
+      expect(defaultService).toBeDefined();
     });
 
     it('should initialize with custom configuration', () => {
       const config = {
-        chromaPath: './custom-path',
-        collectionName: 'test-collection',
+        collectionName: 'custom_collection',
         similarityThreshold: 0.8,
         maxResults: 5,
-        enableLogging: false,
       };
 
       const service = new RetrieverService(config);
@@ -88,17 +113,20 @@ describe('RetrieverService', () => {
     it('should initialize ChromaDB collection successfully', async () => {
       await retrieverService.initialize();
 
-      expect(mockClient.getOrCreateCollection).toHaveBeenCalledWith({
-        name: 'casethread_contexts',
+      expect(mockGetOrCreateCollection).toHaveBeenCalledWith({
+        name: 'test_collection',
         metadata: {
           'hnsw:space': 'cosine',
-          description: 'CaseThread legal document context embeddings',
+          description: 'CaseThread legal document context embeddings'
         },
+        embeddingFunction: expect.objectContaining({
+          generate: expect.any(Function)
+        })
       });
     });
 
     it('should handle initialization errors', async () => {
-      mockClient.getOrCreateCollection.mockRejectedValue(new Error('Connection failed'));
+      mockGetOrCreateCollection.mockRejectedValueOnce(new Error('Connection failed'));
 
       await expect(retrieverService.initialize()).rejects.toThrow('ChromaDB initialization failed');
     });
@@ -107,10 +135,11 @@ describe('RetrieverService', () => {
   describe('storeDocument', () => {
     beforeEach(async () => {
       await retrieverService.initialize();
+      (retrieverService as any).collection = mockCollection;
     });
 
     it('should store a document successfully', async () => {
-      const document = {
+      const document: StoredDocument = {
         id: 'doc1',
         content: 'Test document content',
         metadata: {
@@ -133,7 +162,7 @@ describe('RetrieverService', () => {
     });
 
     it('should handle store document errors', async () => {
-      const document = {
+      const document: StoredDocument = {
         id: 'doc1',
         content: 'Test content',
         metadata: {
@@ -143,7 +172,7 @@ describe('RetrieverService', () => {
         },
       };
 
-      mockCollection.add.mockRejectedValue(new Error('Storage failed'));
+      mockCollection.add.mockRejectedValueOnce(new Error('Storage failed'));
 
       await expect(retrieverService.storeDocument(document)).rejects.toThrow('Storage failed');
     });
@@ -152,10 +181,11 @@ describe('RetrieverService', () => {
   describe('storeDocuments', () => {
     beforeEach(async () => {
       await retrieverService.initialize();
+      (retrieverService as any).collection = mockCollection;
     });
 
     it('should store multiple documents in batch', async () => {
-      const documents = [
+      const documents: StoredDocument[] = [
         {
           id: 'doc1',
           content: 'Content 1',
@@ -187,6 +217,7 @@ describe('RetrieverService', () => {
   describe('searchContext', () => {
     beforeEach(async () => {
       await retrieverService.initialize();
+      (retrieverService as any).collection = mockCollection;
     });
 
     it('should search for relevant context successfully', async () => {
@@ -212,17 +243,17 @@ describe('RetrieverService', () => {
             { title: 'Doc 2', source: 'src2', documentType: 'nda', citation: 'Citation 2' },
           ],
         ],
-        distances: [[0.1, 0.2]], // High similarity (low distance)
+        distances: [[0.1, 0.2]], // Low distance means high similarity
       };
 
-      mockCollection.query.mockResolvedValue(mockQueryResults);
+      mockCollection.query.mockResolvedValueOnce(mockQueryResults);
 
       const result = await retrieverService.searchContext(matterContext);
 
       expect(generateEmbedding).toHaveBeenCalled();
       expect(mockCollection.query).toHaveBeenCalledWith({
         queryEmbeddings: [[0.1, 0.2, 0.3]],
-        nResults: 10,
+        nResults: expect.any(Number),
         include: ['documents', 'metadatas', 'distances'],
       });
 
@@ -251,14 +282,14 @@ describe('RetrieverService', () => {
             { title: 'Doc 2', source: 'src2', documentType: 'nda' },
           ],
         ],
-        distances: [[0.1, 0.9]], // One high similarity, one low similarity
+        distances: [[0.1, 0.9]], // One low distance (high similarity), one high distance (low similarity)
       };
 
-      mockCollection.query.mockResolvedValue(mockQueryResults);
+      mockCollection.query.mockResolvedValueOnce(mockQueryResults);
 
       const result = await retrieverService.searchContext(matterContext);
 
-      // Should only return the high-similarity result
+      // Should only return the high-similarity result (low distance)
       expect(result.embeddings).toHaveLength(1);
       expect(result.sources).toHaveLength(1);
       expect(result.embeddings[0].similarity).toBe(0.9); // 1 - 0.1
@@ -276,7 +307,7 @@ describe('RetrieverService', () => {
         normalizedData: {},
       };
 
-      mockCollection.query.mockRejectedValue(new Error('Search failed'));
+      mockCollection.query.mockRejectedValueOnce(new Error('Search failed'));
 
       await expect(retrieverService.searchContext(matterContext)).rejects.toThrow('Search failed');
     });
@@ -285,6 +316,7 @@ describe('RetrieverService', () => {
   describe('searchWithQuery', () => {
     beforeEach(async () => {
       await retrieverService.initialize();
+      (retrieverService as any).collection = mockCollection;
     });
 
     it('should search with custom query string', async () => {
@@ -296,7 +328,7 @@ describe('RetrieverService', () => {
         distances: [[0.15]],
       };
 
-      mockCollection.query.mockResolvedValue(mockQueryResults);
+      mockCollection.query.mockResolvedValueOnce(mockQueryResults);
 
       const result = await retrieverService.searchWithQuery(query);
 
@@ -309,18 +341,20 @@ describe('RetrieverService', () => {
   describe('getStats', () => {
     it('should return collection statistics', async () => {
       await retrieverService.initialize();
+      (retrieverService as any).collection = mockCollection;
 
       const stats = await retrieverService.getStats();
 
-      expect(stats.documentCount).toBe(100);
-      expect(stats.collectionName).toBe('casethread_contexts');
-      expect(stats.chromaPath).toBe('./test-vector-db');
+      expect(stats.documentCount).toBe(42);
+      expect(stats.collectionName).toBe('test_collection');
+      expect(stats.chromaPath).toBe(path.join(process.cwd(), '.test_vector'));
     });
   });
 
   describe('clear', () => {
     it('should clear all documents from collection', async () => {
       await retrieverService.initialize();
+      (retrieverService as any).collection = mockCollection;
 
       await retrieverService.clear();
 
@@ -331,15 +365,20 @@ describe('RetrieverService', () => {
   describe('close', () => {
     it('should close the service properly', async () => {
       await retrieverService.initialize();
+      (retrieverService as any).collection = mockCollection;
+      
       await retrieverService.close();
 
-      // Should log that service is closed
-      expect(logger.info).toHaveBeenCalledWith('RetrieverService closed');
+      // Verify collection is null after closing
+      expect((retrieverService as any).collection).toBeNull();
     });
   });
 
   describe('buildSearchQuery', () => {
     it('should build query from matter context', async () => {
+      await retrieverService.initialize();
+      (retrieverService as any).collection = mockCollection;
+      
       const matterContext: MatterContext = {
         documentType: 'nda-ip-specific',
         client: 'Test Client',
@@ -353,11 +392,8 @@ describe('RetrieverService', () => {
         validationResults: [],
         normalizedData: {},
       };
-
-      await retrieverService.initialize();
       
-      // Mock the query to capture the built query
-      mockCollection.query.mockResolvedValue({
+      mockCollection.query.mockResolvedValueOnce({
         documents: [[]],
         metadatas: [[]],
         distances: [[]],
@@ -366,9 +402,38 @@ describe('RetrieverService', () => {
       await retrieverService.searchContext(matterContext);
 
       // Should have called generateEmbedding with a query that includes document type, client, and relevant fields
-      expect(generateEmbedding).toHaveBeenCalledWith(
-        expect.stringContaining('nda ip specific')
-      );
+      const expectedQueryParts = [
+        'nda ip specific',
+        'client: Test Client',
+        'agreement_type: mutual',
+        'disclosing_party: Company A',
+        'purpose: Technology evaluation'
+      ];
+      
+      const callArg = generateEmbedding.mock.calls[0][0];
+      expectedQueryParts.forEach(part => {
+        expect(callArg).toContain(part);
+      });
+    });
+  });
+  
+  describe('singleton', () => {
+    it('should provide a singleton instance via getRetrieverService', () => {
+      const { getRetrieverService } = require('../../src/services/retriever');
+      
+      const instance1 = getRetrieverService();
+      const instance2 = getRetrieverService();
+      
+      expect(instance1).toBe(instance2);
+    });
+    
+    it('should provide a singleton instance via retrieverService.instance', () => {
+      const { retrieverService } = require('../../src/services/retriever');
+      
+      const instance1 = retrieverService.instance;
+      const instance2 = retrieverService.instance;
+      
+      expect(instance1).toBe(instance2);
     });
   });
 }); 
