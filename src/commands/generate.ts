@@ -25,7 +25,7 @@ interface GenerateOptions {
 }
 
 // Simple wrapper to match the expected interface
-class SpinnerWrapper {
+class SpinnerWrapper implements CaseThreadSpinner {
   private spinner: CaseThreadSpinner;
   
   constructor(initialMessage: string) {
@@ -36,12 +36,32 @@ class SpinnerWrapper {
     this.spinner.updateMessage(message);
   }
   
+  success(message?: string): void {
+    this.spinner.success(message);
+  }
+  
   succeed(message?: string): void {
     this.spinner.success(message);
   }
   
   fail(message?: string): void {
     this.spinner.fail(message);
+  }
+  
+  warn(message?: string): void {
+    this.spinner.warn(message);
+  }
+  
+  stop(): void {
+    this.spinner.stop();
+  }
+  
+  get isSpinning(): boolean {
+    return this.spinner.isSpinning;
+  }
+  
+  get ora(): any {
+    return this.spinner.ora;
   }
 }
 
@@ -234,7 +254,7 @@ export const generateCommand = new Command('generate')
       logger.debug(`Document saved successfully: ${saveResult.path}`);
       
       // Success!
-      spinner.succeed(`${SPINNER_MESSAGES.SUCCESS} (completed in ${generationTime}s)`);
+      spinner.success(`${SPINNER_MESSAGES.SUCCESS} (completed in ${generationTime}s)`);
       
       // Display success information
       console.log('\n✨ Document Generation Complete!\n');

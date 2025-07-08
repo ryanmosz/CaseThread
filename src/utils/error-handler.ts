@@ -29,6 +29,12 @@ export function handleError(error: Error, spinner: CaseThreadSpinner): never {
     const path = match ? match[1] : 'unknown file';
     userMessage = ERROR_MESSAGES.FILE_NOT_FOUND(path);
     exitCode = ErrorCode.GENERAL_ERROR;
+  } else if (error.message.includes('file not found')) {
+    // Handle YAML file not found errors
+    const match = error.message.match(/file not found: (.+)$/i);
+    const path = match ? match[1] : 'unknown file';
+    userMessage = ERROR_MESSAGES.FILE_NOT_FOUND(path);
+    exitCode = ErrorCode.GENERAL_ERROR;
   } else if (error.message.includes('EACCES') || error.message.includes('permission')) {
     const match = error.message.match(/['"]([^'"]+)['"]/);
     const path = match ? match[1] : 'unknown location';

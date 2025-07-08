@@ -47,8 +47,7 @@ export function getExplanationPath(documentType: string): string {
   const explanationFile = explanationMap[documentType];
   if (!explanationFile) {
     throw new Error(
-      `No explanation mapping found for document type: ${documentType}`,
-      documentType
+      `No explanation mapping found for document type: ${documentType}`
     );
   }
 
@@ -104,7 +103,9 @@ export async function loadExplanation(documentType: string): Promise<string> {
   // Try different naming patterns
   const patterns = [
     `${documentType}-explanation.md`,
-    `${getExplanationNumber(documentType)}-${documentType}-explanation.md`
+    `${getExplanationNumber(documentType)}-${documentType}-explanation.md`,
+    // Try shortened names for some document types
+    `${getExplanationNumber(documentType)}-${documentType.replace('-agreement', '')}-explanation.md`
   ];
   
   for (const pattern of patterns) {
