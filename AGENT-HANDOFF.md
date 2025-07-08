@@ -20,6 +20,13 @@ CaseThread is a CLI proof of concept for generating legal documents using OpenAI
    - Volume mounts configured for development
    - Non-root user (nodejs) for security
 
+3. **Development Workflow Files Updated**:
+   - Adapted `plan-parent.md` for CaseThread (moved to `docs/devops/`)
+   - Maintains reusability with "Not applicable" markers
+   - Updated all project references while keeping structure intact
+   - Added CaseThread-specific context notes
+   - Restored parent task references in `prompt.md`
+
 ## Task 2.0 Preview
 - [ ] 2.1 Run `npm init -y` inside container to create package.json
 - [ ] 2.2 Install TypeScript and Node types: `npm install --save-dev typescript @types/node`
@@ -41,6 +48,18 @@ CaseThread is a CLI proof of concept for generating legal documents using OpenAI
 - **CLI Design**: `docs/planning/cli-poc-plan.md`
 - **Git Workflows**: `docs/devops/git-workflow.md`
 - **Development Prompt**: `docs/devops/prompt.md`
+- **Parent Task Planning**: `docs/devops/plan-parent.md`
+
+## Development Workflow Files
+Located in `docs/devops/`:
+- `prompt.md` - Main development prompt for subtasks (now includes parent task references)
+- `plan-parent.md` - Parent task planning workflow (creates PRD, checklist, details)
+- `git-workflow.md` - Git workflows (SUBTASK-COMMIT, PARENT-COMPLETE)
+
+## Workflow Usage Pattern
+1. For parent tasks: Use `plan-parent.md` to generate PRD, checklist, and detailed files
+2. For subtasks: Use `prompt.md` with references to the generated parent task files
+3. Git operations: Follow workflows in `git-workflow.md`
 
 ## Next Steps
 Ready to begin Task 2.0: Initialize TypeScript project with dependencies inside the Docker container.
@@ -53,9 +72,10 @@ Ready to begin Task 2.0: Initialize TypeScript project with dependencies inside 
 - Session 5: Docker setup implementation (task 1.0) - COMPLETE & MERGED
 - Current session: Beginning TypeScript project initialization (task 2.0)
 
-Total commits in this session: 5
+Total commits in this session: 6
 - Dockerfile creation
 - prompt.md update and relocation  
 - Project structure reorganization
 - docker-compose.yml creation
-- Docker environment completion (task 1.0 final) 
+- Docker environment completion (task 1.0 final)
+- AGENT-HANDOFF update for task 2.0 start 
