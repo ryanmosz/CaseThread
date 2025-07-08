@@ -83,6 +83,9 @@ generated-documents/
 test-output*/
 test-output-*/
 
+# Generated documents in root
+/*.md
+
 # Temporary files
 *.tmp
 *.temp

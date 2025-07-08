@@ -36,7 +36,7 @@ run_test() {
     echo -n "Running... "
     
     # Run the command and capture output
-    if docker exec casethread-dev npm run cli -- generate "$doc_type" "$input_file" --output "./$OUTPUT_DIR" > "$OUTPUT_DIR/$doc_type.log" 2>&1; then
+    if npm run cli -- generate "$doc_type" "$input_file" --output "./$OUTPUT_DIR" > "$OUTPUT_DIR/$doc_type.log" 2>&1; then
         echo -e "${GREEN}✓ PASSED${NC}"
         echo "Generated file saved to $OUTPUT_DIR/"
         PASSED_TESTS=$((PASSED_TESTS + 1))

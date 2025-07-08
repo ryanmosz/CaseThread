@@ -34,7 +34,12 @@
     "prebuild": "rm -rf dist",
     "postbuild": "chmod +x dist/index.js"
   },
-  "keywords": ["legal", "cli", "openai", "document-generation"],
+  "keywords": [
+    "legal",
+    "cli",
+    "openai",
+    "document-generation"
+  ],
   "author": "",
   "license": "ISC",
   "engines": {
@@ -42,11 +47,12 @@
   },
   "dependencies": {
     "chalk": "^5.4.1",
+    "chromadb": "^3.0.6",
     "commander": "^13.0.0",
     "dotenv": "^16.4.7",
     "js-yaml": "^4.1.0",
     "openai": "^4.78.1",
     "ora": "^8.1.1",
-    "winston": "^3.18.0"
+    "winston": "3.17.0"
   }
 }
