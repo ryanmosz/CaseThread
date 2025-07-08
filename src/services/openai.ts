@@ -22,6 +22,10 @@ import { OpenAIConfig, GenerationResult, OpenAIError } from '../types/openai';
 import { Template, YamlData } from '../types';
 import { logger } from '../utils/logger';
 import { withRetry, withTimeout } from '../utils/retry';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 export class OpenAIService {
   private client: OpenAI;
@@ -431,4 +435,44 @@ export function createOpenAIService(
     return new MockOpenAIService(config);
   }
   return new OpenAIService(config);
+}
+
+/**
+ * Standalone function to generate a document using OpenAI
+ * Creates a service instance with default configuration from environment
+ */
+export async function generateDocument(
+  template: Template,
+  explanation: string,
+  yamlData: YamlData
+): Promise<string> {
+  logger.debug('generateDocument called', {
+    templateId: template.id,
+    documentType: yamlData.document_type
+  });
+  
+  // Load environment variables
+  const config: OpenAIConfig = {
+    apiKey: process.env.OPENAI_API_KEY || '',
+    model: process.env.OPENAI_MODEL || 'o3',
+    temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.2'),
+    maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '4000'),
+    timeout: parseInt(process.env.OPENAI_TIMEOUT || '60000')
+  };
+  
+  logger.debug('Creating OpenAI service with config', {
+    model: config.model,
+    temperature: config.temperature,
+    maxTokens: config.maxTokens
+  });
+  
+  const service = createOpenAIService(config);
+  const result = await service.generateDocument(template, explanation, yamlData);
+  
+  logger.debug('Document generated successfully', {
+    contentLength: result.content.length,
+    tokens: result.usage?.totalTokens
+  });
+  
+  return result.content;
 } 

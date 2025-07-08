@@ -6,11 +6,84 @@
  */
 
 import winston from 'winston';
-import path from 'path';
-import { config } from 'dotenv';
+import * as path from 'path';
 
-// Load environment variables
-config();
+const logDir = 'logs';
+const debugLogFile = path.join(logDir, 'debug.log');
+const errorLogFile = path.join(logDir, 'error.log');
+
+// Create custom format for debug logs
+const debugFormat = winston.format.printf(({ timestamp, level, message, ...meta }) => {
+  let log = `${timestamp} [${level.toUpperCase()}]: ${message}`;
+  
+  // Add metadata if present
+  if (Object.keys(meta).length > 0) {
+    log += '\n' + JSON.stringify(meta, null, 2);
+  }
+  
+  return log;
+});
+
+export const logger = winston.createLogger({
+  level: 'info', // Default level
+  format: winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }),
+    winston.format.splat()
+  ),
+  transports: [
+    // File transport for debug logs
+    new winston.transports.File({
+      filename: debugLogFile,
+      level: 'debug',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        debugFormat
+      )
+    }),
+    // File transport for errors
+    new winston.transports.File({
+      filename: errorLogFile,
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      )
+    }),
+    // Console transport (only shows in debug mode)
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+      silent: true // Will be enabled when debug flag is set
+    })
+  ]
+});
+
+// Helper to enable/disable console output
+export function enableConsoleLogging(enable: boolean): void {
+  const consoleTransport = logger.transports.find(
+    t => t instanceof winston.transports.Console
+  ) as winston.transports.ConsoleTransportInstance;
+  
+  if (consoleTransport) {
+    consoleTransport.silent = !enable;
+  }
+}
+
+// Update logger level and console output when level changes
+const originalLevel = Object.getOwnPropertyDescriptor(logger, 'level');
+Object.defineProperty(logger, 'level', {
+  get() {
+    return originalLevel?.get?.call(this);
+  },
+  set(newLevel: string) {
+    originalLevel?.set?.call(this, newLevel);
+    // Enable console logging when in debug mode
+    enableConsoleLogging(newLevel === 'debug');
+  }
+});
 
 /**
  * Log levels available in the application
@@ -23,92 +96,9 @@ export const LOG_LEVELS = {
 } as const;
 
 /**
- * Get log level from environment or default to 'info'
+ * Type for log levels
  */
-const getLogLevel = (): string => {
-  const level = process.env.LOG_LEVEL?.toLowerCase();
-  return level && level in LOG_LEVELS ? level : 'info';
-};
-
-/**
- * Get log file path from environment or default
- */
-const getLogFilePath = (): string => {
-  return process.env.DEBUG_LOG_PATH || path.join(process.cwd(), 'logs', 'casethread.log');
-};
-
-/**
- * Custom format for console output with colors and readable timestamps
- */
-const consoleFormat = winston.format.combine(
-  winston.format.colorize(),
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.errors({ stack: true }),
-  winston.format.printf(({ timestamp, level, message, ...meta }) => {
-    let output = `${timestamp} [${level}]: ${message}`;
-    
-    // Add metadata if present
-    if (Object.keys(meta).length > 0) {
-      // Remove stack from meta if it's already been printed
-      const { stack, ...cleanMeta } = meta;
-      if (Object.keys(cleanMeta).length > 0) {
-        output += ` ${JSON.stringify(cleanMeta, null, 2)}`;
-      }
-    }
-    
-    return output;
-  })
-);
-
-/**
- * JSON format for file output for easy parsing
- */
-const fileFormat = winston.format.combine(
-  winston.format.timestamp(),
-  winston.format.errors({ stack: true }),
-  winston.format.json()
-);
-
-/**
- * Create the Winston logger instance
- */
-const createLogger = (): winston.Logger => {
-  const logLevel = getLogLevel();
-  const logFilePath = getLogFilePath();
-  
-  const transports: winston.transport[] = [
-    // Console transport with custom formatting
-    new winston.transports.Console({
-      format: consoleFormat,
-      level: logLevel
-    })
-  ];
-
-  // Add file transport if not in test environment
-  if (process.env.NODE_ENV !== 'test') {
-    transports.push(
-      new winston.transports.File({
-        filename: logFilePath,
-        format: fileFormat,
-        level: 'debug', // File always gets debug level
-        maxsize: 5242880, // 5MB
-        maxFiles: 5
-      })
-    );
-  }
-
-  return winston.createLogger({
-    levels: LOG_LEVELS,
-    transports,
-    // Don't exit on uncaught errors
-    exitOnError: false
-  });
-};
-
-/**
- * Main logger instance
- */
-export const logger = createLogger();
+export type LogLevel = keyof typeof LOG_LEVELS;
 
 /**
  * Log an error with optional error object
@@ -230,5 +220,4 @@ export async function measureDuration<T>(
 }
 
 // Export Winston types for external use
-export type LogLevel = keyof typeof LOG_LEVELS;
 export type Logger = winston.Logger; 

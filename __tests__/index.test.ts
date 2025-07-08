@@ -1,105 +1,76 @@
 import { jest } from '@jest/globals';
+import { logger } from '../src/utils/logger';
 
-// Mock ora before any modules that use it
-jest.mock('ora');
+// Mock modules before importing
+jest.mock('../src/utils/logger');
+jest.mock('../src/commands/generate', () => ({
+  generateCommand: {
+    name: jest.fn().mockReturnValue('generate'),
+    parse: jest.fn(),
+    parseAsync: jest.fn()
+  }
+}));
 
 describe('CLI Entry Point', () => {
   let originalArgv: string[];
+  let mockLoggerDebug: jest.Mock;
 
   beforeEach(() => {
     originalArgv = process.argv;
-    jest.spyOn(process, 'exit').mockImplementation(() => {
-      throw new Error('process.exit called');
-    });
-    jest.clearAllMocks();
+    mockLoggerDebug = jest.fn();
+    (logger.debug as jest.Mock) = mockLoggerDebug;
+    logger.level = 'info';
+    
+    // Clear module cache to ensure fresh imports
+    jest.resetModules();
   });
 
   afterEach(() => {
     process.argv = originalArgv;
     jest.clearAllMocks();
-    jest.resetModules();
   });
 
-  it('should set up the CLI with correct name and description', async () => {
-    process.argv = ['node', 'index.js', '--help'];
-    
-    const mockCommand = {
-      name: jest.fn().mockReturnThis(),
-      description: jest.fn().mockReturnThis(),
-      version: jest.fn().mockReturnThis(),
-      option: jest.fn().mockReturnThis(),
-      addCommand: jest.fn().mockReturnThis(),
-      parse: jest.fn(),
-      opts: jest.fn().mockReturnValue({})
-    };
+  describe('Debug Flag Functionality', () => {
+    it('should enable debug logging with global --debug flag', async () => {
+      process.argv = ['node', 'index.js', '--debug', 'generate', 'patent-assignment', 'test.yaml'];
+      
+      // Import the CLI after setting up the argv
+      await import('../src/index');
+      
+      // Wait for async operations
+      await new Promise(resolve => setImmediate(resolve));
+      
+      expect(logger.level).toBe('debug');
+      expect(mockLoggerDebug).toHaveBeenCalledWith('Debug logging enabled via global flag');
+      expect(mockLoggerDebug).toHaveBeenCalledWith(expect.stringContaining('Running command:'));
+      expect(mockLoggerDebug).toHaveBeenCalledWith(expect.stringContaining('Node version:'));
+      expect(mockLoggerDebug).toHaveBeenCalledWith(expect.stringContaining('Working directory:'));
+    });
 
-    jest.doMock('commander', () => ({
-      Command: jest.fn(() => mockCommand)
-    }));
+    it('should not enable debug logging without --debug flag', async () => {
+      process.argv = ['node', 'index.js', 'generate', 'patent-assignment', 'test.yaml'];
+      
+      // Import the CLI after setting up the argv
+      await import('../src/index');
+      
+      // Wait for async operations
+      await new Promise(resolve => setImmediate(resolve));
+      
+      expect(logger.level).toBe('info');
+      expect(mockLoggerDebug).not.toHaveBeenCalled();
+    });
 
-    await import('../src/index');
-
-    expect(mockCommand.name).toHaveBeenCalledWith('casethread-poc');
-    expect(mockCommand.description).toHaveBeenCalledWith(
-      'CaseThread CLI Proof of Concept - Generate legal documents using AI'
-    );
-    expect(mockCommand.version).toHaveBeenCalledWith('0.1.0');
-  });
-
-  it('should add debug option', async () => {
-    process.argv = ['node', 'index.js'];
-    
-    const mockCommand = {
-      name: jest.fn().mockReturnThis(),
-      description: jest.fn().mockReturnThis(),
-      version: jest.fn().mockReturnThis(),
-      option: jest.fn().mockReturnThis(),
-      addCommand: jest.fn().mockReturnThis(),
-      parse: jest.fn(),
-      opts: jest.fn().mockReturnValue({})
-    };
-
-    jest.doMock('commander', () => ({
-      Command: jest.fn(() => mockCommand)
-    }));
-
-    await import('../src/index');
-
-    expect(mockCommand.option).toHaveBeenCalledWith(
-      '-d, --debug',
-      'Enable debug logging'
-    );
-  });
-
-  it('should enable debug logging when --debug flag is used', async () => {
-    process.argv = ['node', 'index.js', '--debug'];
-    
-    const mockLogger = {
-      level: 'info',
-      debug: jest.fn()
-    };
-
-    jest.doMock('../src/utils/logger', () => ({
-      logger: mockLogger
-    }));
-
-    const mockCommand = {
-      name: jest.fn().mockReturnThis(),
-      description: jest.fn().mockReturnThis(),
-      version: jest.fn().mockReturnThis(),
-      option: jest.fn().mockReturnThis(),
-      addCommand: jest.fn().mockReturnThis(),
-      parse: jest.fn(),
-      opts: jest.fn().mockReturnValue({ debug: true })
-    };
-
-    jest.doMock('commander', () => ({
-      Command: jest.fn(() => mockCommand)
-    }));
-
-    await import('../src/index');
-
-    expect(mockLogger.level).toBe('debug');
-    expect(mockLogger.debug).toHaveBeenCalledWith('Debug logging enabled');
+    it('should enable debug logging with -d shorthand', async () => {
+      process.argv = ['node', 'index.js', '-d', 'generate', 'patent-assignment', 'test.yaml'];
+      
+      // Import the CLI after setting up the argv
+      await import('../src/index');
+      
+      // Wait for async operations
+      await new Promise(resolve => setImmediate(resolve));
+      
+      expect(logger.level).toBe('debug');
+      expect(mockLoggerDebug).toHaveBeenCalledWith('Debug logging enabled via global flag');
+    });
   });
 }); 

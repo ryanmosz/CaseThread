@@ -1,148 +1,253 @@
-import { Command, Argument } from 'commander';
-import { createSpinner } from '../utils/spinner';
-import { logger } from '../utils/logger';
-import { isValidDocumentType, SUPPORTED_TYPES } from '../utils/validator';
-import { loadTemplate, loadExplanation } from '../services/template';
-import { parseYaml } from '../services/yaml';
-import { OpenAIService } from '../services/openai';
-import { promises as fs } from 'fs';
+import { Command } from 'commander';
 import * as path from 'path';
-import * as dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
+import { promises as fs } from 'fs';
+import { 
+  loadTemplate, 
+  loadExplanation 
+} from '../services/template';
+import { parseYaml } from '../services/yaml';
+import { generateDocument } from '../services/openai';
+import { 
+  isValidDocumentType,
+  SUPPORTED_TYPES 
+} from '../utils/validator';
+import { createSpinner, CaseThreadSpinner } from '../utils/spinner';
+import { logger } from '../utils/logger';
+import { SpinnerMessages } from '../types';
+import { handleError, createError } from '../utils/error-handler';
+import { ErrorCode } from '../types/errors';
+import { createOutputPath } from '../utils/file-naming';
+import { saveDocument, addDocumentMetadata } from '../services/file-writer';
 
 interface GenerateOptions {
   output: string;
+  debug?: boolean;
 }
 
-// Define spinner messages for consistency
-const SPINNER_MESSAGES = {
-  INIT: 'Initializing...',
-  VALIDATE_TYPE: 'Validating document type...',
+// Simple wrapper to match the expected interface
+class SpinnerWrapper {
+  private spinner: CaseThreadSpinner;
+  
+  constructor(initialMessage: string) {
+    this.spinner = createSpinner(initialMessage);
+  }
+  
+  updateMessage(message: string): void {
+    this.spinner.updateMessage(message);
+  }
+  
+  succeed(message?: string): void {
+    this.spinner.success(message);
+  }
+  
+  fail(message?: string): void {
+    this.spinner.fail(message);
+  }
+}
+
+const SPINNER_MESSAGES: SpinnerMessages = {
+  INIT: 'Initializing CaseThread CLI...',
+  CHECK_PERMISSIONS: 'Checking output directory permissions...',
   CREATE_OUTPUT_DIR: 'Creating output directory...',
-  CHECK_PERMISSIONS: 'Checking directory permissions...',
+  VALIDATE_TYPE: 'Validating document type...',
   LOAD_TEMPLATE: 'Loading document template...',
   LOAD_EXPLANATION: 'Loading template explanation...',
-  PARSE_YAML: 'Parsing input data...',
-  VALIDATE_YAML: 'Validating input data...',
-  PREPARE_PROMPT: 'Preparing AI prompt...',
-  CONNECT_OPENAI: 'Connecting to OpenAI...',
-  GENERATE_DOC: 'Generating document (this may take 30-60 seconds)...',
-  SAVE_DOC: 'Saving document...',
+  PARSE_YAML: 'Parsing input YAML file...',
+  VALIDATE_YAML: 'Validating YAML data against template requirements...',
+  PREPARE_PROMPT: 'Preparing prompt for AI generation...',
+  CONNECT_OPENAI: 'Connecting to OpenAI API...',
+  GENERATE_DOC: 'Generating legal document with AI...',
+  SAVE_DOC: 'Saving generated document...',
   SUCCESS: 'Document generated successfully!'
 };
 
 export const generateCommand = new Command('generate')
   .description('Generate a legal document from template and input data')
-  .addArgument(new Argument('<document-type>', 'Type of legal document to generate'))
-  .addArgument(new Argument('<input-path>', 'Path to YAML input file'))
+  .argument('<document-type>', 'Type of legal document to generate')
+  .argument('<input-path>', 'Path to YAML input file')
   .option('-o, --output <path>', 'Output directory for generated document', '.')
+  .option('-d, --debug', 'Enable debug logging')
   .action(async (documentType: string, inputPath: string, options: GenerateOptions) => {
-    const spinner = createSpinner(SPINNER_MESSAGES.INIT);
+    // Check for command-level debug flag
+    if (options.debug && logger.level !== 'debug') {
+      logger.level = 'debug';
+      logger.debug('Debug logging enabled via command flag');
+    }
+    
+    const spinner = new SpinnerWrapper(SPINNER_MESSAGES.INIT);
     const startTime = Date.now();
     
+    // Log command execution details
+    logger.debug('=== Generate Command Execution ===');
+    logger.debug(`Document Type: ${documentType}`);
+    logger.debug(`Input Path: ${inputPath}`);
+    logger.debug(`Output Directory: ${options.output}`);
+    logger.debug(`Debug Mode: ${options.debug || logger.level === 'debug'}`);
+    logger.debug('=================================');
+    
     try {
-      // Step 1: Validate and resolve output directory
+      // Validate output directory
       const outputDir = path.resolve(options.output);
-      logger.debug(`Output directory set to: ${outputDir}`);
+      logger.debug(`Resolved output directory: ${outputDir}`);
       
-      // Verify output directory exists or can be created
       try {
         await fs.access(outputDir);
+        logger.debug(`Output directory exists: ${outputDir}`);
         spinner.updateMessage(SPINNER_MESSAGES.CHECK_PERMISSIONS);
-      } catch {
-        // Directory doesn't exist, try to create it
+      } catch (error) {
+        logger.debug(`Output directory does not exist: ${outputDir}`, error);
         spinner.updateMessage(SPINNER_MESSAGES.CREATE_OUTPUT_DIR);
-        await fs.mkdir(outputDir, { recursive: true });
+        try {
+          await fs.mkdir(outputDir, { recursive: true });
+          logger.debug(`Created output directory: ${outputDir}`);
+        } catch (mkdirError) {
+          throw createError('PERMISSION_ERROR', outputDir);
+        }
       }
       
-      // Verify write permissions
+      // Check write permissions
       try {
         await fs.access(outputDir, fs.constants.W_OK);
+        logger.debug(`Write permissions confirmed for: ${outputDir}`);
       } catch {
-        throw new Error(`No write permission for output directory: ${outputDir}`);
+        throw createError('PERMISSION_ERROR', outputDir);
       }
       
-      // Step 2: Validate document type
+      // Validate document type
       spinner.updateMessage(SPINNER_MESSAGES.VALIDATE_TYPE);
       logger.debug(`Validating document type: ${documentType}`);
       
       if (!isValidDocumentType(documentType)) {
-        throw new Error(
-          `Invalid document type: ${documentType}\n` +
-          `Supported types: ${SUPPORTED_TYPES.join(', ')}`
-        );
+        throw createError('INVALID_TYPE', documentType, SUPPORTED_TYPES);
       }
       
-      // Step 3: Load template files with individual updates
+      // Load template files
       spinner.updateMessage(SPINNER_MESSAGES.LOAD_TEMPLATE);
-      logger.debug(`Loading template for type: ${documentType}`);
-      const template = await loadTemplate(documentType);
+      logger.debug(`Loading template from: templates/core/${documentType}.json`);
+      
+      let template, explanation;
+      try {
+        template = await loadTemplate(documentType);
+        logger.debug(`Template loaded successfully, keys: ${Object.keys(template).join(', ')}`);
+      } catch (error: any) {
+        if (error.message.includes('ENOENT')) {
+          throw createError('TEMPLATE_NOT_FOUND', documentType);
+        }
+        throw error;
+      }
       
       spinner.updateMessage(SPINNER_MESSAGES.LOAD_EXPLANATION);
-      const explanation = await loadExplanation(documentType);
+      logger.debug(`Loading explanation from: templates/explanations/${documentType}-explanation.md`);
+      try {
+        explanation = await loadExplanation(documentType);
+        logger.debug(`Explanation loaded, length: ${explanation.length} characters`);
+      } catch (error: any) {
+        if (error.message.includes('ENOENT')) {
+          throw createError('TEMPLATE_NOT_FOUND', documentType);
+        }
+        throw error;
+      }
       
-      // Step 4: Parse and validate YAML
+      // Parse and validate YAML
       spinner.updateMessage(SPINNER_MESSAGES.PARSE_YAML);
-      logger.debug(`Loading YAML from: ${inputPath}`);
-      const yamlData = await parseYaml(inputPath);
+      logger.debug(`Parsing YAML file: ${inputPath}`);
+      
+      let yamlData;
+      try {
+        yamlData = await parseYaml(inputPath);
+        logger.debug(`YAML parsed successfully, keys: ${Object.keys(yamlData).join(', ')}`);
+      } catch (error: any) {
+        if (error.message.includes('ENOENT')) {
+          throw createError('FILE_NOT_FOUND', inputPath);
+        } else if (error.message.includes('YAMLException')) {
+          throw createError('INVALID_YAML', error.message);
+        } else if (error.message.includes('Missing required fields')) {
+          // Extract field names from error
+          const fields = error.message.match(/Missing required fields: (.+)/)?.[1]?.split(', ') || [];
+          throw createError('MISSING_YAML_FIELDS', fields);
+        }
+        throw error;
+      }
       
       spinner.updateMessage(SPINNER_MESSAGES.VALIDATE_YAML);
-      // YAML validation happens inside parseYaml, this is just for visual feedback
+      logger.debug(`YAML data validated successfully`);
       
-      // Step 5: Generate document with detailed progress
+      // Generate document
       spinner.updateMessage(SPINNER_MESSAGES.PREPARE_PROMPT);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause for visual feedback
+      logger.debug('Preparing to call OpenAI API...');
+      logger.debug(`Template sections: ${JSON.stringify(Object.keys(template), null, 2)}`);
+      logger.debug(`YAML data preview: ${JSON.stringify(yamlData, null, 2).substring(0, 200)}...`);
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       spinner.updateMessage(SPINNER_MESSAGES.CONNECT_OPENAI);
       
-      // Add timestamp to long-running message
       const genStartTime = Date.now();
       spinner.updateMessage(SPINNER_MESSAGES.GENERATE_DOC);
       
-      // Update spinner during generation with elapsed time
       const updateInterval = setInterval(() => {
         const elapsed = Math.round((Date.now() - genStartTime) / 1000);
         spinner.updateMessage(`${SPINNER_MESSAGES.GENERATE_DOC} (${elapsed}s elapsed)`);
       }, 5000);
       
+      let generatedDocument;
       try {
-        // Initialize OpenAI service
-        const openaiService = new OpenAIService({
-          apiKey: process.env.OPENAI_API_KEY || '',
-          model: process.env.OPENAI_MODEL || 'o3',
-          temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.2')
-        });
-        
-        const result = await openaiService.generateDocument(
-          template,
-          explanation,
-          yamlData
-        );
-        
+        generatedDocument = await generateDocument(template, explanation, yamlData);
         clearInterval(updateInterval);
-        
-        // Success!
-        const totalTime = Math.round((Date.now() - startTime) / 1000);
-        spinner.success(`${SPINNER_MESSAGES.SUCCESS} (completed in ${totalTime}s)`);
-        
-        // Store output directory for use in subtask 5.7
-        logger.debug(`Document will be saved to: ${outputDir}`);
-        
-        // Temporary: Output to console until 5.7 implements file saving
-        console.log(`\n--- Generated Document (will be saved to ${outputDir}) ---\n`);
-        console.log(result.content);
-        
-      } catch (error) {
+        logger.debug(`Document generated successfully, length: ${generatedDocument.length} characters`);
+      } catch (error: any) {
         clearInterval(updateInterval);
+        logger.debug('Error during OpenAI generation:', error);
+        
+        // Handle specific OpenAI errors
+        if (error.message.includes('API key') || error.message.includes('Invalid API Key')) {
+          throw createError('OPENAI_ERROR', 'Invalid or missing API key');
+        } else if (error.message.includes('rate limit')) {
+          throw createError('OPENAI_ERROR', 'Rate limit exceeded');
+        } else if (error.message.includes('fetch failed') || error.message.includes('ECONNREFUSED')) {
+          throw createError('NETWORK_ERROR');
+        }
+        
         throw error;
       }
       
+      // Save the document
+      spinner.updateMessage(SPINNER_MESSAGES.SAVE_DOC);
+      
+      // Calculate generation time
+      const generationTime = Math.round((Date.now() - startTime) / 1000);
+      
+      // Add metadata to document
+      const documentWithMetadata = addDocumentMetadata(
+        generatedDocument,
+        documentType,
+        path.basename(inputPath),
+        generationTime
+      );
+      
+      // Create output path
+      const outputPath = createOutputPath(outputDir, documentType);
+      logger.debug(`Saving document to: ${outputPath}`);
+      
+      // Save the document
+      const saveResult = await saveDocument(documentWithMetadata, outputPath);
+      logger.debug(`Document saved successfully: ${saveResult.path}`);
+      
+      // Success!
+      spinner.succeed(`${SPINNER_MESSAGES.SUCCESS} (completed in ${generationTime}s)`);
+      
+      // Display success information
+      console.log('\n✨ Document Generation Complete!\n');
+      console.log(`📄 Document Type: ${documentType}`);
+      console.log(`📁 Saved to: ${saveResult.path}`);
+      console.log(`📏 File size: ${(saveResult.size / 1024).toFixed(2)} KB`);
+      console.log(`⏱️  Generation time: ${generationTime} seconds`);
+      console.log('\n💡 Tip: You can open the file with: cat ' + saveResult.path);
+      
+      process.exit(ErrorCode.SUCCESS);
+      
     } catch (error) {
-      const totalTime = Math.round((Date.now() - startTime) / 1000);
-      spinner.fail(`Error: ${(error as Error).message} (failed after ${totalTime}s)`);
-      logger.error('Document generation failed:', error);
-      process.exit(1);
+      logger.debug('Error occurred during generation:', error);
+      handleError(error as Error, spinner);
     }
   }); 

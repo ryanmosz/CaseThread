@@ -11,17 +11,21 @@ program
   .name('casethread-poc')
   .description('CaseThread CLI Proof of Concept - Generate legal documents using AI')
   .version('0.1.0')
-  .option('-d, --debug', 'Enable debug logging');
+  .option('-d, --debug', 'Enable debug logging')
+  .hook('preAction', (thisCommand) => {
+    // This hook runs before any command action
+    const options = thisCommand.opts();
+    if (options.debug) {
+      logger.level = 'debug';
+      logger.debug('Debug logging enabled via global flag');
+      logger.debug(`Running command: ${thisCommand.args.join(' ')}`);
+      logger.debug(`Node version: ${process.version}`);
+      logger.debug(`Working directory: ${process.cwd()}`);
+    }
+  });
 
 // Add the generate command
 program.addCommand(generateCommand);
 
 // Parse command line arguments
-program.parse();
-
-// Handle debug flag globally
-const options = program.opts();
-if (options.debug) {
-  logger.level = 'debug';
-  logger.debug('Debug logging enabled');
-} 
+program.parse(); 

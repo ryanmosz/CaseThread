@@ -7,6 +7,16 @@ import * as yamlService from '../../src/services/yaml';
 import { OpenAIService } from '../../src/services/openai';
 import * as path from 'path';
 
+// Add file writer mocks
+jest.mock('../../src/services/file-writer');
+jest.mock('../../src/utils/file-naming');
+jest.mock('../../src/utils/error-handler');
+
+import * as fileWriter from '../../src/services/file-writer';
+import * as fileNaming from '../../src/utils/file-naming';
+import { handleError, createError } from '../../src/utils/error-handler';
+import { ERROR_MESSAGES, ErrorCode } from '../../src/types/errors';
+
 // Mock ora before other modules that use it
 jest.mock('ora');
 
@@ -432,5 +442,340 @@ describe('Generate Command - Spinner Updates', () => {
     await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
 
     expect(mockSpinner.updateMessage).toHaveBeenCalledWith('Checking directory permissions...');
+  });
+}); 
+
+describe('Generate Command - Error Handling', () => {
+  let mockSpinner: any;
+  let mockExit: jest.SpyInstance;
+
+  beforeEach(() => {
+    mockSpinner = {
+      updateMessage: jest.fn(),
+      fail: jest.fn(),
+      success: jest.fn(),
+      succeed: jest.fn()
+    };
+    jest.doMock('../../src/utils/spinner', () => ({
+      createSpinner: jest.fn(() => mockSpinner),
+      CaseThreadSpinner: jest.fn()
+    }));
+    
+    mockExit = jest.spyOn(process, 'exit').mockImplementation((code) => {
+      throw new Error(`process.exit called with code ${code}`);
+    });
+    
+    // Mock the generate command's error handler to use our mock spinner
+    (handleError as jest.Mock).mockImplementation((error, spinner) => {
+      spinner.fail(error.message);
+      process.exit(1);
+    });
+  });
+
+  afterEach(() => {
+    mockExit.mockRestore();
+    jest.clearAllMocks();
+  });
+
+  it('should show user-friendly message for invalid document type', async () => {
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(false);
+    (validator.SUPPORTED_TYPES as any) = ['patent-assignment', 'nda-ip-specific'];
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'invalid-type', 'test.yaml']);
+      fail('Should have thrown');
+    } catch (error: any) {
+      expect(error.message).toContain('process.exit called with code 1');
+    }
+    
+    expect(handleError).toHaveBeenCalled();
+  });
+
+  it('should show user-friendly message for file not found', async () => {
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
+    (yamlService.parseYaml as jest.Mock).mockRejectedValue(
+      new Error('ENOENT: no such file or directory, open \'non-existent.yaml\'')
+    );
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'non-existent.yaml']);
+      fail('Should have thrown');
+    } catch (error: any) {
+      expect(error.message).toContain('process.exit called with code 1');
+    }
+    
+    expect(handleError).toHaveBeenCalled();
+  });
+
+  it('should show user-friendly message for template not found', async () => {
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockRejectedValue(
+      new Error('ENOENT: no such file or directory')
+    );
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+      fail('Should have thrown');
+    } catch (error: any) {
+      expect(error.message).toContain('process.exit called with code 1');
+    }
+    
+    expect(handleError).toHaveBeenCalled();
+  });
+
+  it('should show user-friendly message for invalid YAML', async () => {
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
+    (yamlService.parseYaml as jest.Mock).mockRejectedValue(
+      new Error('YAMLException: bad indentation of a mapping entry at line 3')
+    );
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'bad.yaml']);
+      fail('Should have thrown');
+    } catch (error: any) {
+      expect(error.message).toContain('process.exit called with code 1');
+    }
+    
+    expect(handleError).toHaveBeenCalled();
+  });
+
+  it('should exit with code 0 on success', async () => {
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
+    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (fileNaming.createOutputPath as jest.Mock).mockReturnValue('/output/test.md');
+    (fileWriter.addDocumentMetadata as jest.Mock).mockImplementation((content) => `<!-- metadata -->\n${content}`);
+    (fileWriter.saveDocument as jest.Mock).mockResolvedValue({
+      path: '/output/test.md',
+      size: 1024,
+      timestamp: new Date()
+    });
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+      fail('Should have thrown');
+    } catch (error: any) {
+      expect(error.message).toContain('process.exit called with code 0');
+    }
+  });
+});
+
+describe('Generate Command - Debug Flag', () => {
+  let mockSpinner: any;
+  let originalLevel: string;
+
+  beforeEach(() => {
+    originalLevel = logger.level;
+    logger.level = 'info';
+    
+    mockSpinner = {
+      updateMessage: jest.fn(),
+      fail: jest.fn(),
+      success: jest.fn(),
+      succeed: jest.fn()
+    };
+    jest.doMock('../../src/utils/spinner', () => ({
+      createSpinner: jest.fn(() => mockSpinner),
+      CaseThreadSpinner: jest.fn()
+    }));
+  });
+
+  afterEach(() => {
+    logger.level = originalLevel;
+    jest.clearAllMocks();
+  });
+
+  it('should enable debug logging with command-level --debug flag', async () => {
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
+    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (fileNaming.createOutputPath as jest.Mock).mockReturnValue('/output/test.md');
+    (fileWriter.addDocumentMetadata as jest.Mock).mockImplementation((content) => content);
+    (fileWriter.saveDocument as jest.Mock).mockResolvedValue({
+      path: '/output/test.md',
+      size: 1024,
+      timestamp: new Date()
+    });
+
+    const debugSpy = jest.spyOn(logger, 'debug');
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml', '--debug']);
+    } catch {
+      // Ignore exit
+    }
+
+    expect(logger.level).toBe('debug');
+    expect(debugSpy).toHaveBeenCalledWith('Debug logging enabled via command flag');
+    expect(debugSpy).toHaveBeenCalledWith('=== Generate Command Execution ===');
+  });
+
+  it('should not enable debug logging without flag', async () => {
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
+    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (fileNaming.createOutputPath as jest.Mock).mockReturnValue('/output/test.md');
+    (fileWriter.addDocumentMetadata as jest.Mock).mockImplementation((content) => content);
+    (fileWriter.saveDocument as jest.Mock).mockResolvedValue({
+      path: '/output/test.md',
+      size: 1024,
+      timestamp: new Date()
+    });
+
+    const debugSpy = jest.spyOn(logger, 'debug');
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+    } catch {
+      // Ignore exit
+    }
+
+    expect(logger.level).toBe('info');
+    expect(debugSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('Generate Command - File Saving', () => {
+  let mockSpinner: any;
+
+  beforeEach(() => {
+    mockSpinner = {
+      updateMessage: jest.fn(),
+      fail: jest.fn(),
+      success: jest.fn(),
+      succeed: jest.fn()
+    };
+    jest.doMock('../../src/utils/spinner', () => ({
+      createSpinner: jest.fn(() => mockSpinner),
+      CaseThreadSpinner: jest.fn()
+    }));
+    
+    // Setup file naming mocks
+    (fileNaming.createOutputPath as jest.Mock).mockReturnValue('/output/patent-assignment-2024-01-15-143052.md');
+    
+    // Setup file writer mocks
+    (fileWriter.addDocumentMetadata as jest.Mock).mockImplementation((content) => `<!-- metadata -->\n${content}`);
+    (fileWriter.saveDocument as jest.Mock).mockResolvedValue({
+      path: '/output/patent-assignment-2024-01-15-143052.md',
+      size: 1024,
+      timestamp: new Date()
+    });
+  });
+
+  it('should save generated document with timestamp', async () => {
+    // Setup all successful mocks
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
+    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated document content');
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+    } catch {
+      // Ignore exit
+    }
+
+    // Verify file naming
+    expect(fileNaming.createOutputPath).toHaveBeenCalledWith(
+      path.resolve('.'),
+      'patent-assignment'
+    );
+
+    // Verify metadata added
+    expect(fileWriter.addDocumentMetadata).toHaveBeenCalledWith(
+      'Generated document content',
+      'patent-assignment',
+      'test.yaml',
+      expect.any(Number)
+    );
+
+    // Verify document saved
+    expect(fileWriter.saveDocument).toHaveBeenCalledWith(
+      '<!-- metadata -->\nGenerated document content',
+      '/output/patent-assignment-2024-01-15-143052.md'
+    );
+
+    // Verify success message
+    expect(mockSpinner.succeed).toHaveBeenCalled();
+  });
+
+  it('should use custom output directory', async () => {
+    // Setup mocks
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
+    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+
+    try {
+      await generateCommand.parseAsync([
+        'node', 'test', 'patent-assignment', 'test.yaml',
+        '--output', './my-docs'
+      ]);
+    } catch {
+      // Ignore exit
+    }
+
+    expect(fileNaming.createOutputPath).toHaveBeenCalledWith(
+      path.resolve('./my-docs'),
+      'patent-assignment'
+    );
+  });
+
+  it('should display success information', async () => {
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+
+    // Setup mocks
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
+    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+    } catch {
+      // Ignore exit
+    }
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('✨ Document Generation Complete!'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('📄 Document Type: patent-assignment'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('📁 Saved to:'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('📏 File size:'));
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('⏱️  Generation time:'));
+    
+    consoleLogSpy.mockRestore();
+  });
+
+  it('should handle file save errors', async () => {
+    // Setup mocks
+    (validator.isValidDocumentType as jest.Mock).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({});
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({});
+    (OpenAIService.generateDocument as jest.Mock).mockResolvedValue('Generated');
+    (fileWriter.saveDocument as jest.Mock).mockRejectedValue(
+      new Error('Failed to save document: Permission denied')
+    );
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+      fail('Should have thrown');
+    } catch (error: any) {
+      expect(error.message).toContain('process.exit called with code 1');
+    }
+
+    expect(handleError).toHaveBeenCalled();
   });
 }); 

@@ -9,7 +9,7 @@ import { promises as fs } from 'fs';
 import * as yaml from 'js-yaml';
 import path from 'path';
 import { YamlData, YamlParseError, isYamlData, ValidationError } from '../types';
-import { logDebug, logError, measureDuration } from '../utils/logger';
+import { logger } from '../utils/logger';
 
 /**
  * Parses a YAML string into a JavaScript object
@@ -140,26 +140,24 @@ export async function parseYaml(filePath: string): Promise<YamlData> {
     ? filePath 
     : path.join(process.cwd(), filePath);
     
-  logDebug('Parsing YAML file', { filePath: absolutePath });
+  logger.debug(`Parsing YAML file: ${absolutePath}`);
   
   try {
     // Load the file
-    const yamlContent = await measureDuration(
-      `load-yaml-file`,
-      async () => {
-        try {
-          return await fs.readFile(absolutePath, 'utf-8');
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            throw new YamlParseError(
-              `YAML file not found: ${absolutePath}`,
-              absolutePath
-            );
-          }
-          throw error;
-        }
+    logger.debug(`Reading YAML file: ${absolutePath}`);
+    let yamlContent: string;
+    try {
+      yamlContent = await fs.readFile(absolutePath, 'utf-8');
+      logger.debug(`YAML file read successfully, size: ${yamlContent.length} bytes`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        throw new YamlParseError(
+          `YAML file not found: ${absolutePath}`,
+          absolutePath
+        );
       }
-    );
+      throw error;
+    }
     
     // Check if file is empty
     if (!yamlContent || yamlContent.trim() === '') {
@@ -170,12 +168,15 @@ export async function parseYaml(filePath: string): Promise<YamlData> {
     }
     
     // Parse YAML content
+    logger.debug('Parsing YAML content...');
     const parsedData = parseYamlContent(yamlContent, absolutePath);
+    logger.debug(`YAML parsed successfully, keys: ${Object.keys(parsedData).join(', ')}`);
     
     // Validate the data
+    logger.debug('Validating YAML data...');
     const validatedData = validateYamlData(parsedData);
     
-    logDebug('YAML parsed successfully', {
+    logger.debug('YAML parsed and validated successfully', {
       filePath: absolutePath,
       client: validatedData.client,
       documentType: validatedData.document_type,
@@ -185,7 +186,7 @@ export async function parseYaml(filePath: string): Promise<YamlData> {
     return validatedData;
   } catch (error) {
     if (error instanceof YamlParseError || error instanceof ValidationError) {
-      logError('YAML parsing/validation error', error, { filePath: absolutePath });
+      logger.error('YAML parsing/validation error:', error);
       throw error;
     }
     
@@ -193,7 +194,7 @@ export async function parseYaml(filePath: string): Promise<YamlData> {
       `Failed to parse YAML file: ${(error as Error).message}`,
       absolutePath
     );
-    logError('Unexpected YAML parsing error', error as Error, { filePath: absolutePath });
+    logger.error('Unexpected YAML parsing error:', error as Error);
     throw wrappedError;
   }
 }

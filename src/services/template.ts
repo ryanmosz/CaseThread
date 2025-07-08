@@ -6,9 +6,9 @@
  */
 
 import { promises as fs } from 'fs';
-import path from 'path';
-import { Template, TemplateLoadError, isTemplate } from '../types';
-import { logDebug, logError, measureDuration } from '../utils/logger';
+import * as path from 'path';
+import { Template } from '../types';
+import { logger } from '../utils/logger';
 
 /**
  * Base path for template files
@@ -46,7 +46,7 @@ export function getExplanationPath(documentType: string): string {
 
   const explanationFile = explanationMap[documentType];
   if (!explanationFile) {
-    throw new TemplateLoadError(
+    throw new Error(
       `No explanation mapping found for document type: ${documentType}`,
       documentType
     );
@@ -69,89 +69,19 @@ export function getExplanationPath(documentType: string): string {
  * ```
  */
 export async function loadTemplate(documentType: string): Promise<Template> {
-  const templatePath = getTemplatePath(documentType);
-  
-  logDebug('Loading template', { documentType, templatePath });
+  logger.debug(`loadTemplate called with type: ${documentType}`);
+  const templatePath = path.join('templates', 'core', `${documentType}.json`);
+  logger.debug(`Attempting to read template from: ${templatePath}`);
   
   try {
-    // Load the template file
-    const templateContent = await measureDuration(
-      `load-template-file-${documentType}`,
-      async () => {
-        try {
-          return await fs.readFile(templatePath, 'utf-8');
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            throw new TemplateLoadError(
-              `Template file not found: ${templatePath}`,
-              documentType,
-              templatePath
-            );
-          }
-          throw error;
-        }
-      }
-    );
-
-    // Parse JSON
-    let templateData: any;
-    try {
-      templateData = JSON.parse(templateContent);
-    } catch (error) {
-      throw new TemplateLoadError(
-        `Invalid JSON in template file: ${(error as Error).message}`,
-        documentType,
-        templatePath
-      );
-    }
-
-    // Validate template structure
-    if (!isTemplate(templateData)) {
-      throw new TemplateLoadError(
-        'Template file does not match expected schema. Missing required fields.',
-        documentType,
-        templatePath
-      );
-    }
-
-    // Additional validation for required arrays
-    if (!Array.isArray(templateData.requiredFields) || templateData.requiredFields.length === 0) {
-      throw new TemplateLoadError(
-        'Template must have at least one required field',
-        documentType,
-        templatePath
-      );
-    }
-
-    if (!Array.isArray(templateData.sections) || templateData.sections.length === 0) {
-      throw new TemplateLoadError(
-        'Template must have at least one section',
-        documentType,
-        templatePath
-      );
-    }
-
-    logDebug('Template loaded successfully', {
-      documentType,
-      templateId: templateData.id,
-      fieldCount: templateData.requiredFields.length,
-      sectionCount: templateData.sections.length
-    });
-
-    return templateData as Template;
-  } catch (error) {
-    if (error instanceof TemplateLoadError) {
-      logError('Template load error', error, { documentType });
-      throw error;
-    }
-    
-    const wrappedError = new TemplateLoadError(
-      `Failed to load template: ${(error as Error).message}`,
-      documentType,
-      templatePath
-    );
-    logError('Unexpected template load error', error as Error, { documentType });
-    throw wrappedError;
+    const content = await fs.readFile(templatePath, 'utf-8');
+    logger.debug(`Template file read successfully, size: ${content.length} bytes`);
+    const template = JSON.parse(content);
+    logger.debug(`Template parsed successfully, sections: ${template.sections?.length || 0}`);
+    return template;
+  } catch (error: any) {
+    logger.debug(`Failed to load template: ${error.message}`);
+    throw error;
   }
 }
 
@@ -169,58 +99,50 @@ export async function loadTemplate(documentType: string): Promise<Template> {
  * ```
  */
 export async function loadExplanation(documentType: string): Promise<string> {
-  const explanationPath = getExplanationPath(documentType);
+  logger.debug(`loadExplanation called with type: ${documentType}`);
   
-  logDebug('Loading explanation', { documentType, explanationPath });
+  // Try different naming patterns
+  const patterns = [
+    `${documentType}-explanation.md`,
+    `${getExplanationNumber(documentType)}-${documentType}-explanation.md`
+  ];
   
-  try {
-    const content = await measureDuration(
-      `load-explanation-${documentType}`,
-      async () => {
-        try {
-          return await fs.readFile(explanationPath, 'utf-8');
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            throw new TemplateLoadError(
-              `Explanation file not found: ${explanationPath}`,
-              documentType,
-              explanationPath
-            );
-          }
-          throw error;
-        }
-      }
-    );
-
-    // Basic validation - ensure content is not empty
-    if (!content || content.trim().length === 0) {
-      throw new TemplateLoadError(
-        'Explanation file is empty',
-        documentType,
-        explanationPath
-      );
-    }
-
-    logDebug('Explanation loaded successfully', {
-      documentType,
-      contentLength: content.length
-    });
-
-    return content;
-  } catch (error) {
-    if (error instanceof TemplateLoadError) {
-      logError('Explanation load error', error, { documentType });
-      throw error;
-    }
+  for (const pattern of patterns) {
+    const explanationPath = path.join('templates', 'explanations', pattern);
+    logger.debug(`Attempting to read explanation from: ${explanationPath}`);
     
-    const wrappedError = new TemplateLoadError(
-      `Failed to load explanation: ${(error as Error).message}`,
-      documentType,
-      explanationPath
-    );
-    logError('Unexpected explanation load error', error as Error, { documentType });
-    throw wrappedError;
+    try {
+      const content = await fs.readFile(explanationPath, 'utf-8');
+      logger.debug(`Explanation file read successfully, size: ${content.length} bytes`);
+      return content;
+    } catch (error) {
+      logger.debug(`Failed to read ${pattern}: ${(error as Error).message}`);
+      // Continue to next pattern
+    }
   }
+  
+  throw new Error(`Explanation file not found for document type: ${documentType}`);
+}
+
+/**
+ * Get the explanation file number based on document type
+ */
+function getExplanationNumber(documentType: string): string {
+  logger.debug(`Getting explanation number for type: ${documentType}`);
+  const mapping: Record<string, string> = {
+    'provisional-patent-application': '01',
+    'nda-ip-specific': '02',
+    'patent-license-agreement': '03',
+    'trademark-application': '04',
+    'patent-assignment-agreement': '05',
+    'office-action-response': '06',
+    'cease-and-desist-letter': '07',
+    'technology-transfer-agreement': '08'
+  };
+  
+  const number = mapping[documentType] || '';
+  logger.debug(`Explanation number for ${documentType}: ${number || 'none'}`);
+  return number;
 }
 
 /**
