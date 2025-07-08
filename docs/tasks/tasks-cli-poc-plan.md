@@ -31,7 +31,7 @@
 ## Tasks
 
 - [ ] 1.0 Set up Docker development environment
-  - [ ] 1.1 Create Dockerfile with Node.js 20 Alpine image, including git and bash
+  - [x] 1.1 Create Dockerfile with Node.js 20 Alpine image, including git and bash
   - [ ] 1.2 Create docker-compose.yml with volume mounts for code and node_modules
   - [ ] 1.3 Add .dockerignore file to exclude node_modules and dist directories
   - [ ] 1.4 Create docker-entrypoint.sh script for container initialization
