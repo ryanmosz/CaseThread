@@ -4,27 +4,27 @@
 - [x] Project planning complete
 - [x] Technical decisions documented
 - [x] Team coordination guide created
-- [ ] Repository initialized
-- [ ] Development environment setup
+- [x] Repository initialized
+- [x] Development environment setup
 
 ## 🎯 Phase 1: CLI MVP Development (Weeks 1-6)
 
 ### Week 1-2: Foundation & CLI Framework
-- [ ] Initialize TypeScript project
-- [ ] Set up Jest testing framework
+- [x] Initialize TypeScript project
+- [x] Set up Jest testing framework
 - [ ] Create CLI structure (using Commander.js or Yargs)
-- [ ] Design core data models
+- [x] Design core data models
 - [ ] Set up GitHub Projects board
 - [ ] Basic CLI commands scaffold
 
 ### Week 3-4: Core Engine (CLI)
-- [ ] Template system implementation
+- [x] Template system implementation
 - [ ] OpenAI service integration
 - [ ] Basic prompt engineering
 - [ ] Firm context learning module
 - [ ] CLI command: `casethread generate <template> <output>`
 - [ ] CLI command: `casethread learn <firm-docs-folder>`
-- [ ] Unit tests for core logic
+- [x] Unit tests for core logic
 
 ### Week 5-6: CLI Features & Testing
 - [ ] Document preview in terminal
