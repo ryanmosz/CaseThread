@@ -170,47 +170,45 @@ describe('DataExtractor', () => {
 Following the Parent Task Development Plan Request, I will generate detailed task lists using the format from `generate-tasks.mdc`:
 
 1. **tasks-parent-[TASK-ID]-checklist.md** - Checkbox list with task codes
-2. **tasks-parent-[TASK-ID]-detailed.md** - Detailed implementation information
+2. **tasks-parent-[TASK-ID].[SUBTASK-ID]-detailed.md** - One detail file per subtask
 
-### Step 4: Detailed Task File Management (500-Line Limit)
+### Step 4: Detailed Task File Management (One File Per Subtask)
 
-**Note**: Not typically needed for CaseThread due to simpler task structure, but included for complex tasks or future projects.
+**IMPORTANT**: To avoid file generation issues and keep documentation manageable, create individual detail files for each subtask.
 
-When creating detailed task files:
+1. **File Structure**: Create one detail file per subtask (not parent task)
+   - Format: `tasks-parent-[TASK-ID].[SUBTASK-ID]-detailed.md`
+   - Example: `tasks-parent-3.1-detailed.md`, `tasks-parent-3.2-detailed.md`, etc.
+   - Each file focuses on a single subtask's implementation details
 
-1. **File Length Target**: Aim for approximately 500 lines per detailed task file
-   - This keeps files manageable and focused
-   - Allows for easier review and navigation
-   - Prevents overwhelming documentation
+2. **File Content**: Each subtask detail file should include:
+   - Reference to parent task (e.g., "Part of Parent Task 3.0: Implement Core Services")
+   - Complete implementation details for that specific subtask
+   - All sub-subtasks with detailed steps
+   - Code examples and testing procedures
+   - Typically 100-300 lines per file (more manageable than 500+ line files)
 
-2. **Multiple Detail Files**: When a parent task requires more than 500 lines of detail:
-   - Create multiple numbered files: `tasks-parent-[TASK-ID].[SUBTASK-ID]-detailed.md`
-   - Example: `tasks-parent-5.6.1-detailed.md`, `tasks-parent-5.6.2-detailed.md`, etc.
-   - Each file should cover a logical grouping of subtasks
-
-3. **Checklist References**: When multiple detail files exist:
-   - Update the checklist to indicate which file contains each subtask's details
-   - Add notes under parent task entries showing the file mapping
+3. **Checklist References**: Update the checklist to indicate detail file locations:
    - Example format:
      ```markdown
-     - [ ] 5.6 Integration testing and documentation
-       - [ ] 5.6.1 Create end-to-end integration tests (Details in: tasks-parent-5.6.1-detailed.md)
-       - [ ] 5.6.2 Test complete research flow (Details in: tasks-parent-5.6.1-detailed.md)
-       - [ ] 5.6.4 Update project README (Details in: tasks-parent-5.6.2-detailed.md)
+     - [ ] 3.0 Implement core services
+       - [ ] 3.1 Create TypeScript type definitions (Details: tasks-parent-3.1-detailed.md)
+       - [ ] 3.2 Implement validator utility (Details: tasks-parent-3.2-detailed.md)
+       - [ ] 3.3 Create logger utility (Details: tasks-parent-3.3-detailed.md)
      ```
 
-4. **File Organization Guidelines**:
-   - Group related subtasks in the same detail file
-   - Never delete successfully created files
-   - Maintain logical coherence within each file
-   - Include clear headers indicating which subtasks are covered
+4. **Benefits of This Approach**:
+   - Avoids file generation failures from overly large files
+   - Makes documentation easier to navigate and update
+   - Allows parallel work on different subtasks
+   - Simplifies version control and reviewing changes
 
 ## Output
 
 The final output will be saved as:
 - **PRD**: `/docs/tasks/prd-parent-task-[TASK-ID].md`
 - **Checklist**: `/docs/tasks/tasks-parent-[TASK-ID]-checklist.md`
-- **Details**: `/docs/tasks/tasks-parent-[TASK-ID]-detailed.md`
+- **Details**: Multiple files - `/docs/tasks/tasks-parent-[TASK-ID].[SUBTASK-ID]-detailed.md`
 
 ## Target Audience
 
