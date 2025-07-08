@@ -1,186 +1,125 @@
 /**
- * Core TypeScript type definitions for CaseThread CLI POC
- * 
- * These types define the structure of data flowing through the application,
- * from template loading to YAML parsing and document generation.
+ * Type definitions for CaseThread CLI POC
  */
 
-/**
- * Represents a supported document type in the system
- */
-export interface DocumentType {
-  /** Unique identifier matching the template file name */
+// Template types
+export interface Template {
   id: string;
-  /** Human-readable name for display */
   name: string;
-  /** Path to the JSON template file */
-  templateFile: string;
-  /** Path to the markdown explanation file */
-  explanationFile: string;
+  description: string;
+  version: string;
+  category: string;
+  subcategory?: string;
+  jurisdiction: string;
+  requiredFields: RequiredField[];
+  sections: Section[];
+  metadata: TemplateMetadata;
 }
 
-/**
- * Base structure for YAML input data
- * All YAML files must contain these fields at minimum
- */
-export interface YamlData {
-  /** Client name or identifier */
-  client: string;
-  /** Attorney handling the matter */
-  attorney: string;
-  /** Type of document to generate */
-  document_type: string;
-  /** Template file to use */
-  template: string;
-  /** Additional fields specific to each document type */
-  [key: string]: any;
+export interface RequiredField {
+  id: string;
+  name: string;
+  type: 'text' | 'date' | 'number' | 'select' | 'multiselect' | 'boolean';
+  description: string;
+  required: boolean;
+  validation?: FieldValidation;
+  options?: string[]; // For select/multiselect
+  defaultValue?: any;
 }
 
-/**
- * Field validation rules for template fields
- */
+// Used by both RequiredField and TemplateField
 export interface FieldValidation {
-  /** Regex pattern for validation */
-  pattern?: string;
-  /** Minimum length for text fields */
   minLength?: number;
-  /** Maximum length for text fields */
   maxLength?: number;
-  /** Minimum value for numeric fields */
+  pattern?: string;
   min?: number;
-  /** Maximum value for numeric fields */
   max?: number;
 }
 
-/**
- * Represents a single field in a template
- */
+// Keep TemplateField for backward compatibility
 export interface TemplateField {
-  /** Unique field identifier */
   id: string;
-  /** Display name for the field */
   name: string;
-  /** Field data type */
-  type: 'text' | 'textarea' | 'date' | 'number' | 'select' | 'multiselect' | 'boolean';
-  /** Help text describing the field */
+  type: 'text' | 'date' | 'number' | 'select' | 'multiselect' | 'boolean' | 'textarea';
   description: string;
-  /** Whether the field is required */
   required: boolean;
-  /** Validation rules for the field */
   validation?: FieldValidation;
-  /** Available options for select/multiselect fields */
   options?: string[];
-  /** Default value if not provided */
   default?: any;
 }
 
-/**
- * Conditional logic for template sections
- */
-export interface SectionCondition {
-  /** Field ID to check */
-  field: string;
-  /** Expected value for the condition to be true */
-  value: any;
-  /** Operator for comparison (defaults to equals) */
-  operator?: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan';
-}
-
-/**
- * Represents a section within a template
- */
-export interface TemplateSection {
-  /** Unique section identifier */
+export interface Section {
   id: string;
-  /** Section title for display */
   title: string;
-  /** Display order (1-based) */
-  order: number;
-  /** Whether the section is required */
-  required: boolean;
-  /** Template content with variable placeholders */
   content: string;
-  /** Conditional display logic */
-  conditionalOn?: SectionCondition;
-  /** Whether law firms can customize this section */
-  firmCustomizable?: boolean;
-  /** Guidance text for filling out this section */
+  order: number;
+  required: boolean;
+  conditions?: SectionCondition[];
+  conditionalOn?: SectionCondition; // For backward compatibility
+  variables?: string[];
   helpText?: string;
 }
 
-/**
- * Template metadata information
- */
+export interface SectionCondition {
+  field: string;
+  operator?: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan';
+  value: any;
+}
+
 export interface TemplateMetadata {
-  /** Document category */
-  category: 'patent' | 'trademark' | 'licensing' | 'general';
-  /** Jurisdiction scope */
-  jurisdiction: 'federal' | 'state' | 'international';
-  /** Last update date */
-  lastUpdated: string;
-  /** Template author */
   author: string;
+  lastUpdated: string;
+  tags: string[];
+  estimatedTime?: string;
+  difficulty?: 'simple' | 'moderate' | 'complex';
+  notes?: string;
+  relatedTemplates?: string[];
+  category?: string;
+  jurisdiction?: string;
+  [key: string]: any;
 }
 
-/**
- * Variable transformation options
- */
-export interface TemplateVariable {
-  /** Source field ID */
-  source: string;
-  /** Text transformation to apply */
-  transform?: 'uppercase' | 'lowercase' | 'titlecase' | 'none';
-  /** Default value if source is empty */
-  default?: string;
+// YAML Data types
+export interface YamlData {
+  document_type: string;
+  client: string;
+  attorney?: string;
+  template?: string;
+  [key: string]: any;
 }
 
-/**
- * AI prompt configuration for dynamic sections
- */
-export interface TemplatePrompt {
-  /** System prompt for AI context */
-  system: string;
-  /** User prompt template */
-  user: string;
-  /** Temperature setting for generation */
-  temperature?: number;
-  /** Maximum tokens to generate */
-  maxTokens?: number;
+// Spinner message type for type safety
+export interface SpinnerMessages {
+  INIT: string;
+  VALIDATE_TYPE: string;
+  CREATE_OUTPUT_DIR: string;
+  CHECK_PERMISSIONS: string;
+  LOAD_TEMPLATE: string;
+  LOAD_EXPLANATION: string;
+  PARSE_YAML: string;
+  VALIDATE_YAML: string;
+  PREPARE_PROMPT: string;
+  CONNECT_OPENAI: string;
+  GENERATE_DOC: string;
+  SAVE_DOC: string;
+  SUCCESS: string;
 }
 
-/**
- * Complete template structure
- */
-export interface Template {
-  /** Unique template identifier */
-  id: string;
-  /** Display name */
-  name: string;
-  /** Template type/category */
-  type: string;
-  /** Template version */
-  version: string;
-  /** Brief description of the template */
-  description: string;
-  /** Complexity level */
-  complexity: 'low' | 'medium' | 'high';
-  /** Estimated time to complete */
-  estimatedTime: string;
-  /** Template metadata */
-  metadata: TemplateMetadata;
-  /** Required input fields */
-  requiredFields: TemplateField[];
-  /** Document sections */
-  sections: TemplateSection[];
-  /** Variable definitions */
-  variables?: Record<string, TemplateVariable>;
-  /** AI prompt configurations */
-  prompts?: Record<string, TemplatePrompt>;
+// Document generation types
+export interface GeneratedDocument {
+  content: string;
+  metadata: DocumentMetadata;
 }
 
-/**
- * Custom error types for better error handling
- */
+export interface DocumentMetadata {
+  templateId: string;
+  generatedAt: Date;
+  client: string;
+  yamlPath: string;
+  outputPath?: string;
+}
+
+// Custom error types
 export class ValidationError extends Error {
   constructor(
     message: string,
@@ -215,30 +154,22 @@ export class YamlParseError extends Error {
   }
 }
 
-/**
- * Type guard to check if a value is a valid YamlData object
- */
+// Type guards
 export function isYamlData(value: any): value is YamlData {
   return (
     typeof value === 'object' &&
     value !== null &&
     typeof value.client === 'string' &&
-    typeof value.attorney === 'string' &&
-    typeof value.document_type === 'string' &&
-    typeof value.template === 'string'
+    typeof value.document_type === 'string'
   );
 }
 
-/**
- * Type guard to check if a value is a valid Template object
- */
 export function isTemplate(value: any): value is Template {
   return (
     typeof value === 'object' &&
     value !== null &&
     typeof value.id === 'string' &&
     typeof value.name === 'string' &&
-    typeof value.type === 'string' &&
     typeof value.version === 'string' &&
     Array.isArray(value.requiredFields) &&
     Array.isArray(value.sections) &&
@@ -246,9 +177,6 @@ export function isTemplate(value: any): value is Template {
   );
 }
 
-/**
- * Type guard to check if a value is a valid TemplateField
- */
 export function isTemplateField(value: any): value is TemplateField {
   const validTypes = ['text', 'textarea', 'date', 'number', 'select', 'multiselect', 'boolean'];
   return (
@@ -260,4 +188,18 @@ export function isTemplateField(value: any): value is TemplateField {
     typeof value.description === 'string' &&
     typeof value.required === 'boolean'
   );
-} 
+}
+
+// Export a type-safe version of supported document types
+export const DOCUMENT_TYPES = {
+  CEASE_AND_DESIST: 'cease-and-desist-letter',
+  NDA_IP: 'nda-ip-specific',
+  OFFICE_ACTION: 'office-action-response',
+  PATENT_ASSIGNMENT: 'patent-assignment-agreement',
+  PATENT_LICENSE: 'patent-license-agreement',
+  PROVISIONAL_PATENT: 'provisional-patent-application',
+  TECH_TRANSFER: 'technology-transfer-agreement',
+  TRADEMARK: 'trademark-application'
+} as const;
+
+export type DocumentType = typeof DOCUMENT_TYPES[keyof typeof DOCUMENT_TYPES]; 

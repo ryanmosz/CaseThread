@@ -123,7 +123,7 @@ describe('Generate Command', () => {
     expect(mockSpinner.updateMessage).toHaveBeenCalledWith('Validating document type...');
     expect(validator.isValidDocumentType).toHaveBeenCalledWith('patent-assignment');
     
-    expect(mockSpinner.updateMessage).toHaveBeenCalledWith('Loading template files...');
+    expect(mockSpinner.updateMessage).toHaveBeenCalledWith('Loading document template...');
     expect(templateService.loadTemplate).toHaveBeenCalledWith('patent-assignment');
     expect(templateService.loadExplanation).toHaveBeenCalledWith('patent-assignment');
     
@@ -137,7 +137,9 @@ describe('Generate Command', () => {
       { yaml: 'data' }
     );
     
-    expect(mockSpinner.success).toHaveBeenCalledWith('Document generated successfully!');
+    expect(mockSpinner.success).toHaveBeenCalledWith(
+      expect.stringMatching(/Document generated successfully! \(completed in \d+s\)/)
+    );
     expect(consoleLogSpy).toHaveBeenCalledWith('Generated document content');
   });
 
@@ -153,7 +155,7 @@ describe('Generate Command', () => {
     }
 
     expect(mockSpinner.fail).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid document type: invalid-type')
+      expect.stringMatching(/Invalid document type: invalid-type.*\(failed after \d+s\)/)
     );
     expect(mockExit).toHaveBeenCalledWith(1);
   });
@@ -216,7 +218,7 @@ describe('Generate Command', () => {
       { recursive: true }
     );
     expect(mockSpinner.updateMessage).toHaveBeenCalledWith(
-      expect.stringContaining('Creating output directory')
+      'Creating output directory...'
     );
   });
 
@@ -239,8 +241,196 @@ describe('Generate Command', () => {
     }
 
     expect(mockSpinner.fail).toHaveBeenCalledWith(
-      expect.stringContaining('No write permission for output directory')
+      expect.stringMatching(/No write permission for output directory.*\(failed after \d+s\)/)
     );
     expect(mockExit).toHaveBeenCalledWith(1);
+  });
+});
+
+describe('Generate Command - Spinner Updates', () => {
+  let mockSpinner: any;
+  let mockSetInterval: jest.SpyInstance;
+  let mockClearInterval: jest.SpyInstance;
+
+  // Use fake timers
+  beforeEach(() => {
+    jest.useFakeTimers();
+    
+    // Setup spinner mock
+    mockSpinner = {
+      updateMessage: jest.fn(),
+      success: jest.fn(),
+      fail: jest.fn(),
+      stop: jest.fn(),
+      isSpinning: true
+    };
+    (createSpinner as jest.Mock).mockReturnValue(mockSpinner);
+
+    // Setup OpenAI mock
+    const mockGenerateDocument = jest.fn();
+    (OpenAIService as jest.MockedClass<typeof OpenAIService>).mockImplementation(() => ({
+      generateDocument: mockGenerateDocument
+    } as any));
+
+    // Setup interval spies
+    mockSetInterval = jest.spyOn(global, 'setInterval');
+    mockClearInterval = jest.spyOn(global, 'clearInterval');
+
+    // Setup other mocks
+    (logger.debug as jest.Mock).mockImplementation();
+    (logger.error as jest.Mock).mockImplementation();
+    mockAccess.mockResolvedValue(undefined);
+    mockMkdir.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
+    jest.clearAllMocks();
+  });
+
+  it('should show all spinner messages in correct order', async () => {
+    // Setup all mocks for success
+    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
+    
+    const mockOpenAIInstance = new (OpenAIService as any)();
+    mockOpenAIInstance.generateDocument.mockResolvedValue({ content: 'Generated content' });
+
+    await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+
+    // Verify spinner messages in order
+    const updateCalls = mockSpinner.updateMessage.mock.calls.map((call: any[]) => call[0]);
+    
+    expect(updateCalls).toContain('Validating document type...');
+    expect(updateCalls).toContain('Loading document template...');
+    expect(updateCalls).toContain('Loading template explanation...');
+    expect(updateCalls).toContain('Parsing input data...');
+    expect(updateCalls).toContain('Validating input data...');
+    expect(updateCalls).toContain('Preparing AI prompt...');
+    expect(updateCalls).toContain('Connecting to OpenAI...');
+    expect(updateCalls).toContain('Generating document (this may take 30-60 seconds)...');
+    
+    // Verify final success message includes timing
+    expect(mockSpinner.success).toHaveBeenCalledWith(
+      expect.stringMatching(/Document generated successfully! \(completed in \d+s\)/)
+    );
+  });
+
+  it('should update spinner with elapsed time during generation', async () => {
+    // Setup mocks
+    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
+    
+    // Make generateDocument take time
+    const mockOpenAIInstance = new (OpenAIService as any)();
+    mockOpenAIInstance.generateDocument.mockImplementation(
+      () => new Promise(resolve => setTimeout(() => resolve({ content: 'Generated' }), 15000))
+    );
+
+    const promise = generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+
+    // Fast-forward time to trigger interval updates
+    jest.advanceTimersByTime(5000);
+    expect(mockSpinner.updateMessage).toHaveBeenCalledWith(
+      expect.stringMatching(/Generating document.*\(5s elapsed\)/)
+    );
+
+    jest.advanceTimersByTime(5000);
+    expect(mockSpinner.updateMessage).toHaveBeenCalledWith(
+      expect.stringMatching(/Generating document.*\(10s elapsed\)/)
+    );
+
+    // Complete the generation
+    jest.runAllTimers();
+    await promise;
+
+    expect(mockClearInterval).toHaveBeenCalled();
+  });
+
+  it('should show appropriate message when creating output directory', async () => {
+    // Directory doesn't exist
+    mockAccess.mockRejectedValueOnce(new Error('ENOENT'));
+    
+    // Setup other mocks
+    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
+    
+    const mockOpenAIInstance = new (OpenAIService as any)();
+    mockOpenAIInstance.generateDocument.mockResolvedValue({ content: 'Generated' });
+
+    await generateCommand.parseAsync([
+      'node', 'test', 'patent-assignment', 'test.yaml',
+      '--output', './new-dir'
+    ]);
+
+    expect(mockSpinner.updateMessage).toHaveBeenCalledWith('Creating output directory...');
+  });
+
+  it('should include timing in error message', async () => {
+    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockRejectedValue(
+      new Error('Template not found')
+    );
+
+    // Mock Date.now to control timing
+    const mockNow = jest.spyOn(Date, 'now');
+    mockNow.mockReturnValueOnce(1000); // Start time
+    mockNow.mockReturnValueOnce(3500); // End time (2.5 seconds later, rounds to 3)
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+      fail('Should have thrown');
+    } catch {
+      // Expected
+    }
+
+    expect(mockSpinner.fail).toHaveBeenCalledWith(
+      'Error: Template not found (failed after 3s)'
+    );
+  });
+
+  it('should clear interval on error during generation', async () => {
+    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
+    
+    const mockOpenAIInstance = new (OpenAIService as any)();
+    mockOpenAIInstance.generateDocument.mockRejectedValue(new Error('API error'));
+
+    try {
+      await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+      fail('Should have thrown');
+    } catch {
+      // Expected
+    }
+
+    expect(mockSetInterval).toHaveBeenCalled();
+    expect(mockClearInterval).toHaveBeenCalled();
+  });
+
+  it('should show checking permissions message when directory exists', async () => {
+    // Directory exists
+    mockAccess.mockResolvedValueOnce(undefined);
+    
+    // Setup other mocks
+    (validator.isValidDocumentType as any).mockReturnValue(true);
+    (templateService.loadTemplate as jest.Mock).mockResolvedValue({ template: 'data' });
+    (templateService.loadExplanation as jest.Mock).mockResolvedValue('explanation');
+    (yamlService.parseYaml as jest.Mock).mockResolvedValue({ yaml: 'data' });
+    
+    const mockOpenAIInstance = new (OpenAIService as any)();
+    mockOpenAIInstance.generateDocument.mockResolvedValue({ content: 'Generated' });
+
+    await generateCommand.parseAsync(['node', 'test', 'patent-assignment', 'test.yaml']);
+
+    expect(mockSpinner.updateMessage).toHaveBeenCalledWith('Checking directory permissions...');
   });
 }); 
