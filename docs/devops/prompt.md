@@ -192,4 +192,10 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
 
 19. Update AGENT-HANDOFF.md at the end of every chat response
 
-Using the guidelines above, produce your plan to implement and verify the current task from **docs/tasks/tasks-cli-poc-plan.md**. Analyze the plan and decide if it would be more efficient to do all subtasks at once and then test everything, or if it would be better to stop after some of the subtasks and test them individually before moving on. Remember, our goal is to write quality software at each step, minimizing bugs and mistakes and thus minimizing the need for backtracking, confusion and irritability. current task: 
+Using the guidelines above, produce your plan to implement and verify the current task from **docs/tasks/tasks-cli-poc-plan.md**. Analyze the plan and decide if it would be more efficient to do all subtasks at once and then test everything, or if it would be better to stop after some of the subtasks and test them individually before moving on. Remember, our goal is to write quality software at each step, minimizing bugs and mistakes and thus minimizing the need for backtracking, confusion and wasted effort.
+
+parent plan, task checklist and detailed checklist you are to proceed with development now are:
+docs/tasks/prd-parent-task-[PARENT-VAR].md
+docs/tasks/tasks-parent-[PARENT-VAR]-checklist.md
+docs/tasks/tasks-parent-[PARENT-VAR]-detailed.md
+where, PARENT-VAR = 

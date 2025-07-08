@@ -39,14 +39,14 @@
   - [x] 1.4 Create docker-entrypoint.sh script for container initialization
   - [x] 1.5 Test Docker setup with `docker-compose up -d` and verify container access
 
-- [ ] 2.0 Initialize TypeScript project with dependencies
-  - [ ] 2.1 Run `npm init -y` inside container to create package.json
-  - [ ] 2.2 Install TypeScript and Node types: `npm install --save-dev typescript @types/node`
-  - [ ] 2.3 Create tsconfig.json with strict mode and ES2022 target
-  - [ ] 2.4 Install core dependencies following npm-package-check: commander, openai, js-yaml, ora, winston, dotenv, chalk
-  - [ ] 2.5 Install dev dependencies: jest, ts-jest, @types/jest, ts-node, nodemon, eslint, prettier
-  - [ ] 2.6 Configure npm scripts in package.json (dev, build, start, cli, test, lint, format)
-  - [ ] 2.7 Create .env.example with OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE placeholders
+- [x] 2.0 Initialize TypeScript project with dependencies
+  - [x] 2.1 Run `npm init -y` inside container to create package.json
+  - [x] 2.2 Install TypeScript and Node types: `npm install --save-dev typescript @types/node`
+  - [x] 2.3 Create tsconfig.json with strict mode and ES2022 target
+  - [x] 2.4 Install core dependencies following npm-package-check: commander, openai, js-yaml, ora, winston, dotenv, chalk
+  - [x] 2.5 Install dev dependencies: jest, ts-jest, @types/jest, ts-node, nodemon, eslint, prettier
+  - [x] 2.6 Configure npm scripts in package.json (dev, build, start, cli, test, lint, format)
+  - [x] 2.7 Create .env.example with OPENAI_API_KEY, OPENAI_MODEL, OPENAI_TEMPERATURE placeholders
 
 - [ ] 3.0 Implement core services (template, YAML, logging)
   - [ ] 3.1 Create src/types/index.ts with TypeScript interfaces for DocumentType, YamlData, Template
