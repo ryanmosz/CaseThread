@@ -15,6 +15,26 @@
 
 The CaseThread CLI is fully functional and has been tested with real scenarios. All major features are implemented and working correctly.
 
+### 🔔 PENDING: Multi-Agent System Integration (PR #1)
+
+**Important**: There is an open pull request (#1) from team member `sinedd777` that introduces a major architectural change:
+
+- **PR Title**: "test: add comprehensive test coverage for multi-agent system"
+- **Scope**: +4,958 lines / -1,616 lines across 21 files
+- **Major Changes**:
+  - Transforms CLI into multi-agent system with ChromaDB vector search
+  - Adds Context Builder and Drafting agents
+  - New `learn` command for document indexing
+  - Requires additional ChromaDB Docker container
+
+**Integration Planning**: Complete integration planning documents have been created in `docs/planning/integration-setup/`:
+- `Integration-Plan.md` - Comprehensive integration strategy
+- `migration-guide.md` - User migration instructions
+- `scripts/` - Integration and test fix scripts
+- `docker-compose-multiagent.yml` - Proposed Docker configuration
+
+**Current Branch**: `feature/integration` contains all planning documents but NO actual integration work yet. This serves as a checkpoint before integration begins.
+
 ### Test Status
 - **237 tests passing** across all test suites
 - **1 test suite with TypeScript compilation issues** (generate.test.ts) - This is due to TypeScript configuration issues, not functionality problems
@@ -57,4 +77,6 @@ docker exec casethread-dev npm run cli -- generate trademark-application docs/te
    - Provides better error messages
 
 ### For Next Agent
-The project is functionally complete with comprehensive documentation. The only remaining issue is TypeScript configuration for one test file, which doesn't affect the actual functionality of the CLI. 
+The project is functionally complete with comprehensive documentation. The only remaining issue is TypeScript configuration for one test file, which doesn't affect the actual functionality of the CLI.
+
+**IMPORTANT**: Before integrating PR #1, review the integration planning documents in `docs/planning/integration-setup/`. This is a major architectural change that transforms the simple CLI into a multi-agent system. 
