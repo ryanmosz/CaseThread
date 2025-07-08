@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  casethread-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: casethread-dev
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+    tty: true
+    stdin_open: true
+    command: tail -f /dev/null
+
+volumes:
+  node_modules: 

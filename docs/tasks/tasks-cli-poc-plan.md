@@ -32,7 +32,7 @@
 
 - [ ] 1.0 Set up Docker development environment
   - [x] 1.1 Create Dockerfile with Node.js 20 Alpine image, including git and bash
-  - [ ] 1.2 Create docker-compose.yml with volume mounts for code and node_modules
+  - [x] 1.2 Create docker-compose.yml with volume mounts for code and node_modules
   - [ ] 1.3 Add .dockerignore file to exclude node_modules and dist directories
   - [ ] 1.4 Create docker-entrypoint.sh script for container initialization
   - [ ] 1.5 Test Docker setup with `docker-compose up -d` and verify container access
