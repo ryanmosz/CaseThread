@@ -219,6 +219,6 @@ The primary reader is a **junior developer** implementing their first CLI projec
 - Provide clear success criteria
 
 Remember to move any previous *plan*, *checklist* and *detailed* file to `docs/tasks/complete/` first! 
-**Note**: Not applicable to current project - used when tasks folder gets crowded.
+
 
 ## Parent Task to Plan:
