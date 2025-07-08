@@ -6,6 +6,8 @@
 - `.env.example` - Environment variables template
 - `Dockerfile` - Docker container configuration
 - `docker-compose.yml` - Docker compose setup for development
+- `.dockerignore` - Docker build exclusion patterns
+- `docker-entrypoint.sh` - Container initialization script
 - `src/index.ts` - CLI entry point
 - `src/commands/generate.ts` - Generate command implementation
 - `src/services/openai.ts` - OpenAI API integration service
@@ -30,12 +32,12 @@
 
 ## Tasks
 
-- [ ] 1.0 Set up Docker development environment
+- [x] 1.0 Set up Docker development environment
   - [x] 1.1 Create Dockerfile with Node.js 20 Alpine image, including git and bash
   - [x] 1.2 Create docker-compose.yml with volume mounts for code and node_modules
-  - [ ] 1.3 Add .dockerignore file to exclude node_modules and dist directories
-  - [ ] 1.4 Create docker-entrypoint.sh script for container initialization
-  - [ ] 1.5 Test Docker setup with `docker-compose up -d` and verify container access
+  - [x] 1.3 Add .dockerignore file to exclude node_modules and dist directories
+  - [x] 1.4 Create docker-entrypoint.sh script for container initialization
+  - [x] 1.5 Test Docker setup with `docker-compose up -d` and verify container access
 
 - [ ] 2.0 Initialize TypeScript project with dependencies
   - [ ] 2.1 Run `npm init -y` inside container to create package.json
