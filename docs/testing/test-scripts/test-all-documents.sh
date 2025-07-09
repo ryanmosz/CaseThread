@@ -1,8 +1,11 @@
 #!/bin/bash
 
-# CaseThread CLI Test Script - Tests all 8 document types
-# This script runs the CLI for each document type and reports success/failure
-# Updated for multi-agent system with ChromaDB
+# CaseThread CLI Test Script - DEFINITIVE TEST for all 8 document types
+# This script validates the complete CaseThread functionality
+# Updated for multi-agent system with ChromaDB integration
+# 
+# SUCCESS CRITERIA: All 8 document types must generate successfully
+# This is the authoritative test for project readiness
 
 echo "================================================"
 echo "CaseThread CLI - Full Document Generation Test"
