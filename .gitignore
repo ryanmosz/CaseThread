@@ -82,6 +82,8 @@ generated-documents/
 # Test output directories
 test-output*/
 test-output-*/
+temp-parallel/
+temp-regular/
 
 # Temporary files
 *.tmp
