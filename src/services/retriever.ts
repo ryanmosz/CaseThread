@@ -55,8 +55,17 @@ export class RetrieverService {
     // ChromaDB client configuration - requires server to be running
     // Use CHROMADB_URL from environment or default to localhost:8000
     const chromaUrl = process.env.CHROMADB_URL || 'http://localhost:8000';
+    
+    // Parse URL to get host and port for new ChromaDB client format
+    const url = new URL(chromaUrl);
+    const host = url.hostname;
+    const port = parseInt(url.port || '8000', 10);
+    const ssl = url.protocol === 'https:';
+    
     this.client = new ChromaClient({
-      path: chromaUrl
+      host,
+      port,
+      ssl
     });
 
     if (this.config.enableLogging) {
