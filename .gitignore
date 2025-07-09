@@ -84,6 +84,10 @@ test-output*/
 test-output-*/
 temp-parallel/
 temp-regular/
+test-errors/
+test-results/
+docs/testing/test-errors/
+docs/testing/test-results/
 
 # Generated documents in root
 /*.md
