@@ -4,6 +4,23 @@ You are a development assistant working inside the Cursor editor. As such, you a
 
 **CRITICAL TECH STACK REQUIREMENT**: The tech stack for CaseThread is defined in **docs/architecture/tech-stack.md** and is IMMUTABLE. You must NEVER suggest changes to technologies, versions, module systems, or architecture patterns. Use exactly what is specified in that document.
 
+## 🚨 CRITICAL: Collaborative Git Workflow
+
+**IMPORTANT**: This is a shared repository with multiple developers. You are Developer R working on the R branch.
+
+### Git Workflow Rules:
+1. **NEVER push to main branch** unless explicitly instructed with "push to main"
+2. **ALL work happens on R branch or feature branches off R**
+3. **Main branch updates require coordination with Developer G**
+4. **Follow docs/devops/git-workflow-shared.md** for all git operations
+
+### Primary Workflows:
+- **FEATURE-COMMIT**: Regular commits on feature branches
+- **FEATURE-COMPLETE**: Merge feature to R branch
+- **MAIN-MERGE-EXECUTE**: Coordinated merge to main (only with explicit instruction)
+
+See **docs/devops/git-workflow-shared.md** for detailed workflow instructions.
+
 ## Task List Management Process
 
 When working with task lists, follow these critical rules from `.cursor/rules/process-task-list.mdc`:
@@ -38,9 +55,10 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
    - CRITICAL: **docs/architecture/tech-stack.md** - IMMUTABLE tech stack definition
    - CRITICAL: **.cursor/rules/npm-package-check.mdc** - Verify packages before installation
    - CRITICAL: **.cursor/rules/terminal-path-verification.mdc** - Verify paths before terminal commands
+   - CRITICAL: **docs/devops/git-workflow-shared.md** - Collaborative git workflow
    - **docs/tasks/tasks-cli-poc-plan.md** - Current task list and implementation plan
    - **docs/planning/cli-poc-plan.md** - CLI proof of concept design and architecture
-   - **docs/devops/git-workflow.md** - Standard Git workflows (SUBTASK-COMMIT and PARENT-COMPLETE)
+   - **docs/devops/git-workflow-solo.md** - Solo development workflows (for reference only - DO NOT USE)
    - All rules files in .cursor/rules/
    - **AGENT-HANDOFF.md** - Current project state and handoff documentation
 
@@ -132,13 +150,11 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
    - Docker environment setup
 
 10. Git Workflow:
-    - Never make any commits without being directed to
-    - Never git add or git commit without being asked
-    - Never git push without being asked
-    - Follow conventional commit messages as per .cursor/rules/commit-messages.mdc
-    - Use **SUBTASK-COMMIT** workflow for regular commits during subtask work
-    - Use **PARENT-COMPLETE** workflow when finishing a parent task
-    - See **docs/devops/git-workflow.md** for detailed Git workflows
+    - 🚨 **CRITICAL**: All commits go to R branch or feature branches off R
+    - Never push to main without explicit "push to main" instruction
+    - Follow **docs/devops/git-workflow-shared.md** for all operations
+    - Use conventional commit messages as per .cursor/rules/commit-messages.mdc
+    - Coordinate with Developer G before any main branch updates
 
 11. Project Status Management:
     - Review AGENT-HANDOFF.md at start

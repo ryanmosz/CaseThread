@@ -15,6 +15,26 @@
 
 The CaseThread CLI is fully functional and has been tested with real scenarios. All major features are implemented and working correctly.
 
+### 🚨 CRITICAL: Collaborative Git Workflow
+
+**IMPORTANT UPDATE**: This is now a shared repository with two developers.
+
+- **Developer R (Ryan)**: Works on R branch, focuses on PDF generation and backend
+- **Developer G (Gaurang)**: Works on G branch, focuses on GUI and frontend
+- **Workflow Document**: `docs/devops/git-workflow-shared.md`
+
+**Key Rules**:
+1. NEVER push directly to main branch
+2. Each developer works on their own integration branch (R or G)
+3. Feature branches created off personal branches (e.g., feature/r-pdf-generation)
+4. Main branch updates require explicit coordination between both developers
+5. See `docs/devops/git-workflow-shared.md` for detailed workflows
+
+**Current Branch Status**:
+- Main branch: Contains shared documentation and stable code
+- R branch: Developer R's integration branch (active)
+- G branch: To be created by Developer G
+
 ### 🔔 PENDING: Multi-Agent System Integration (PR #1)
 
 **Important**: There is an open pull request (#1) from team member `sinedd777` that introduces a major architectural change:
