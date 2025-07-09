@@ -91,11 +91,24 @@ run_test_demo() {
         # Show a preview of the generated document
         echo ""
         echo -e "${BLUE}Output Preview:${NC}"
-        generated_file=$(ls -t "$OUTPUT_DIR"/*.md 2>/dev/null | grep -v ".log" | head -n 1)
-        if [ -f "$generated_file" ]; then
-            head -n 10 "$generated_file" | sed 's/^/  /'
+        
+        # Wait a moment for file to be written and find the most recent .md file
+        sleep 1
+        generated_file=""
+        for attempt in 1 2 3; do
+            generated_file=$(find "$OUTPUT_DIR" -name "*.md" -type f 2>/dev/null | grep -v ".log" | sort -r | head -n 1)
+            if [ -n "$generated_file" ] && [ -f "$generated_file" ]; then
+                break
+            fi
+            sleep 1
+        done
+        
+        if [ -n "$generated_file" ] && [ -f "$generated_file" ]; then
+            head -n 10 "$generated_file" 2>/dev/null | sed 's/^/  /'
             echo "  ..."
             echo -e "  ${CYAN}Full document saved to: $(basename "$generated_file")${NC}"
+        else
+            echo -e "  ${YELLOW}Document preview not available immediately${NC}"
         fi
         
         PASSED_TESTS=$((PASSED_TESTS + 1))
@@ -168,7 +181,10 @@ if [ $FAILED_TESTS -eq 0 ]; then
     echo -e "   ${YELLOW}$OUTPUT_DIR/${NC}"
     echo ""
     echo -e "${BLUE}📄 Files generated:${NC}"
-    ls -la "$OUTPUT_DIR"/*.md 2>/dev/null | grep -v ".log" | awk '{print "   " $9}' | sed "s|$OUTPUT_DIR/|   |g"
+    # Use find to avoid glob expansion issues
+    find "$OUTPUT_DIR" -name "*.md" -type f 2>/dev/null | grep -v ".log" | while read -r file; do
+        echo "   $(basename "$file")"
+    done
 else
     echo -e "${RED}${BOLD}⚠️  Some tests failed${NC}"
     echo ""
