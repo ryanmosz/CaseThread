@@ -202,4 +202,85 @@ export const DOCUMENT_TYPES = {
   TRADEMARK: 'trademark-application'
 } as const;
 
-export type DocumentType = typeof DOCUMENT_TYPES[keyof typeof DOCUMENT_TYPES]; 
+export type DocumentType = typeof DOCUMENT_TYPES[keyof typeof DOCUMENT_TYPES];
+
+// Signature Block types for PDF generation
+export interface FieldDefinition {
+  required: boolean;
+  label: string;
+  defaultValue?: string;
+  maxLength?: number;
+}
+
+export interface SignatureBlock {
+  id: string;                              // Unique identifier
+  type: 'single' | 'multiple';            // Block type
+  placement: {
+    location: string;                      // e.g., "after-section-5", "document-end"
+    marker: string;                        // e.g., "[SIGNATURE_BLOCK:assignor-signature]"
+  };
+  layout?: {
+    position: 'standalone' | 'side-by-side';
+    groupWith?: string;                    // ID of block to group with
+    preventPageBreak?: boolean;            // Keep together on same page
+  };
+  party: {
+    role: string;                          // e.g., "assignor", "licensee"
+    label: string;                         // Display label, e.g., "ASSIGNOR"
+    fields: {
+      name: FieldDefinition;
+      title?: FieldDefinition;
+      company?: FieldDefinition;
+      date?: FieldDefinition;
+      registrationNumber?: FieldDefinition; // For attorneys
+      email?: FieldDefinition;              // For electronic signatures
+      [key: string]: FieldDefinition | undefined;
+    };
+  };
+  witnessRequired?: boolean;               // If witness signature needed
+  notaryRequired?: boolean;                // If notary acknowledgment needed
+}
+
+export interface InitialBlock {
+  id: string;                              // Unique identifier
+  placement: {
+    locations: string[];                   // e.g., ["each-page-footer", "after-section-3.2"]
+    marker: string;                        // e.g., "[INITIALS_BLOCK:assignor-initials]"
+  };
+  party: {
+    role: string;                          // Links to signature block party role
+    label: string;                         // e.g., "Initials"
+  };
+  customText?: string;                     // Optional text like "Initial here to acknowledge"
+}
+
+export interface WitnessBlock {
+  id: string;
+  forSignatureId: string;                  // Which signature this witnesses
+  placement: {
+    location: string;                      // Relative to main signature
+    marker: string;                        // e.g., "[WITNESS_BLOCK:assignor-witness]"
+  };
+  fields: {
+    name: FieldDefinition;
+    date: FieldDefinition;
+  };
+}
+
+export interface NotaryBlock {
+  id: string;
+  forSignatureId: string;                  // Which signature this notarizes
+  placement: {
+    location: string;
+    marker: string;                        // e.g., "[NOTARY_BLOCK]"
+  };
+  state?: string;                          // State of notarization
+}
+
+// Enhanced Template interface with signature blocks
+export interface TemplateWithSignatures extends Template {
+  signatureBlocks?: SignatureBlock[];
+  initialBlocks?: InitialBlock[];
+  witnessBlocks?: WitnessBlock[];
+  notaryBlocks?: NotaryBlock[];
+} 

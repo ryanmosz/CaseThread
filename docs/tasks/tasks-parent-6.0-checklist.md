@@ -28,9 +28,9 @@
     - [x] 6.2.1 Investigate signature/initial requirements and positions
     - [x] 6.2.2 Implement blocks and test
     (Details: tasks-parent-6.2-detailed.md)
-  - [ ] 6.3 Trademark Application signature/initial blocks
-    - [ ] 6.3.1 Investigate signature/initial requirements and positions
-    - [ ] 6.3.2 Implement blocks and test
+  - [x] 6.3 Trademark Application signature/initial blocks
+    - [x] 6.3.1 Investigate signature/initial requirements and positions
+    - [x] 6.3.2 Implement blocks and test
     (Details: tasks-parent-6.3-detailed.md)
   - [ ] 6.4 Cease and Desist Letter signature/initial blocks
     - [ ] 6.4.1 Investigate signature/initial requirements and positions

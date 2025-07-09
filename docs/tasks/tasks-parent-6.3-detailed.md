@@ -62,6 +62,47 @@ I declare under penalty of perjury...
 7. Additional Statements (if any)
 ```
 
+## ACTUAL INVESTIGATION FINDINGS (2025-01-08)
+
+### Document Structure Analysis:
+The generated trademark application follows this structure:
+1. **Title**: "TRADEMARK APPLICATION TEAS Plus Electronic Filing"
+2. **Mark Information**: Mark text and type
+3. **Applicant Information**: Name, entity type, address, citizenship
+4. **Goods and Services**: International classes and descriptions
+5. **Filing Basis**: Section 1(a) or 1(b) with dates if applicable
+6. **Specimen**: Description (only for use-based applications)
+7. **Declaration**: Legal declaration text (required by USPTO)
+8. **Signature Section**: Attorney/authorized signatory information
+
+### Key Findings:
+1. **Single Signature Required**: 
+   - Attorney signs on behalf of applicant (most common)
+   - Or authorized signatory for the applicant entity
+   - No co-signatures or witness requirements
+
+2. **Signature Placement**:
+   - Immediately follows the declaration text
+   - Currently includes: Signature line, Name, Date, "ATTORNEY OF RECORD", Email
+   - Marker should be placed at the end of signature section content
+
+3. **No Initial Blocks Needed**:
+   - Trademark applications don't require page initials
+   - No section-specific acknowledgments needed
+   - Single signature suffices for entire application
+
+4. **Fields Required**:
+   - Name (always required)
+   - Title (optional - only for entity representatives)
+   - Date (always required)
+   - Attorney registration info already handled in template
+
+5. **Special Considerations**:
+   - Declaration text is legally mandated and must precede signature
+   - Title field should be conditional based on applicant type
+   - Electronic filing through TEAS has specific formatting requirements
+   - Current template already has attorney fields which can serve dual purpose
+
 ### 6.3.2 Implement blocks and test
 
 **Implementation Steps:**

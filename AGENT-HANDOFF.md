@@ -9,7 +9,8 @@ Current Branch: R
 
 **Working on Parent Task 6.0**: Update JSON Templates with Signature Block Definitions
 - Focus: Adding signature blocks, initial blocks, and placement markers to all 8 document templates
-- Progress: Tasks 6.1 and 6.2 complete, 6.3-6.12 pending
+- Progress: Tasks 6.1, 6.2, and 6.3 complete
+- **Current**: Task 6.3 complete, ready for Task 6.4 (Cease and Desist Letter)
 
 ### Recent Completions
 
@@ -70,12 +71,34 @@ Current Branch: R
 - ✅ Committed to R branch (commit: bba65ba)
 - 📝 Improvements based on Task 6.2 experience to prevent future issues
 
+**Task 6.3 Completed** (2025-01-08):
+- ✅ Investigated trademark application signature requirements
+  - Single signature block needed (attorney or authorized representative)
+  - No initial blocks or witness/notary requirements
+  - Placement after declaration section
+- ✅ Updated `templates/core/trademark-application.json`:
+  - Added signatureBlocks array with single applicant signature
+  - Configured for either attorney or authorized signatory
+  - Optional title field for entity representatives
+  - Added marker to signature section content
+- ✅ Tested with both LLC and individual applicants
+- ✅ Marker `[SIGNATURE_BLOCK:applicant-signature]` appears correctly in output
+- ✅ All tests passing (269/269)
+- ✅ Both subtasks 6.3.1 and 6.3.2 complete
+
 ### Next Priority
 
-**Task 6.3**: Trademark Application signature/initial blocks
-- Need to investigate and implement signature blocks for trademark applications
-- Similar approach to Task 6.2
-- Markers will now appear in generated output for verification
+**Task 6.4**: Cease and Desist Letter signature/initial blocks
+- ⏳ Ready to start Task 6.4.1 (Investigation phase)
+- Need to investigate and implement signature blocks for cease and desist letters
+- Expected to be single signature in letter format
+
+### Task 6.3.1 Investigation Summary
+- Analyzed generated trademark application structure
+- Confirmed single signature requirement (attorney or authorized representative)
+- Signature placement: After declaration section
+- No witness/notary/initial blocks needed
+- Current template already has attorney fields that can serve dual purpose
 
 ## Key Implementation Details
 
@@ -89,7 +112,7 @@ The signature block schema (defined in Task 6.1) includes:
 
 ### Template Updates Progress
 - ✅ Patent Assignment Agreement (Task 6.2)
-- ⏳ Trademark Application (Task 6.3)
+- ✅ Trademark Application (Task 6.3)
 - ⏳ Cease and Desist Letter (Task 6.4)
 - ⏳ NDA IP Specific (Task 6.5)
 - ⏳ Office Action Response (Task 6.6)

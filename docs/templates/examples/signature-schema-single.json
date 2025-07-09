@@ -1,0 +1,47 @@
+{
+  "comment": "Example: Single signature for office action response",
+  "signatureBlocks": [
+    {
+      "id": "attorney-signature",
+      "type": "single",
+      "placement": {
+        "location": "document-end",
+        "marker": "[SIGNATURE_BLOCK:attorney-signature]"
+      },
+      "party": {
+        "role": "attorney",
+        "label": "Respectfully submitted",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Attorney Name"
+          },
+          "registrationNumber": {
+            "required": true,
+            "label": "Registration No."
+          },
+          "firmName": {
+            "required": false,
+            "label": "Firm Name"
+          },
+          "address": {
+            "required": false,
+            "label": "Address"
+          },
+          "phone": {
+            "required": false,
+            "label": "Phone"
+          },
+          "email": {
+            "required": true,
+            "label": "Email"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      }
+    }
+  ]
+}

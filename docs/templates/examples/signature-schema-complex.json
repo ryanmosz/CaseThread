@@ -1,0 +1,166 @@
+{
+  "comment": "Example: Complex multi-party agreement with witnesses and page initials",
+  "signatureBlocks": [
+    {
+      "id": "licensor-signature",
+      "type": "single",
+      "placement": {
+        "location": "document-end",
+        "marker": "[SIGNATURE_BLOCK:licensor-signature]"
+      },
+      "party": {
+        "role": "licensor",
+        "label": "LICENSOR",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "title": {
+            "required": true,
+            "label": "Title"
+          },
+          "company": {
+            "required": true,
+            "label": "Company"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      },
+      "witnessRequired": true
+    },
+    {
+      "id": "licensee-signature",
+      "type": "single",
+      "placement": {
+        "location": "document-end",
+        "marker": "[SIGNATURE_BLOCK:licensee-signature]"
+      },
+      "party": {
+        "role": "licensee",
+        "label": "LICENSEE",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "title": {
+            "required": true,
+            "label": "Title"
+          },
+          "company": {
+            "required": true,
+            "label": "Company"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      },
+      "witnessRequired": true
+    },
+    {
+      "id": "guarantor-signature",
+      "type": "single",
+      "placement": {
+        "location": "document-end",
+        "marker": "[SIGNATURE_BLOCK:guarantor-signature]"
+      },
+      "party": {
+        "role": "guarantor",
+        "label": "GUARANTOR",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "personalAddress": {
+            "required": true,
+            "label": "Personal Address"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      }
+    }
+  ],
+  "initialBlocks": [
+    {
+      "id": "page-initials-all",
+      "placement": {
+        "locations": ["each-page-footer"],
+        "marker": "[INITIALS_BLOCK:page-initials-all]"
+      },
+      "party": {
+        "role": "all-parties",
+        "label": "___ / ___ / ___"
+      }
+    },
+    {
+      "id": "royalty-acknowledgment",
+      "placement": {
+        "locations": ["after-section-royalties"],
+        "marker": "[INITIALS_BLOCK:royalty-acknowledgment]"
+      },
+      "party": {
+        "role": "licensee",
+        "label": "Licensee acknowledges royalty calculation method"
+      }
+    },
+    {
+      "id": "confidentiality-acknowledgment",
+      "placement": {
+        "locations": ["after-section-confidentiality"],
+        "marker": "[INITIALS_BLOCK:confidentiality-acknowledgment]"
+      },
+      "party": {
+        "role": "all-parties",
+        "label": "All parties acknowledge confidentiality obligations"
+      }
+    }
+  ],
+  "witnessBlocks": [
+    {
+      "id": "licensor-witness",
+      "forSignatureId": "licensor-signature",
+      "placement": {
+        "location": "after-licensor-signature",
+        "marker": "[WITNESS_BLOCK:licensor-witness]"
+      },
+      "fields": {
+        "name": {
+          "required": true,
+          "label": "Witness Name"
+        },
+        "date": {
+          "required": true,
+          "label": "Date"
+        }
+      }
+    },
+    {
+      "id": "licensee-witness",
+      "forSignatureId": "licensee-signature",
+      "placement": {
+        "location": "after-licensee-signature",
+        "marker": "[WITNESS_BLOCK:licensee-witness]"
+      },
+      "fields": {
+        "name": {
+          "required": true,
+          "label": "Witness Name"
+        },
+        "date": {
+          "required": true,
+          "label": "Date"
+        }
+      }
+    }
+  ]
+}

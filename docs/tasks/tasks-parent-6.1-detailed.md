@@ -30,6 +30,19 @@ Design a comprehensive, flexible JSON schema for signature blocks, initial block
 - License Agreements: Often require initials on key terms pages
 - etc.
 
+**Actual Research Findings:**
+
+| Document Type | Parties | Signature Layout | Fields Required | Special Requirements | Initial Needs |
+|--------------|---------|------------------|-----------------|---------------------|---------------|
+| **Patent Assignment Agreement** | 2 (Assignor, Assignee) | Side-by-side preferred | Name, Date, Title (Assignee only) | Notary block for USPTO recording | Key sections (assignment clause) |
+| **NDA IP Specific** | 2 (Disclosing/Receiving or First/Second) | Sequential | Name, Title, Date | None | Each page footer |
+| **Office Action Response** | 1 (Attorney/Agent) | Single | Name, Registration No., Date | USPTO format | None |
+| **Patent License Agreement** | 2 (Licensor, Licensee) | Sequential | Name, Title, Date | None | Key terms pages |
+| **Provisional Patent Application** | 0-1 (Inventor/Attorney) | Single (if paper filing) | Name, Date | Declaration format | None |
+| **Technology Transfer Agreement** | 2 (Provider, Recipient) | Sequential | Name, Title, Date | None | Confidentiality sections |
+| **Trademark Application** | 1 (Attorney) | Single | Name, Date, Email | Electronic signature format | None |
+| **Cease and Desist Letter** | 1 (Attorney) | Single | Name, Firm, Contact Info | Letter format | None |
+
 ### 6.1.2 Define core signature block data structure
 
 **Implementation Steps:**

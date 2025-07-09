@@ -239,4 +239,4 @@ parent plan, task checklist and detailed checklist you are to proceed with devel
 docs/tasks/prd-parent-task-[PARENT-VAR].md
 docs/tasks/tasks-parent-[PARENT-VAR]-checklist.md
 docs/tasks/tasks-parent-[PARENT-VAR]-detailed.md
-where, PARENT-VAR = 6.0
+where, PARENT-VAR = 
