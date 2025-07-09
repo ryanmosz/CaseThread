@@ -1,39 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-
-// Define the API interface for type safety
-export interface ElectronAPI {
-  // File system operations
-  readFile: (filePath: string) => Promise<{ success: boolean; data?: string; error?: string }>;
-  writeFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
-  readDirectory: (dirPath: string) => Promise<{ success: boolean; data?: DirectoryEntry[]; error?: string }>;
-  
-  // Template operations
-  loadTemplates: () => Promise<{ success: boolean; data?: Template[]; error?: string }>;
-  loadTemplateSchema: (templateId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
-  
-  // CLI operations
-  generateDocument: (templateId: string, formData: any) => Promise<{ success: boolean; data?: { output: string; errors: string }; error?: string }>;
-  learnFromPath: (dirPath: string) => Promise<{ success: boolean; data?: { output: string; errors: string }; error?: string }>;
-  
-  // Dialog operations
-  showSaveDialog: (options?: any) => Promise<any>;
-  showOpenDialog: (options?: any) => Promise<any>;
-}
-
-export interface DirectoryEntry {
-  name: string;
-  isDirectory: boolean;
-  path: string;
-}
-
-export interface Template {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  fields: any[];
-  filePath: string;
-}
+import { Template, DirectoryEntry, ElectronAPI } from '../../shared/types';
 
 // IPC Channel constants (shared with main process)
 const IPC_CHANNELS = {

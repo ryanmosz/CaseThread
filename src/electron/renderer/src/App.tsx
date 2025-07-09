@@ -81,22 +81,34 @@ const App: React.FC = () => {
 
       // Check if electronAPI is available
       if (!window.electronAPI) {
-        throw new Error('Electron API not available. Please ensure preload script is loaded.');
+        throw new Error('Application not properly initialized. Please restart the application.');
       }
 
-      // Load templates
+      // Load templates with better error handling
       console.log('Loading templates...');
       const templatesResult = await window.electronAPI.loadTemplates();
       console.log('Templates result:', templatesResult);
       
       if (!templatesResult.success) {
-        throw new Error(templatesResult.error || 'Failed to load templates');
+        const templateError = templatesResult.error || 'Failed to load templates';
+        if (templateError.includes('ENOENT')) {
+          throw new Error('Template directory not found. Please ensure templates are properly installed.');
+        } else if (templateError.includes('permission')) {
+          throw new Error('Permission denied accessing templates. Please check file permissions.');
+        } else {
+          throw new Error(`Template loading error: ${templateError}`);
+        }
       }
 
-      // Load mock data directory tree
+      // Load mock data directory tree with fallback
       console.log('Loading mock data...');
       const mockDataResult = await window.electronAPI.readDirectory('./mock-data');
       console.log('Mock data result:', mockDataResult);
+      
+      // Don't fail the entire app if mock data fails to load
+      if (!mockDataResult.success) {
+        console.warn('Mock data loading failed:', mockDataResult.error);
+      }
       
       setState(prev => ({
         ...prev,
@@ -106,9 +118,24 @@ const App: React.FC = () => {
       }));
     } catch (error) {
       console.error('Error loading initial data:', error);
+      
+      let userFriendlyError = 'Failed to load application data';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('not properly initialized')) {
+          userFriendlyError = 'Application initialization failed. Please restart the application.';
+        } else if (error.message.includes('Template directory not found')) {
+          userFriendlyError = 'Template files are missing. Please reinstall the application.';
+        } else if (error.message.includes('Permission denied')) {
+          userFriendlyError = 'File permission error. Please check file permissions or run as administrator.';
+        } else {
+          userFriendlyError = error.message;
+        }
+      }
+      
       setState(prev => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'Failed to load initial data',
+        error: userFriendlyError,
         isLoading: false,
       }));
     }
@@ -150,12 +177,43 @@ const App: React.FC = () => {
           isLoading: false,
         }));
       } else {
-        throw new Error(result.error || 'Document generation failed');
+        // More specific error handling
+        let errorMessage = 'Document generation failed';
+        
+        if (result.error) {
+          if (result.error.includes('timeout')) {
+            errorMessage = 'Generation timed out. Please try again with a simpler template.';
+          } else if (result.error.includes('OpenAI')) {
+            errorMessage = 'AI service error. Please check your OpenAI API key and try again.';
+          } else if (result.error.includes('template')) {
+            errorMessage = 'Template error. Please check the template configuration.';
+          } else if (result.error.includes('YAML')) {
+            errorMessage = 'Form data error. Please check your form inputs.';
+          } else {
+            errorMessage = `Generation error: ${result.error}`;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
     } catch (error) {
+      console.error('Document generation error:', error);
+      
+      let userFriendlyError = 'Document generation failed';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+          userFriendlyError = 'Network error. Please check your internet connection and try again.';
+        } else if (error.message.includes('timeout')) {
+          userFriendlyError = 'Generation is taking too long. Please try again or use a simpler template.';
+        } else {
+          userFriendlyError = error.message;
+        }
+      }
+      
       setState(prev => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'Generation failed',
+        error: userFriendlyError,
         isLoading: false,
       }));
     }
@@ -230,10 +288,13 @@ const App: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-900">Document Viewer</h2>
             </div>
             <div className="flex-1 overflow-hidden">
-              <DocumentViewer
-                content={state.selectedDocument}
-                isLoading={state.isLoading}
-              />
+                          <DocumentViewer
+              content={state.selectedDocument}
+              isLoading={state.isLoading}
+              error={state.error}
+              documentType={state.selectedTemplate?.name}
+              generatedAt={new Date().toISOString()}
+            />
             </div>
           </div>
 

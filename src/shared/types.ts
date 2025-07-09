@@ -30,15 +30,17 @@ export interface TemplateField {
   id: string;
   name: string;
   label?: string;
-  type: 'text' | 'textarea' | 'number' | 'email' | 'date' | 'select' | 'boolean';
+  type: 'text' | 'textarea' | 'number' | 'email' | 'date' | 'select' | 'multiselect' | 'boolean';
   required?: boolean;
   placeholder?: string;
   description?: string;
-  options?: string[]; // For select fields
+  options?: string[]; // For select and multiselect fields
   defaultValue?: string;
   validation?: {
     minLength?: number;
     maxLength?: number;
+    min?: number;
+    max?: number;
     pattern?: string;
   };
 }

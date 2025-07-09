@@ -228,12 +228,41 @@ function createYamlFromFormData(formData: any): string {
   const yamlLines = ['# Generated from GUI form data', ''];
   
   for (const [key, value] of Object.entries(formData)) {
-    if (typeof value === 'string') {
-      yamlLines.push(`${key}: "${value}"`);
+    if (value === null || value === undefined) {
+      // Skip null/undefined values
+      continue;
+    } else if (typeof value === 'string') {
+      if (value.trim() === '') {
+        // Skip empty strings
+        continue;
+      }
+      // Escape quotes and handle multi-line strings
+      const escapedValue = value.replace(/"/g, '\\"');
+      if (value.includes('\n')) {
+        yamlLines.push(`${key}: |`);
+        value.split('\n').forEach(line => yamlLines.push(`  ${line}`));
+      } else {
+        yamlLines.push(`${key}: "${escapedValue}"`);
+      }
     } else if (Array.isArray(value)) {
+      if (value.length === 0) {
+        // Skip empty arrays
+        continue;
+      }
       yamlLines.push(`${key}:`);
-      value.forEach(item => yamlLines.push(`  - "${item}"`));
+      value.forEach(item => {
+        if (typeof item === 'string') {
+          yamlLines.push(`  - "${item}"`);
+        } else {
+          yamlLines.push(`  - ${item}`);
+        }
+      });
+    } else if (typeof value === 'boolean') {
+      yamlLines.push(`${key}: ${value}`);
+    } else if (typeof value === 'number') {
+      yamlLines.push(`${key}: ${value}`);
     } else {
+      // Handle objects and other types
       yamlLines.push(`${key}: ${JSON.stringify(value)}`);
     }
   }
