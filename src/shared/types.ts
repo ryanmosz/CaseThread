@@ -40,6 +40,8 @@ export interface TemplateField {
     minLength?: number;
     maxLength?: number;
     pattern?: string;
+    min?: number; // For number fields
+    max?: number; // For number fields
   };
 }
 

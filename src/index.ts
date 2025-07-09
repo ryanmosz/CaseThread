@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { generateCommand } from './commands/generate';
-import { learnCommand } from './commands/learn';
-import { logger } from './utils/logger';
+import { generateCommand } from './commands/generate.js';
+import { learnCommand } from './commands/learn.js';
+import { logger } from './utils/logger.js';
 
 // Create the main program instance
 const program = new Command();

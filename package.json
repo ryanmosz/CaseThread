@@ -2,6 +2,7 @@
   "name": "casethread-poc",
   "version": "0.1.0",
   "description": "CLI proof of concept for generating legal documents using OpenAI and template system",
+  "type": "module",
   "main": "dist/main/index.js",
   "bin": {
     "casethread-poc": "./dist/index.js"
