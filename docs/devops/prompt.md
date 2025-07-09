@@ -175,10 +175,10 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
     - All commands run inside Docker container
 
 13. CaseThread Specific Guidelines:
-    - **Template System**: JSON templates in templates/core/ (adding signatureBlocks and initialBlocks)
+    - **Template System**: JSON templates in templates/core/
     - **Explanations**: Markdown files in templates/explanations/
     - **Input Format**: YAML files following scenario structure
-    - **Document Types**: 8 supported types (each gets individual investigation in tasks 6.2-6.9)
+    - **Document Types**: 8 supported types (patent-assignment, trademark-application, etc.)
     - **OpenAI Integration**: Handle API timeouts (60 second limit)
     - **Progress Indication**: Use Ora spinner with step-by-step updates
     - **Logging**: Winston for debug logs to file, errors to console
@@ -214,10 +214,10 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
 
 19. Update AGENT-HANDOFF.md at the end of every chat response
 
-Using the guidelines above, produce your plan to implement and verify the current task from **Parent Task 6.0**. Analyze the plan and decide if it would be more efficient to do all subtasks at once and then test everything, or if it would be better to stop after some of the subtasks and test them individually before moving on. Remember, our goal is to write quality software at each step, minimizing bugs and mistakes and thus minimizing the need for backtracking, confusion and wasted effort.
+Using the guidelines above, produce your plan to implement and verify the current task from **docs/tasks/prd-parent-task-6.0.md**. Analyze the plan and decide if it would be more efficient to do all subtasks defined at **docs/tasks/tasks-parent-6.0-checklist.md** at once and then test everything, or if it would be better to stop after some of the subtasks and test them individually before moving on. Remember, our goal is to write quality software at each step, minimizing bugs and mistakes and thus minimizing the need for backtracking, confusion and wasted effort.
 
 parent plan, task checklist and detailed checklist you are to proceed with development now are:
-docs/tasks/prd-parent-task-6.0.md
-docs/tasks/tasks-parent-6.0-checklist.md
-docs/tasks/tasks-parent-6.1-detailed.md through docs/tasks/tasks-parent-6.12-detailed.md
-where, PARENT-VAR = 6.0 
+docs/tasks/prd-parent-task-[PARENT-VAR].md
+docs/tasks/tasks-parent-[PARENT-VAR]-checklist.md
+docs/tasks/tasks-parent-[PARENT-VAR]-detailed.md
+where, PARENT-VAR = 
