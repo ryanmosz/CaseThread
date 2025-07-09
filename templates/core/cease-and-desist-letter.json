@@ -262,8 +262,28 @@
       "title": "Closing",
       "order": 8,
       "required": true,
-      "content": "{{#if friendly}}We trust that this matter can be resolved quickly and amicably. Please contact us at your earliest convenience to discuss this matter.{{/if}}\n\n{{#if professional}}We await your prompt response and compliance with these demands.{{/if}}\n\n{{#if firm}}This is a serious matter requiring your immediate attention. Govern yourself accordingly.{{/if}}\n\n{{#if aggressive}}Time is of the essence. This letter is written without prejudice to any other rights or remedies available to our client, all of which are expressly reserved.{{/if}}\n\nYou must respond within {{response_deadline}} days of the date of this letter.\n\nSincerely,\n\n[ATTORNEY NAME]\n[FIRM NAME]\n[PHONE]\n[EMAIL]\n\nAttorney for {{sender_name}}",
+      "content": "{{#if friendly}}We trust that this matter can be resolved quickly and amicably. Please contact us at your earliest convenience to discuss this matter.{{/if}}\n\n{{#if professional}}We await your prompt response and compliance with these demands.{{/if}}\n\n{{#if firm}}This is a serious matter requiring your immediate attention. Govern yourself accordingly.{{/if}}\n\n{{#if aggressive}}Time is of the essence. This letter is written without prejudice to any other rights or remedies available to our client, all of which are expressly reserved.{{/if}}\n\nYou must respond within {{response_deadline}} days of the date of this letter.\n\nSincerely,\n\n[SIGNATURE_BLOCK:attorney-signature]\n\n[ATTORNEY NAME]\n[FIRM NAME]\n[PHONE]\n[EMAIL]\n\nAttorney for {{sender_name}}",
       "firmCustomizable": true
+    }
+  ],
+  "signatureBlocks": [
+    {
+      "id": "attorney-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-closing-salutation",
+        "marker": "[SIGNATURE_BLOCK:attorney-signature]"
+      },
+      "party": {
+        "role": "attorney",
+        "label": "Sincerely",
+        "fields": {
+          "name": { "required": true, "label": "[ATTORNEY NAME]" },
+          "firmName": { "required": false, "label": "[FIRM NAME]" },
+          "phone": { "required": false, "label": "[PHONE]" },
+          "email": { "required": false, "label": "[EMAIL]" }
+        }
+      }
     }
   ]
 } 

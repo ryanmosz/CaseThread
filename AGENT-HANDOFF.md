@@ -9,8 +9,8 @@ Current Branch: R
 
 **Working on Parent Task 6.0**: Update JSON Templates with Signature Block Definitions
 - Focus: Adding signature blocks, initial blocks, and placement markers to all 8 document templates
-- Progress: Tasks 6.1, 6.2, and 6.3 complete
-- **Current**: Task 6.3 complete, ready for Task 6.4 (Cease and Desist Letter)
+- Progress: Tasks 6.1, 6.2, 6.3, and 6.4 complete
+- **Current**: Task 6.4 complete, ready for Task 6.5 (NDA IP Specific)
 
 ### Recent Completions
 
@@ -86,19 +86,34 @@ Current Branch: R
 - ✅ All tests passing (269/269)
 - ✅ Both subtasks 6.3.1 and 6.3.2 complete
 
+**Task 6.4 Completed** (2025-01-08):
+- ✅ Investigated cease and desist letter signature requirements
+  - Single attorney signature in business letter format
+  - No initial blocks or witness/notary requirements
+  - Placement between "Sincerely," and attorney name
+- ✅ Updated `templates/core/cease-and-desist-letter.json`:
+  - Added signatureBlocks array with single attorney signature
+  - Placed marker between "Sincerely," and attorney information
+  - Fields: name (required), firmName, phone, email (all optional)
+  - Used business letter signature label "Sincerely"
+- ✅ Marker `[SIGNATURE_BLOCK:attorney-signature]` appears correctly in output
+- ✅ All tests passing (269/269)
+- ✅ Both subtasks 6.4.1 and 6.4.2 complete
+
 ### Next Priority
 
-**Task 6.4**: Cease and Desist Letter signature/initial blocks
-- ⏳ Ready to start Task 6.4.1 (Investigation phase)
-- Need to investigate and implement signature blocks for cease and desist letters
-- Expected to be single signature in letter format
+**Task 6.5**: NDA IP Specific signature/initial blocks
+- ⏳ Ready to start Task 6.5.1 (Investigation phase)
+- Need to investigate and implement signature blocks for NDA IP Specific
+- Expected to have signatures for both parties (mutual NDA)
+- May require page initials
 
-### Task 6.3.1 Investigation Summary
-- Analyzed generated trademark application structure
-- Confirmed single signature requirement (attorney or authorized representative)
-- Signature placement: After declaration section
+### Task 6.4.1 Investigation Summary
+- Analyzed generated cease and desist letter structure
+- Confirmed single attorney signature requirement
+- Signature placement: Between "Sincerely," and attorney name
 - No witness/notary/initial blocks needed
-- Current template already has attorney fields that can serve dual purpose
+- Current template has placeholders but needs proper signature block definition
 
 ## Key Implementation Details
 
@@ -113,7 +128,7 @@ The signature block schema (defined in Task 6.1) includes:
 ### Template Updates Progress
 - ✅ Patent Assignment Agreement (Task 6.2)
 - ✅ Trademark Application (Task 6.3)
-- ⏳ Cease and Desist Letter (Task 6.4)
+- ✅ Cease and Desist Letter (Task 6.4)
 - ⏳ NDA IP Specific (Task 6.5)
 - ⏳ Office Action Response (Task 6.6)
 - ⏳ Patent License Agreement (Task 6.7)

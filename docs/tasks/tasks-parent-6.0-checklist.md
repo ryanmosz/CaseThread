@@ -32,9 +32,9 @@
     - [x] 6.3.1 Investigate signature/initial requirements and positions
     - [x] 6.3.2 Implement blocks and test
     (Details: tasks-parent-6.3-detailed.md)
-  - [ ] 6.4 Cease and Desist Letter signature/initial blocks
-    - [ ] 6.4.1 Investigate signature/initial requirements and positions
-    - [ ] 6.4.2 Implement blocks and test
+  - [x] 6.4 Cease and Desist Letter signature/initial blocks
+    - [x] 6.4.1 Investigate signature/initial requirements and positions
+    - [x] 6.4.2 Implement blocks and test
     (Details: tasks-parent-6.4-detailed.md)
   - [ ] 6.5 NDA IP Specific signature/initial blocks
     - [ ] 6.5.1 Investigate signature/initial requirements and positions

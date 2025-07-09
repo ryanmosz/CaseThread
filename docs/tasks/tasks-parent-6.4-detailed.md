@@ -4,7 +4,7 @@
 
 ## Overview
 
-Investigate and implement signature blocks, initial blocks, and placement markers for the Cease and Desist Letter template. These letters are typically sent by attorneys or rights holders and require formal signature with professional credentials.
+Investigate and implement signature blocks, initial blocks, and placement markers for the Cease and Desist Letter template. Cease and desist letters follow a formal business letter format with single attorney signature.
 
 ## Sub-tasks
 
@@ -14,59 +14,105 @@ Investigate and implement signature blocks, initial blocks, and placement marker
 
 1. **Generate sample document for analysis:**
    ```bash
-   docker exec casethread-dev npm run cli -- generate cease-and-desist-letter docs/testing/scenario-inputs/cil-05-cease-desist-false-claims.yaml
+   docker exec casethread-dev npm run cli -- generate cease-and-desist-letter docs/testing/scenario-inputs/tfs-05-cease-desist-cacheflow.yaml
    ```
 
 2. **Analyze generated document structure:**
-   - Review letter format and sections
-   - Identify closing/signature area
-   - Note professional tone requirements
-   - Look for formal letter conventions
+   - Review business letter format
+   - Identify closing section
+   - Note attorney signature placement
+   - Check for any initial requirements
 
 3. **Research legal requirements:**
-   - Formal business letter format
-   - Attorney signature with firm information
-   - May need attorney registration number
+   - Standard business letter format
+   - Attorney signature after closing
+   - Attorney contact information below signature
+   - No witness or notary requirements
    - No initials typically required
-   - Some jurisdictions require specific disclaimers
 
 4. **Document findings:**
-   - Map letter structure
+   - Map document structure
    - Identify signature placement
-   - Note professional requirements
-   - Consider letterhead implications
+   - Note field requirements
+   - Consider formal letter conventions
 
 **Expected Findings:**
-- Main signature: After closing salutation
+- Main signature: After "Sincerely," in closing section
 - Layout: Single signature block
-- Initials: Not required
-- Fields needed: Name, Title, Law Firm/Company
-- Special: Professional closing format
+- Initials: Not typically required
+- Fields needed: Attorney name, firm, contact info
+- Special: Formal business letter format
 
 **Investigation Output:**
 ```markdown
 ## Cease and Desist Letter Placement Map
 
-### Letter Structure:
-1. Date
-2. Recipient Information
-3. Subject/Re: Line
-4. Salutation
-5. Body Paragraphs
-   - Introduction
-   - Facts/Allegations
-   - Legal Basis
-   - Demands
-   - Consequences
-6. Closing Statement
-7. Closing Salutation
+### Document Structure:
+1. Header (Date, Via, Recipient, Re:)
+2. Opening
+3. IP Ownership
+4. Infringement Description
+5. Legal Basis
+6. Demands
+7. Consequences
+8. Closing
 
 Sincerely,
 
-[SIGNATURE_BLOCK:sender-signature]
+[SIGNATURE_BLOCK:attorney-signature]
 
-8. CC/Enclosures (if any)
+[ATTORNEY NAME]
+[FIRM NAME]
+[PHONE]
+[EMAIL]
+
+Attorney for [Client]
 ```
+
+## ACTUAL INVESTIGATION FINDINGS (2025-01-08)
+
+### Document Structure Analysis:
+The generated cease and desist letter follows this business letter structure:
+1. **Header**: Date, delivery method (CERTIFIED MAIL), recipient info, Re: line
+2. **Opening**: Formal greeting and introduction
+3. **IP Ownership**: Description of client's intellectual property
+4. **Infringement Description**: Details of how IP is being infringed
+5. **Legal Basis**: Relevant statutes and potential penalties
+6. **Demands**: Numbered list of required actions
+7. **Consequences**: Warning about legal action if non-compliant
+8. **Closing**: Final statement, deadline, and signature block
+
+### Key Findings:
+1. **Single Signature Required**:
+   - Attorney signs on behalf of the client
+   - No co-signatures or witness requirements
+   - Standard business letter signature format
+
+2. **Signature Placement**:
+   - Appears after "Sincerely," in the closing section
+   - Current template has placeholders: [ATTORNEY NAME], [FIRM NAME], [PHONE], [EMAIL]
+   - Marker should be placed between "Sincerely," and attorney name
+
+3. **No Initial Blocks Needed**:
+   - Cease and desist letters don't require page initials
+   - No section-specific acknowledgments needed
+   - Single attorney signature suffices
+
+4. **Fields Required**:
+   - Attorney name (always required)
+   - Firm name (optional but common)
+   - Phone (optional but common)
+   - Email (optional but common)
+   - No date field needed (date appears at top of letter)
+
+5. **Special Considerations**:
+   - Professional business letter format is standard
+   - "Attorney for [Client]" appears at the very end
+   - Some firms may include attorney bar number
+   - Electronic delivery may affect signature format
+
+### Template Current State:
+The closing section already includes placeholders for attorney information but needs a proper signature block definition with the marker positioned correctly.
 
 ### 6.4.2 Implement blocks and test
 
