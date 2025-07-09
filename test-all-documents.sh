@@ -101,6 +101,7 @@ run_comparison_test() {
     echo -e "${CYAN}========================================${NC}"
     
     # Store test name for later comparison
+    local current_index=${#TEST_NAMES[@]}
     TEST_NAMES+=("$test_name")
     
     # Run regular test
@@ -112,11 +113,15 @@ run_comparison_test() {
     run_test "$doc_type" "$input_file" "$test_name" "parallel" "parallel"
     
     # Calculate and display speed improvement for this test
-    if [ ${#REGULAR_TIMES[@]} -gt 0 ] && [ ${#PARALLEL_TIMES[@]} -gt 0 ]; then
-        local regular_time=${REGULAR_TIMES[-1]}
-        local parallel_time=${PARALLEL_TIMES[-1]}
-        local speedup=$(echo "scale=2; $regular_time / $parallel_time" | bc)
-        echo -e "${CYAN}Speed improvement: ${speedup}× faster with parallel processing${NC}"
+    if [ $current_index -lt ${#REGULAR_TIMES[@]} ] && [ $current_index -lt ${#PARALLEL_TIMES[@]} ]; then
+        local regular_time="${REGULAR_TIMES[$current_index]}"
+        local parallel_time="${PARALLEL_TIMES[$current_index]}"
+        if [ $(echo "$parallel_time > 0" | bc -l) -eq 1 ]; then
+            local speedup=$(echo "scale=2; $regular_time / $parallel_time" | bc -l)
+            echo -e "${CYAN}Speed improvement: ${speedup}× faster with parallel processing${NC}"
+        else
+            echo -e "${YELLOW}Warning: Could not calculate speed improvement (invalid timing data)${NC}"
+        fi
     fi
     echo ""
 }
@@ -168,7 +173,7 @@ run_comparison_test "provisional-patent-application" \
 
 # Calculate overall performance metrics
 calculate_average() {
-    local arr=("$@")
+    local -n arr=$1
     local sum=0
     local count=${#arr[@]}
     
@@ -178,9 +183,9 @@ calculate_average() {
     fi
     
     for time in "${arr[@]}"; do
-        sum=$(echo "$sum + $time" | bc)
+        sum=$(echo "$sum + $time" | bc -l)
     done
-    echo "scale=2; $sum / $count" | bc
+    echo "scale=2; $sum / $count" | bc -l
 }
 
 # Performance Summary
@@ -189,14 +194,18 @@ echo "PERFORMANCE COMPARISON SUMMARY"
 echo "============================================================"
 
 if [ ${#REGULAR_TIMES[@]} -gt 0 ] && [ ${#PARALLEL_TIMES[@]} -gt 0 ]; then
-    regular_avg=$(calculate_average "${REGULAR_TIMES[@]}")
-    parallel_avg=$(calculate_average "${PARALLEL_TIMES[@]}")
-    overall_speedup=$(echo "scale=2; $regular_avg / $parallel_avg" | bc)
-    
-    echo -e "${CYAN}Average Processing Times:${NC}"
-    echo -e "  Regular Mode:  ${regular_avg}s"
-    echo -e "  Parallel Mode: ${parallel_avg}s"
-    echo -e "  ${GREEN}Overall Speedup: ${overall_speedup}× faster${NC}"
+    regular_avg=$(calculate_average REGULAR_TIMES)
+    parallel_avg=$(calculate_average PARALLEL_TIMES)
+    if [ $(echo "$parallel_avg > 0" | bc -l) -eq 1 ]; then
+        overall_speedup=$(echo "scale=2; $regular_avg / $parallel_avg" | bc -l)
+        
+        echo -e "${CYAN}Average Processing Times:${NC}"
+        echo -e "  Regular Mode:  ${regular_avg}s"
+        echo -e "  Parallel Mode: ${parallel_avg}s"
+        echo -e "  ${GREEN}Overall Speedup: ${overall_speedup}× faster${NC}"
+    else
+        echo -e "${YELLOW}Warning: Could not calculate overall speedup (invalid timing data)${NC}"
+    fi
     echo ""
     
     # Individual test breakdown
