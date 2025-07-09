@@ -56,24 +56,27 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
    - CRITICAL: **.cursor/rules/npm-package-check.mdc** - Verify packages before installation
    - CRITICAL: **.cursor/rules/terminal-path-verification.mdc** - Verify paths before terminal commands
    - CRITICAL: **docs/devops/git-workflow-shared.md** - Collaborative git workflow
-   - **docs/tasks/tasks-cli-poc-plan.md** - Current task list and implementation plan
-   - **docs/planning/cli-poc-plan.md** - CLI proof of concept design and architecture
-   - **docs/devops/git-workflow-solo.md** - Solo development workflows (for reference only - DO NOT USE)
+   - **docs/tasks/prd-parent-task-6.0.md** - Current PRD for signature block implementation
+   - **docs/tasks/tasks-parent-6.0-checklist.md** - Current task checklist (12 tasks)
+   - **docs/tasks/tasks-parent-6.X-detailed.md** - Detailed implementation files (6.1 through 6.12)
+   - **docs/planning/developer-r-tasks.md** - Developer R's task assignments
    - All rules files in .cursor/rules/
    - **AGENT-HANDOFF.md** - Current project state and handoff documentation
 
 2. Understand the CaseThread project:
-   - **Goal**: CLI proof of concept for generating legal documents using OpenAI's API and template system
-   - **Tech Stack**: As defined in docs/architecture/tech-stack.md (Node.js + TypeScript + Commander.js + OpenAI SDK)
-   - **Purpose**: Test document generation by combining JSON templates, explanation files, and YAML input data
-   - **OpenAI Configuration**: Model 'o3' with temperature 0.2
+   - **Current State**: CLI with multi-agent integration complete and functional
+   - **Current Focus**: Parent Task 6.0 - Update JSON Templates with Signature Block Definitions
+   - **Goal**: Add signature blocks, initial blocks, and placement markers to all 8 document templates
+   - **Tech Stack**: As defined in docs/architecture/tech-stack.md (Node.js + TypeScript + Commander.js + OpenAI SDK + ChromaDB)
+   - **Purpose**: Enable PDF generation with proper legal document formatting
+   - **Key Features**: Marker system ([SIGNATURE_BLOCK:id], [INITIALS_BLOCK:id]), placement directives, investigation phases
    
 3. **Before starting any new task, you MUST:**
    a. **Read the project planning documents**
-      - Review docs/planning/cli-poc-plan.md for understanding the architecture
+      - Review docs/tasks/prd-parent-task-6.0.md for understanding the signature block requirements
       - Check docs/architecture/tech-stack.md to ensure you're using approved technologies
-      - Review docs/tasks/tasks-cli-poc-plan.md for current task status
-      - Understand the CLI command structure: `casethread-poc generate <document-type> <input-yaml-path>`
+      - Review docs/tasks/tasks-parent-6.0-checklist.md for current task status (12 tasks total)
+      - Understand the investigation + implementation approach for tasks 6.2-6.9
 
    b. Query the Docs provided through the cursor system if what you're doing is related to: Node.js, TypeScript, Commander.js, Jest, or any of the project dependencies
 
@@ -172,13 +175,16 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
     - All commands run inside Docker container
 
 13. CaseThread Specific Guidelines:
-    - **Template System**: JSON templates in templates/core/
+    - **Template System**: JSON templates in templates/core/ (adding signatureBlocks and initialBlocks)
     - **Explanations**: Markdown files in templates/explanations/
     - **Input Format**: YAML files following scenario structure
-    - **Document Types**: 8 supported types (patent-assignment, trademark-application, etc.)
+    - **Document Types**: 8 supported types (each gets individual investigation in tasks 6.2-6.9)
     - **OpenAI Integration**: Handle API timeouts (60 second limit)
     - **Progress Indication**: Use Ora spinner with step-by-step updates
     - **Logging**: Winston for debug logs to file, errors to console
+    - **Signature Blocks**: Support single, side-by-side, and sequential layouts
+    - **Initial Blocks**: Support page-by-page and section-specific placement
+    - **Markers**: Text output includes [SIGNATURE_BLOCK:id] and [INITIALS_BLOCK:id] markers
 
 14. Command Structure:
     - `generate <document-type> <input-yaml-path>` - Main generation command
@@ -208,10 +214,10 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
 
 19. Update AGENT-HANDOFF.md at the end of every chat response
 
-Using the guidelines above, produce your plan to implement and verify the current task from **docs/tasks/tasks-cli-poc-plan.md**. Analyze the plan and decide if it would be more efficient to do all subtasks at once and then test everything, or if it would be better to stop after some of the subtasks and test them individually before moving on. Remember, our goal is to write quality software at each step, minimizing bugs and mistakes and thus minimizing the need for backtracking, confusion and wasted effort.
+Using the guidelines above, produce your plan to implement and verify the current task from **Parent Task 6.0**. Analyze the plan and decide if it would be more efficient to do all subtasks at once and then test everything, or if it would be better to stop after some of the subtasks and test them individually before moving on. Remember, our goal is to write quality software at each step, minimizing bugs and mistakes and thus minimizing the need for backtracking, confusion and wasted effort.
 
 parent plan, task checklist and detailed checklist you are to proceed with development now are:
-docs/tasks/prd-parent-task-[PARENT-VAR].md
-docs/tasks/tasks-parent-[PARENT-VAR]-checklist.md
-docs/tasks/tasks-parent-[PARENT-VAR]-detailed.md
-where, PARENT-VAR = 
+docs/tasks/prd-parent-task-6.0.md
+docs/tasks/tasks-parent-6.0-checklist.md
+docs/tasks/tasks-parent-6.1-detailed.md through docs/tasks/tasks-parent-6.12-detailed.md
+where, PARENT-VAR = 6.0 
