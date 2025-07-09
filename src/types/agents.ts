@@ -112,6 +112,11 @@ export interface DraftingAgentInput {
   template: Template;
   matterContext: MatterContext;
   contextBundle: ContextBundle;
+  /**
+   * Optional subset of section IDs this drafting agent should generate.
+   * When undefined, the agent should draft the entire template.
+   */
+  sectionIds?: string[];
 }
 
 export interface DraftingAgentOutput {
@@ -121,6 +126,53 @@ export interface DraftingAgentOutput {
     placeholdersRemaining: string[];
     tokenCount: number;
     streamingChunks: number;
+  };
+}
+
+/**
+ * Represents a granular drafting task assigned to a worker model.
+ */
+export interface DraftingTask {
+  /** Unique task identifier */
+  id: string;
+  /** IDs of the template sections to draft */
+  sectionIds: string[];
+  /** Reference to the full template (unchanged across tasks) */
+  template: Template;
+  /** Contextual data required for drafting */
+  matterContext: MatterContext;
+  contextBundle: ContextBundle;
+}
+
+/**
+ * Output of a DraftingAgent when it only drafts a subset of sections.
+ */
+export interface PartialDraftOutput {
+  draftMarkdown: string; // Markdown for the drafted sections only
+  generationMetadata: {
+    sectionsGenerated: string[];
+    placeholdersRemaining: string[];
+    tokenCount: number;
+    streamingChunks: number;
+  };
+}
+
+/**
+ * Input for the OverseerAgent responsible for merging and polishing partial drafts.
+ */
+export interface OverseerInput {
+  partialDrafts: PartialDraftOutput[];
+  template: Template;
+  matterContext: MatterContext;
+}
+
+export interface OverseerOutput {
+  mergedMarkdown: string;
+  /** Metadata about the overseer pass */
+  overseerMetadata: {
+    rewriteRatio: number; // Percentage of characters changed during overseer edit
+    tokenCount: number;
+    issuesDetected: string[];
   };
 }
 
