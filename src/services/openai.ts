@@ -443,7 +443,8 @@ export function createOpenAIService(
 export async function generateDocument(
   template: Template,
   explanation: string,
-  yamlData: YamlData
+  yamlData: YamlData,
+  modelOverride?: string
 ): Promise<string> {
   logger.debug('generateDocument called', {
     templateId: template.id,
@@ -453,7 +454,7 @@ export async function generateDocument(
   // Load environment variables
   const config: OpenAIConfig = {
     apiKey: process.env.OPENAI_API_KEY || '',
-    model: process.env.OPENAI_MODEL || 'o3',
+    model: modelOverride || process.env.OPENAI_MODEL || 'o3',
     temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.2'),
     maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '4000'),
     timeout: parseInt(process.env.OPENAI_TIMEOUT || '60000')
