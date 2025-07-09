@@ -79,8 +79,9 @@ run_test_demo() {
     # Track timing
     local start_time=$(date +%s)
     
-    # Run command with real-time output using tee
-    if docker exec -t casethread-dev npm run cli -- generate "$doc_type" "$input_file" --output "$OUTPUT_DIR" 2>&1 | tee "$OUTPUT_DIR/$doc_type.log"; then
+    # Run command and capture output
+    # Remove -t flag to avoid TTY issues with tee
+    if docker exec casethread-dev npm run cli -- generate "$doc_type" "$input_file" --output "$OUTPUT_DIR" 2>&1 | tee "$OUTPUT_DIR/$doc_type.log"; then
         local end_time=$(date +%s)
         local duration=$((end_time - start_time))
         TOTAL_TIME=$((TOTAL_TIME + duration))
