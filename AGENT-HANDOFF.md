@@ -51,13 +51,22 @@ Current Branch: R
   - Updated signature section content to include placement markers
   - Updated assignment section to include initial block marker
 - ✅ All tests passing, template loads correctly
-- 📝 Note: Markers appear in template but not yet in generated output (OpenAI service integration is a separate task)
+- ~~📝 Note: Markers appear in template but not yet in generated output (OpenAI service integration is a separate task)~~
+
+**OpenAI Service Fix Applied** (2025-01-08):
+- ✅ Updated OpenAI prompt to preserve placement markers
+- ✅ Added explicit instructions for [SIGNATURE_BLOCK:*], [INITIALS_BLOCK:*], and [NOTARY_BLOCK:*]
+- ✅ Verified markers now appear correctly in generated documents
+- ✅ All tests passing (269/269)
+- ✅ Committed to R branch (commit: 8ad585e)
+- 📝 Markers are now functional and ready for PDF generation phase
 
 ### Next Priority
 
 **Task 6.3**: Trademark Application signature/initial blocks
 - Need to investigate and implement signature blocks for trademark applications
 - Similar approach to Task 6.2
+- Markers will now appear in generated output for verification
 
 ## Key Implementation Details
 
