@@ -2,12 +2,14 @@
 
 ## Relevant Files
 
-- `templates/core/*.json` - All 8 JSON template files to be updated
-- `src/types/index.ts` - TypeScript interfaces for templates (needs signature block types)
+- `templates/core/*.json` - All 8 JSON template files to be updated - **UPDATING**
+- `src/types/index.ts` - TypeScript interfaces for templates (needs signature block types) - **UPDATED**
 - `src/services/template.ts` - Template loading service (verify compatibility)
 - `src/services/openai.ts` - OpenAI service (will need to handle markers in output)
 - `__tests__/services/template.test.ts` - Template service tests (must all pass)
 - `docs/templates/template-schema.md` - Documentation for template structure (needs update)
+- `docs/templates/signature-block-schema.md` - **NEW** - Comprehensive signature block schema documentation
+- `docs/templates/examples/signature-schema-*.json` - **NEW** - Example signature block schemas
 - `generated-documents/*` - Generated documents to analyze for signature placement
 
 ### Notes
@@ -20,11 +22,11 @@
 
 ## Tasks
 
-- [ ] 6.0 Update JSON templates with signature block definitions
-  - [ ] 6.1 Design and document signature block JSON schema (Details: tasks-parent-6.1-detailed.md)
-  - [ ] 6.2 Patent Assignment Agreement signature/initial blocks
-    - [ ] 6.2.1 Investigate signature/initial requirements and positions
-    - [ ] 6.2.2 Implement blocks and test
+- [x] 6.0 Update JSON templates with signature block definitions
+  - [x] 6.1 Design and document signature block JSON schema (Details: tasks-parent-6.1-detailed.md)
+  - [x] 6.2 Patent Assignment Agreement signature/initial blocks
+    - [x] 6.2.1 Investigate signature/initial requirements and positions
+    - [x] 6.2.2 Implement blocks and test
     (Details: tasks-parent-6.2-detailed.md)
   - [ ] 6.3 Trademark Application signature/initial blocks
     - [ ] 6.3.1 Investigate signature/initial requirements and positions

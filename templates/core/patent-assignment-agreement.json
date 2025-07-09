@@ -157,7 +157,7 @@
       "title": "Assignment",
       "order": 4,
       "required": true,
-      "content": "1. ASSIGNMENT\n\n1.1 Assignor hereby assigns, transfers, and conveys to Assignee all right, title, and interest in and to the following (collectively, the \"Patents\"):\n\n{{patent_list}}\n\n{{#if include_applications}}1.2 The Patents include all patent applications, provisionals, continuations, continuations-in-part, divisionals, reissues, reexaminations, and extensions related to the above.{{/if}}\n\n{{#if include_future}}1.3 Assignor hereby assigns all future inventions and patent applications conceived, developed, or reduced to practice during the term of Assignor's employment with Assignee.{{/if}}\n\n1.4 This assignment includes all rights of priority, all rights to sue for past infringement, and all proceeds from the Patents.",
+      "content": "1. ASSIGNMENT\n\n1.1 Assignor hereby assigns, transfers, and conveys to Assignee all right, title, and interest in and to the following (collectively, the \"Patents\"):\n\n{{patent_list}}\n\n{{#if include_applications}}1.2 The Patents include all patent applications, provisionals, continuations, continuations-in-part, divisionals, reissues, reexaminations, and extensions related to the above.{{/if}}\n\n{{#if include_future}}1.3 Assignor hereby assigns all future inventions and patent applications conceived, developed, or reduced to practice during the term of Assignor's employment with Assignee.{{/if}}\n\n1.4 This assignment includes all rights of priority, all rights to sue for past infringement, and all proceeds from the Patents.\n\n[INITIALS_BLOCK:assignment-acknowledgment]",
       "firmCustomizable": true
     },
     {
@@ -237,8 +237,92 @@
       "title": "Signatures",
       "order": 10,
       "required": true,
-      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\nASSIGNOR:\n\n_____________________________\n{{assignor_name}}\n\nDate: _____________________\n\n\nASSIGNEE:\n\n_____________________________\n{{assignee_name}}\n\nBy: _____________________________\nName:\nTitle:\n\nDate: _____________________\n\n\n[NOTARY ACKNOWLEDGMENT IF REQUIRED FOR RECORDING]",
+      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\n[SIGNATURE_BLOCK:assignor-signature]\n[SIGNATURE_BLOCK:assignee-signature]\n\n[NOTARY_BLOCK:assignor-notary]",
       "firmCustomizable": false
+    }
+  ],
+  "signatureBlocks": [
+    {
+      "id": "assignor-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-section-signature",
+        "marker": "[SIGNATURE_BLOCK:assignor-signature]"
+      },
+      "party": {
+        "role": "assignor",
+        "label": "ASSIGNOR",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      },
+      "notaryRequired": true
+    },
+    {
+      "id": "assignee-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-section-signature",
+        "marker": "[SIGNATURE_BLOCK:assignee-signature]"
+      },
+      "layout": {
+        "position": "side-by-side",
+        "groupWith": "assignor-signature",
+        "preventPageBreak": true
+      },
+      "party": {
+        "role": "assignee",
+        "label": "ASSIGNEE",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "title": {
+            "required": false,
+            "label": "Title"
+          },
+          "company": {
+            "required": false,
+            "label": "By"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      }
+    }
+  ],
+  "initialBlocks": [
+    {
+      "id": "assignment-acknowledgment",
+      "placement": {
+        "locations": ["end-of-section-assignment"],
+        "marker": "[INITIALS_BLOCK:assignment-acknowledgment]"
+      },
+      "party": {
+        "role": "all-parties",
+        "label": "Initials"
+      },
+      "customText": "By initialing here, all parties acknowledge the complete transfer of patent rights as described above"
+    }
+  ],
+  "notaryBlocks": [
+    {
+      "id": "assignor-notary",
+      "forSignatureId": "assignor-signature",
+      "placement": {
+        "location": "after-assignor-signature",
+        "marker": "[NOTARY_BLOCK:assignor-notary]"
+      }
     }
   ]
 } 
