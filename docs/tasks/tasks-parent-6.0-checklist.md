@@ -36,9 +36,9 @@
     - [x] 6.4.1 Investigate signature/initial requirements and positions
     - [x] 6.4.2 Implement blocks and test
     (Details: tasks-parent-6.4-detailed.md)
-  - [ ] 6.5 NDA IP Specific signature/initial blocks
-    - [ ] 6.5.1 Investigate signature/initial requirements and positions
-    - [ ] 6.5.2 Implement blocks and test
+  - [x] 6.5 NDA IP Specific signature/initial blocks
+    - [x] 6.5.1 Investigate signature/initial requirements and positions
+    - [x] 6.5.2 Implement blocks and test
     (Details: tasks-parent-6.5-detailed.md)
   - [ ] 6.6 Office Action Response signature/initial blocks
     - [ ] 6.6.1 Investigate signature/initial requirements and positions

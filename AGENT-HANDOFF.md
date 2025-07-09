@@ -9,8 +9,8 @@ Current Branch: R
 
 **Working on Parent Task 6.0**: Update JSON Templates with Signature Block Definitions
 - Focus: Adding signature blocks, initial blocks, and placement markers to all 8 document templates
-- Progress: Tasks 6.1, 6.2, 6.3, and 6.4 complete
-- **Current**: Task 6.4 complete, ready for Task 6.5 (NDA IP Specific)
+- Progress: Tasks 6.1, 6.2, 6.3, 6.4, and 6.5 complete
+- **Current**: Task 6.5 complete, ready for Task 6.6 (Office Action Response)
 
 ### Recent Completions
 
@@ -100,20 +100,32 @@ Current Branch: R
 - ✅ All tests passing (269/269)
 - ✅ Both subtasks 6.4.1 and 6.4.2 complete
 
+**Task 6.5 Completed** (2025-01-08):
+- ✅ Investigated NDA signature requirements
+  - Two signature blocks required (both parties)
+  - Page initials commonly used
+  - Party labels vary by agreement type (mutual vs unilateral)
+- ✅ Updated `templates/core/nda-ip-specific.json` with:
+  - Two signature blocks with sequential layout
+  - Conditional party labels in template content
+  - Page initial blocks for each-page-footer
+  - Tested with both mutual and unilateral agreements
+- ✅ Verified markers appear correctly
+- ✅ All tests passing (269/269)
+
 ### Next Priority
 
-**Task 6.5**: NDA IP Specific signature/initial blocks
-- ⏳ Ready to start Task 6.5.1 (Investigation phase)
-- Need to investigate and implement signature blocks for NDA IP Specific
-- Expected to have signatures for both parties (mutual NDA)
-- May require page initials
+**Task 6.6**: Office Action Response signature/initial blocks
+- Need to investigate legal format requirements
+- Single attorney signature likely required
+- Professional legal document standards
 
-### Task 6.4.1 Investigation Summary
-- Analyzed generated cease and desist letter structure
-- Confirmed single attorney signature requirement
-- Signature placement: Between "Sincerely," and attorney name
-- No witness/notary/initial blocks needed
-- Current template has placeholders but needs proper signature block definition
+### Task 6.5.1 Investigation Summary
+- Analyzed generated NDA IP Specific structure
+- Confirmed two signatures required (sequential layout)
+- Signature placement: After "IN WITNESS WHEREOF" clause
+- Page initials commonly used for NDAs
+- Party labels change based on agreement type
 
 ## Key Implementation Details
 
@@ -170,3 +182,13 @@ All tests passing:
 2. Follow same pattern: investigate → implement → test
 3. Update checklist after each subtask
 4. Run full test suite after each template update 
+
+## Templates Updated So Far
+1. ✅ Patent Assignment Agreement - Done (complex with witness/notary)
+2. ✅ Trademark Application - Done (single attorney signature)
+3. ✅ Cease and Desist Letter - Done (business letter format)
+4. ✅ NDA IP Specific - Done (two parties, page initials)
+5. ⏳ Office Action Response - Next
+6. ⏳ Patent License Agreement
+7. ⏳ Provisional Patent Application
+8. ⏳ Technology Transfer Agreement 

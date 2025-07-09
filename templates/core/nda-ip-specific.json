@@ -166,7 +166,7 @@
       "title": "Signatures",
       "order": 9,
       "required": true,
-      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\n{{#if mutual}}FIRST PARTY:{{else}}DISCLOSING PARTY:{{/if}}\n\n{{disclosing_party}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\n{{#if mutual}}SECOND PARTY:{{else}}RECEIVING PARTY:{{/if}}\n\n{{receiving_party}}\n\nBy: _____________________________\nName:\nTitle:\nDate:",
+      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\n{{#if mutual}}FIRST PARTY:{{else}}DISCLOSING PARTY:{{/if}}\n\n{{disclosing_party}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\n[SIGNATURE_BLOCK:first-party-signature]\n\n{{#if mutual}}SECOND PARTY:{{else}}RECEIVING PARTY:{{/if}}\n\n{{receiving_party}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\n[SIGNATURE_BLOCK:second-party-signature]",
       "firmCustomizable": false
     }
   ],
@@ -175,5 +175,54 @@
       "source": "agreement_type",
       "transform": "equals:mutual"
     }
-  }
+  },
+  "signatureBlocks": [
+    {
+      "id": "first-party-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-signatures-intro",
+        "marker": "[SIGNATURE_BLOCK:first-party-signature]"
+      },
+      "party": {
+        "role": "first-party",
+        "label": "FIRST PARTY / DISCLOSING PARTY",
+        "fields": {
+          "name": { "required": true, "label": "Name" },
+          "title": { "required": true, "label": "Title" },
+          "date": { "required": true, "label": "Date" }
+        }
+      }
+    },
+    {
+      "id": "second-party-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-first-party-signature",
+        "marker": "[SIGNATURE_BLOCK:second-party-signature]"
+      },
+      "party": {
+        "role": "second-party",
+        "label": "SECOND PARTY / RECEIVING PARTY",
+        "fields": {
+          "name": { "required": true, "label": "Name" },
+          "title": { "required": true, "label": "Title" },
+          "date": { "required": true, "label": "Date" }
+        }
+      }
+    }
+  ],
+  "initialBlocks": [
+    {
+      "id": "page-initials",
+      "placement": {
+        "locations": ["each-page-footer"],
+        "marker": "[INITIALS_BLOCK:page-initials]"
+      },
+      "party": {
+        "role": "all-parties",
+        "label": "___ / ___"
+      }
+    }
+  ]
 } 
