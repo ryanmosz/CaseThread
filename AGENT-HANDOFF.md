@@ -172,3 +172,14 @@ The project is functionally complete with comprehensive documentation. The only 
 - ✅ This is the highest priority task from developer-r-tasks.md
 - ✅ All documentation committed to R branch (commit: 6793149)
 - 📋 Ready for implementation - enables PDF generation with proper signature positioning 
+
+**Parent Task 6.0 Restructured** (2025-01-08):
+- ✅ Updated PRD to include initial blocks, placement system, and marker definitions
+- ✅ Restructured from 7 tasks to 12 tasks with investigation phases
+- ✅ Created individual task files (6.2-6.9) for each document type
+- ✅ Each document task has investigation and implementation subtasks
+- ✅ Renamed former tasks to 6.10 (TypeScript), 6.11 (Testing), 6.12 (Documentation)
+- ✅ Comprehensive schema for signatures, initials, and placement
+- ✅ Marker system: `[SIGNATURE_BLOCK:id]`, `[INITIALS_BLOCK:id]`
+- ✅ All changes committed to R branch (commit: 8f14aab)
+- 📋 Ready for Developer R to begin implementation with investigation phases 
