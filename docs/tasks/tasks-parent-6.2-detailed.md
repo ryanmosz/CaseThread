@@ -1,220 +1,212 @@
-# Task 6.2: Update Patent-Assignment-Agreement Template
+# Task 6.2: Patent Assignment Agreement Signature/Initial Blocks
 
 **Part of Parent Task 6.0: Update JSON Templates with Signature Block Definitions**
 
 ## Overview
 
-Update the patent-assignment-agreement.json template to include signature block definitions. This document typically requires signatures from both the assignor (person/entity transferring rights) and assignee (person/entity receiving rights), usually displayed side-by-side.
+Investigate and implement signature blocks, initial blocks, and placement markers for the Patent Assignment Agreement template. This document typically involves transfer of patent rights from assignor to assignee and may require initials on key sections.
 
 ## Sub-tasks
 
-### 6.2.1 Analyze current patent assignment template structure
+### 6.2.1 Investigate signature/initial requirements and positions
 
 **Implementation Steps:**
-1. Open `templates/core/patent-assignment-agreement.json`
-2. Review current structure and fields
-3. Identify where signature blocks should be added
-4. Note any existing signature-related placeholders
 
-**File:** `templates/core/patent-assignment-agreement.json`
+1. **Generate sample document for analysis:**
+   ```bash
+   docker exec casethread-dev npm run cli -- generate patent-assignment-agreement docs/testing/scenario-inputs/tfs-01-patent-assignment-founders.yaml
+   ```
 
-### 6.2.2 Design signature blocks for patent assignment
+2. **Analyze generated document structure:**
+   - Open the generated markdown file
+   - Identify major sections (e.g., recitals, assignment clause, warranties)
+   - Note current placement of party information
+   - Look for natural signature placement points
 
-**Implementation Steps:**
-1. Determine parties needing signatures:
-   - Assignor (transferring party)
-   - Assignee (receiving party)
-2. Define required fields for each party
-3. Specify side-by-side layout preference
+3. **Research legal requirements:**
+   - Patent assignments typically require both parties' signatures
+   - Side-by-side format is standard for two-party agreements
+   - May need initials on assignment clause itself
+   - Some jurisdictions require witness signatures
 
-**Expected Structure:**
-```json
-{
-  "signatureBlocks": [
-    {
-      "id": "assignor-signature",
-      "type": "single",
-      "party": {
-        "role": "assignor",
-        "label": "ASSIGNOR",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": false, "label": "Title" },
-          "date": { "required": true, "label": "Date" }
-        }
-      }
-    },
-    {
-      "id": "assignee-signature",
-      "type": "single",
-      "layout": {
-        "position": "side-by-side",
-        "groupWith": "assignor-signature",
-        "preventPageBreak": true
-      },
-      "party": {
-        "role": "assignee",
-        "label": "ASSIGNEE",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": false, "label": "Title" },
-          "company": { "required": true, "label": "Company" },
-          "date": { "required": true, "label": "Date" }
-        }
-      }
-    }
-  ]
-}
+4. **Document findings:**
+   - Create a placement map showing:
+     - Section names and numbers
+     - Recommended signature placement
+     - Initial requirements (if any)
+     - Special considerations
+
+**Expected Findings:**
+- Main signatures: After assignment section, before governing law
+- Layout: Side-by-side for assignor/assignee
+- Initials: Possibly on assignment clause page
+- Fields needed: Name, Title (optional), Date, Company (for assignee)
+
+**Investigation Output:**
+```markdown
+## Patent Assignment Placement Map
+
+### Document Structure:
+1. Header/Title
+2. Party Information
+3. Recitals/Background
+4. Assignment Clause [INITIALS_BLOCK:assignor-initials] [INITIALS_BLOCK:assignee-initials]
+5. Warranties and Representations
+6. General Provisions
+
+[SIGNATURE_BLOCK:assignor-signature]
+[SIGNATURE_BLOCK:assignee-signature]
+
+7. Governing Law
 ```
 
-### 6.2.3 Add signature blocks to template JSON
+### 6.2.2 Implement blocks and test
 
 **Implementation Steps:**
-1. Open the template file in your editor
-2. Add the `signatureBlocks` array at the root level
-3. Ensure proper JSON formatting
-4. Validate JSON syntax
 
-**Code Changes:**
-```json
-{
-  "id": "patent-assignment-agreement",
-  "name": "Patent Assignment Agreement",
-  "description": "...",
-  "sections": [...],
-  "signatureBlocks": [
-    // Add signature block definitions here
-  ]
-}
-```
+1. **Update patent-assignment-agreement.json:**
+   ```json
+   {
+     "id": "patent-assignment-agreement",
+     "name": "Patent Assignment Agreement",
+     "description": "...",
+     "sections": [...],
+     "signatureBlocks": [
+       {
+         "id": "assignor-signature",
+         "type": "single",
+         "placement": {
+           "location": "after-section-assignment",
+           "marker": "[SIGNATURE_BLOCK:assignor-signature]"
+         },
+         "party": {
+           "role": "assignor",
+           "label": "ASSIGNOR",
+           "fields": {
+             "name": { "required": true, "label": "Name" },
+             "title": { "required": false, "label": "Title" },
+             "date": { "required": true, "label": "Date" }
+           }
+         }
+       },
+       {
+         "id": "assignee-signature",
+         "type": "single",
+         "placement": {
+           "location": "after-section-assignment",
+           "marker": "[SIGNATURE_BLOCK:assignee-signature]"
+         },
+         "layout": {
+           "position": "side-by-side",
+           "groupWith": "assignor-signature",
+           "preventPageBreak": true
+         },
+         "party": {
+           "role": "assignee",
+           "label": "ASSIGNEE",
+           "fields": {
+             "name": { "required": true, "label": "Name" },
+             "title": { "required": false, "label": "Title" },
+             "company": { "required": true, "label": "Company" },
+             "date": { "required": true, "label": "Date" }
+           }
+         }
+       }
+     ],
+     "initialBlocks": [
+       {
+         "id": "assignor-initials",
+         "placement": {
+           "locations": ["after-assignment-clause"],
+           "marker": "[INITIALS_BLOCK:assignor-initials]"
+         },
+         "party": {
+           "role": "assignor",
+           "label": "Assignor"
+         }
+       },
+       {
+         "id": "assignee-initials",
+         "placement": {
+           "locations": ["after-assignment-clause"],
+           "marker": "[INITIALS_BLOCK:assignee-initials]"
+         },
+         "party": {
+           "role": "assignee",
+           "label": "Assignee"
+         }
+       }
+     ]
+   }
+   ```
 
-### 6.2.4 Test template loading with new structure
+2. **Update document generation to include markers:**
+   - Ensure OpenAI service includes markers in appropriate positions
+   - May need to modify prompt or post-process output
 
-**Implementation Steps:**
-1. Run the template service tests:
+3. **Test template loading:**
    ```bash
    docker exec casethread-dev npm test -- __tests__/services/template.test.ts
    ```
-2. Verify no errors when loading the updated template
-3. Check that existing functionality still works
 
-**Manual Test:**
-```typescript
-// Quick test script to verify template loads
-import { TemplateService } from './src/services/template';
-
-const templateService = new TemplateService();
-const template = await templateService.loadTemplate('patent-assignment-agreement');
-console.log('Signature blocks:', template.signatureBlocks);
-```
-
-### 6.2.5 Verify backward compatibility
-
-**Implementation Steps:**
-1. Ensure document generation still works:
+4. **Test document generation with markers:**
    ```bash
-   docker exec casethread-dev npm run cli -- generate patent-assignment-agreement test-input.yaml
+   docker exec casethread-dev npm run cli -- generate patent-assignment-agreement docs/testing/scenario-inputs/tfs-01-patent-assignment-founders.yaml
    ```
-2. Confirm output is unchanged (signature blocks ignored for now)
-3. Check no runtime errors occur
+
+5. **Verify marker placement:**
+   - Check that `[SIGNATURE_BLOCK:assignor-signature]` appears after assignment section
+   - Check that `[SIGNATURE_BLOCK:assignee-signature]` appears in correct position
+   - Verify initial blocks appear where expected
+   - Ensure no disruption to document flow
+
+6. **Run full test suite:**
+   ```bash
+   docker exec casethread-dev npm test
+   ```
 
 ## Testing Approach
 
-1. **Automated Testing:**
-   - Run existing template service tests
-   - All must pass without modification
+1. **Template Loading Test:**
+   - Verify template loads with new blocks
+   - Check signature blocks are accessible
+   - Ensure backward compatibility
 
-2. **Manual Testing:**
-   - Load template programmatically
-   - Verify signature blocks are present
-   - Generate a document to ensure backward compatibility
+2. **Document Generation Test:**
+   - Generate document with test scenario
+   - Verify markers appear in output
+   - Check document remains readable
+   - Ensure no content is lost
 
-3. **JSON Validation:**
-   - Use JSON linter to validate syntax
-   - Ensure no duplicate keys or formatting issues
+3. **Marker Validation:**
+   - Confirm all markers are unique
+   - Verify marker format is consistent
+   - Check markers are in logical positions
 
 ## Definition of Done
 
-- [ ] Patent assignment template has signature blocks defined
-- [ ] Both assignor and assignee signature blocks included
-- [ ] Side-by-side layout specified
-- [ ] All required and optional fields defined
-- [ ] Template service tests pass
-- [ ] Document generation still works
-- [ ] JSON is valid and properly formatted
+- [ ] Investigation complete with documented findings
+- [ ] Placement map created showing marker positions
+- [ ] JSON template updated with signature blocks
+- [ ] Initial blocks added where needed
+- [ ] All placement directives specified
+- [ ] Markers appear in generated documents
+- [ ] Template loading tests pass
+- [ ] Document generation works correctly
+- [ ] Full test suite passes
 
 ## Common Pitfalls
 
-1. **Breaking existing structure** - Only add new fields, don't modify existing ones
-2. **Invalid JSON** - Always validate after editing
-3. **Missing required fields** - Ensure name and date are always required
-4. **Incorrect layout specification** - Test the groupWith reference is correct
-
-## Code Example
-
-Complete signature blocks section to add:
-
-```json
-"signatureBlocks": [
-  {
-    "id": "assignor-signature",
-    "type": "single",
-    "party": {
-      "role": "assignor",
-      "label": "ASSIGNOR",
-      "fields": {
-        "name": { 
-          "required": true, 
-          "label": "Name" 
-        },
-        "title": { 
-          "required": false, 
-          "label": "Title" 
-        },
-        "date": { 
-          "required": true, 
-          "label": "Date" 
-        }
-      }
-    }
-  },
-  {
-    "id": "assignee-signature",
-    "type": "single",
-    "layout": {
-      "position": "side-by-side",
-      "groupWith": "assignor-signature",
-      "preventPageBreak": true
-    },
-    "party": {
-      "role": "assignee",
-      "label": "ASSIGNEE",
-      "fields": {
-        "name": { 
-          "required": true, 
-          "label": "Name" 
-        },
-        "title": { 
-          "required": false, 
-          "label": "Title" 
-        },
-        "company": { 
-          "required": true, 
-          "label": "Company" 
-        },
-        "date": { 
-          "required": true, 
-          "label": "Date" 
-        }
-      }
-    }
-  }
-]
-```
+1. **Incorrect marker placement** - Ensure markers don't break document flow
+2. **Missing company field** - Assignee often needs company name
+3. **Forgetting initials** - Assignment clause may need initials
+4. **Invalid JSON** - Always validate after editing
+5. **Breaking existing functionality** - Test thoroughly
 
 ## Notes
 
-- This is one of the more complex signature layouts (side-by-side)
-- Patent assignments often need corporate titles/positions
-- Consider whether witness signatures might be needed in future
-- This template will serve as a model for other two-party agreements 
+- Patent assignments are legally binding transfers of rights
+- Side-by-side signatures are industry standard
+- Initial blocks on key clauses add legal weight
+- This template serves as a model for other two-party agreements
+- Consider future needs for witness signatures 

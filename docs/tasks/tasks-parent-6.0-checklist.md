@@ -5,23 +5,55 @@
 - `templates/core/*.json` - All 8 JSON template files to be updated
 - `src/types/index.ts` - TypeScript interfaces for templates (needs signature block types)
 - `src/services/template.ts` - Template loading service (verify compatibility)
+- `src/services/openai.ts` - OpenAI service (will need to handle markers in output)
 - `__tests__/services/template.test.ts` - Template service tests (must all pass)
 - `docs/templates/template-schema.md` - Documentation for template structure (needs update)
+- `generated-documents/*` - Generated documents to analyze for signature placement
 
 ### Notes
 
 - This is the highest priority task for Developer R
+- Each document type requires investigation before implementation
 - All existing tests must pass after implementation
 - Coordinate with Developer G for main merge after completion
-- No changes to document generation logic - only adding metadata
+- Document generation will now include markers for signature/initial blocks
 
 ## Tasks
 
 - [ ] 6.0 Update JSON templates with signature block definitions
   - [ ] 6.1 Design and document signature block JSON schema (Details: tasks-parent-6.1-detailed.md)
-  - [ ] 6.2 Update patent-assignment-agreement template (Details: tasks-parent-6.2-detailed.md)
-  - [ ] 6.3 Update trademark-application template (Details: tasks-parent-6.3-detailed.md)
-  - [ ] 6.4 Update remaining 6 document templates (Details: tasks-parent-6.4-detailed.md)
-  - [ ] 6.5 Update TypeScript interfaces and types (Details: tasks-parent-6.5-detailed.md)
-  - [ ] 6.6 Run and verify all existing tests pass (Details: tasks-parent-6.6-detailed.md)
-  - [ ] 6.7 Create documentation for signature block schema (Details: tasks-parent-6.7-detailed.md) 
+  - [ ] 6.2 Patent Assignment Agreement signature/initial blocks
+    - [ ] 6.2.1 Investigate signature/initial requirements and positions
+    - [ ] 6.2.2 Implement blocks and test
+    (Details: tasks-parent-6.2-detailed.md)
+  - [ ] 6.3 Trademark Application signature/initial blocks
+    - [ ] 6.3.1 Investigate signature/initial requirements and positions
+    - [ ] 6.3.2 Implement blocks and test
+    (Details: tasks-parent-6.3-detailed.md)
+  - [ ] 6.4 Cease and Desist Letter signature/initial blocks
+    - [ ] 6.4.1 Investigate signature/initial requirements and positions
+    - [ ] 6.4.2 Implement blocks and test
+    (Details: tasks-parent-6.4-detailed.md)
+  - [ ] 6.5 NDA IP Specific signature/initial blocks
+    - [ ] 6.5.1 Investigate signature/initial requirements and positions
+    - [ ] 6.5.2 Implement blocks and test
+    (Details: tasks-parent-6.5-detailed.md)
+  - [ ] 6.6 Office Action Response signature/initial blocks
+    - [ ] 6.6.1 Investigate signature/initial requirements and positions
+    - [ ] 6.6.2 Implement blocks and test
+    (Details: tasks-parent-6.6-detailed.md)
+  - [ ] 6.7 Patent License Agreement signature/initial blocks
+    - [ ] 6.7.1 Investigate signature/initial requirements and positions
+    - [ ] 6.7.2 Implement blocks and test
+    (Details: tasks-parent-6.7-detailed.md)
+  - [ ] 6.8 Provisional Patent Application signature/initial blocks
+    - [ ] 6.8.1 Investigate signature/initial requirements and positions
+    - [ ] 6.8.2 Implement blocks and test
+    (Details: tasks-parent-6.8-detailed.md)
+  - [ ] 6.9 Technology Transfer Agreement signature/initial blocks
+    - [ ] 6.9.1 Investigate signature/initial requirements and positions
+    - [ ] 6.9.2 Implement blocks and test
+    (Details: tasks-parent-6.9-detailed.md)
+  - [ ] 6.10 Update TypeScript interfaces and types (Details: tasks-parent-6.10-detailed.md)
+  - [ ] 6.11 Run and verify all existing tests pass (Details: tasks-parent-6.11-detailed.md)
+  - [ ] 6.12 Create documentation for signature block schema (Details: tasks-parent-6.12-detailed.md) 
