@@ -1,136 +1,87 @@
 # CaseThread: Moving Forward
 
 ## Development Team
-- **Developer R**: Created core CLI framework, testing infrastructure, Docker setup
-- **Developer G**: Contributed multi-agent architecture, ChromaDB integration, context-aware generation
+- **Developer R**: Created core CLI framework, testing infrastructure, Docker setup, leading PDF generation
+- **Developer G**: Contributed multi-agent architecture, ChromaDB integration, leading GUI development
 
 ## MVP Goals (By Friday)
-- All current features working without error
-- Demo-ready system
-- All tests passing (fix tests or code as needed)
-- Comprehensive test suite demonstration
-- Core Electron app with two major features
+- Document generation with full edit/save/export workflow
+- 3-pane Electron GUI functional
+- All 8 document types working
+- Professional PDF output with legal formatting
+- All tests passing
 
-## MVP Features
+## Division of Labor
 
-### Core Functionality ✅
-- All 8 document types generating correctly
-- Multi-agent system fully integrated
-- ChromaDB learning and context retrieval
-- Docker deployment
+### Developer G (GUI Lead)
+- Electron app implementation
+- 3-pane layout
+- Text editor integration
+- File browser (left pane)
+- Forms and UI components
+- Save/export workflow
 
-### Immediate Priorities
+### Developer R (Backend/PDF)
+- PDF generation with PDFKit
+- Legal formatting compliance
+- Export service API
+- Backend integration
 
-#### 1. Test Suite Completion
-- Ensure 100% of existing tests pass
-- Fix failing tests or adjust test expectations
-- Create demo script for test suite
+## Friday Demo Workflow ✅
+1. User opens 3-pane GUI
+2. Selects document type from right pane
+3. Fills form in middle pane
+4. Clicks "Generate Now"
+5. Reviews generated document (editable text)
+6. Makes manual edits as needed
+7. Clicks "Save and Export to PDF"
+8. Both text and PDF saved to project
+9. Files appear in left pane
+10. Can view saved files by clicking them
 
-#### 2. Error Handling (If Time Permits)
-- Basic user-friendly error messages
-- Graceful failure modes
+## Technical Decisions Made
+- **Architecture**: 3-pane layout (locked)
+- **Input Method**: Form-based (locked)
+- **Editor**: Editable text in middle pane (locked)
+- **Export**: Both text and PDF files (locked)
+- **PDF Library**: PDFKit (locked)
 
-#### 3. Performance Baseline
-- Document current performance (~30-35 seconds)
-- Identify obvious bottlenecks only
+## Decisions for Developer G
+- Save/Export button placement
+- File organization structure
+- Error handling UI
+- Loading indicators
+- Component libraries
 
-## Electron App (Phase 2 - For Friday Demo)
+## Removed from MVP
+- Document summarization (now optional stretch goal)
+- Tabbed interface in right pane
+- Advanced file management
+- Generative editing (weekend stretch goal)
 
-### Critical Design Decision Required
-**User Input Method for Document Generation:**
-- **Option 1**: Form-based interface with fields for each template requirement
-- **Option 2**: Conversational chat interface for gathering requirements
-- Decision impacts entire GUI design
+## Success Criteria for Friday
+- [ ] 3-pane GUI loads without errors
+- [ ] All 8 document types generate successfully
+- [ ] Generated documents are editable
+- [ ] Save function works properly
+- [ ] PDF export creates legal-formatted documents
+- [ ] File browser shows all documents
+- [ ] PDF viewer displays PDFs correctly
+- [ ] Complete workflow demo ready
 
-### Confirmed Features for Friday
+## Timeline
+- **Tuesday**: Core development starts
+- **Wednesday**: Features complete individually
+- **Thursday**: Integration day
+- **Friday AM**: Polish and testing
+- **Friday PM**: Demo
 
-#### 1. Drafting Support (Existing Functionality)
-- Integration of current CLI document generation
-- Template-based generation for all 8 document types
-- PDF export functionality (lawyers need PDFs)
+## Stretch Goals (Weekend Only)
+- Generative editing (AI-powered edits)
+- Document summarization tab
+- Advanced file management
 
-#### 2. Document Summary (New Feature)
-- Summarize lengthy legal documents
-- Identify key elements and extract information
-- Answer complex legal questions from knowledge base
-- Provide citations when possible
-- Integration into Electron GUI
-
-### Architecture Focus
-Enable IP attorneys to focus on higher-value work by automating:
-- Initial document drafting
-- Document review and analysis
-- Routine legal research tasks
-
-### Stretch Goal (Weekend - Optional)
-- Template customization functionality
-- Allow attorneys to modify existing templates
-- Not on roadmap unless time permits
-
-### Under Consideration
-- Real-time preview functionality
-- Jurisdiction-specific knowledge for IP law
-- Quality scoring system
-
-## Possible Future Features
-
-### Agent Enhancements
-- QA Agent implementation
-- Risk Assessment Agent
-- Compliance Agent
-- Agent performance metrics
-
-### Extended Capabilities
-- Template editor
-- Template marketplace
-- Custom template support
-- Batch processing
-- Output formats (PDF, DOCX)
-
-### Enterprise/Integration Features
-- Multi-user support
-- Role-based access
-- Law firm management system integration
-- E-signature service integration
-- Billing system integration
-
-### AI/Analytics Features
-- Fine-tuned legal language models
-- Citation verification
-- Document generation analytics
-- Time-saving metrics
-
-### Platform Features
-- SaaS offering
-- Plugin architecture
-- Mobile app
-- API marketplace
-
-## Technical Notes
-
-### Documentation Requirements
-- Minimal user guide explaining program capabilities
-- Basic setup instructions
-- Template usage documentation
-
-### Code Quality
-- Current mock data structure is well-organized
-- Standardized error patterns (if time permits)
-
-## Success Criteria for Friday Demo
-- [ ] All features demonstrated without crashes
-- [ ] Complete test suite passes
-- [ ] Document generation works for all 8 types
-- [ ] Electron app with drafting support
-- [ ] PDF export working
-- [ ] Document summary feature functional
-- [ ] Clear demonstration flow prepared
-
-## Next Steps
-1. Make input method decision (form vs chat)
-2. Focus on test completion
-3. Build Electron app with two features
-4. Implement PDF functionality
-5. Prepare demo script
-6. Fix any blocking issues
-7. Document setup process 
+## Reference Documents
+- `/docs/planning/MFD-gui-architecture-decisions.md` - Detailed GUI specs
+- `/docs/planning/MFD-pdf-generation-options.md` - PDF implementation
+- `/docs/planning/MFD-roadmap.md` - Current progress tracking 
