@@ -1,4 +1,4 @@
-# MFT: PDF Generation Options for Legal Documents
+# MFD: PDF Generation Options for Legal Documents
 
 ## Current State
 - Text output only from CLI
@@ -26,6 +26,11 @@
    - Signature block with attorney info
    - Date line
 
+4. **Signature Blocks** (NEW DETAIL)
+   - Must be explicitly positioned
+   - Cannot split across pages
+   - Different layouts per document type
+
 ### Nice-to-Have for Demo
 - Paragraph numbering
 - Headers with case info
@@ -38,6 +43,87 @@
 - Exhibit labeling
 - Conditional logic
 - PDF/A compliance
+
+---
+
+## Signature Block Implementation Guide
+
+### Why Explicit Implementation is Required
+- PDF libraries don't understand "signature blocks"
+- Must specify exact coordinates and spacing
+- Page break logic must prevent splitting
+- Different documents need different layouts
+
+### Template Modification Recommendation
+**YES** - Add signature block markers to templates and JSON files:
+
+```json
+// Example template addition
+{
+  "signature_block": {
+    "type": "single", // or "side-by-side"
+    "parties": [
+      {
+        "label": "ASSIGNOR",
+        "name_field": "assignor_name",
+        "title_field": "assignor_title",
+        "include_date": true
+      }
+    ]
+  }
+}
+```
+
+### Text Output Markers
+Add clear markers in generated text:
+```
+[SIGNATURE BLOCK - SINGLE]
+By: _______________________
+    [Assignor Name]
+    [Assignor Title]
+    Date: _____________
+[END SIGNATURE BLOCK]
+```
+
+### Implementation in PDFKit
+```javascript
+// Basic signature block implementation
+function addSignatureBlock(doc, type, parties) {
+  // Ensure enough space (prevent page splits)
+  const blockHeight = parties.length * 60 + 40;
+  if (doc.y + blockHeight > 720) { // Bottom margin check
+    doc.addPage();
+  }
+  
+  if (type === 'single') {
+    parties.forEach(party => {
+      doc.moveDown(2);
+      doc.text(`${party.label}:`, 72, doc.y);
+      doc.moveDown();
+      doc.text('By: _______________________', 72, doc.y);
+      doc.text(`    ${party.name}`, 72, doc.y + 20);
+      doc.text(`    ${party.title}`, 72, doc.y + 40);
+      if (party.includeDate) {
+        doc.text('    Date: _____________', 72, doc.y + 60);
+      }
+    });
+  } else if (type === 'side-by-side') {
+    // Position signatures in columns
+    const col1X = 72;
+    const col2X = 306; // Middle of page
+    
+    doc.text(`${parties[0].label}:`, col1X, doc.y);
+    doc.text(`${parties[1].label}:`, col2X, doc.y);
+    // ... continue positioning
+  }
+}
+```
+
+### Document-Specific Requirements
+1. **Patent Assignment**: Usually side-by-side (Assignor/Assignee)
+2. **NDA**: Can be single or side-by-side
+3. **License Agreement**: Often multiple signature pages
+4. **Cease & Desist**: Single signature (sender only)
 
 ---
 
@@ -71,6 +157,7 @@
 - Limited formatting control
 - May not handle page breaks well
 - Basic typography only
+- **Signature block positioning difficult**
 
 ---
 
@@ -93,12 +180,14 @@
   - PDF template system
   - Layout engine
   - Style management
+  - Signature block positioning logic
 - **Legal compliance**: ~80%
 
 ### Pros
 - Precise formatting control
 - Professional appearance
 - Handles page breaks properly
+- **Can position signature blocks exactly**
 
 ### Cons
 - More complex to implement
@@ -203,6 +292,7 @@
 - Limited formatting
 - May look basic
 - Less impressive
+- **No signature block control**
 
 ---
 
@@ -215,6 +305,7 @@
   2. Create basic legal template
   3. Implement must-have formatting
   4. Add page numbers and margins
+  5. **Add signature block positioning logic**
 - **Timeline**: 8-10 hours
 - **Risk**: Moderate
 
@@ -250,11 +341,16 @@ class LegalPDFGenerator {
         indent: numbered ? 36 : 0
       });
   }
+  
+  // NEW: Add signature block method
+  addSignatureBlock(config) {
+    // Implementation as shown above
+  }
 }
 ```
 
 ### Day 2: Legal Elements
-- Signature blocks
+- Signature blocks with positioning
 - Page numbering
 - Attorney information formatting
 - Date formatting
@@ -263,6 +359,7 @@ class LegalPDFGenerator {
 - Test with all 8 document types
 - Ensure consistent formatting
 - Add any missing must-haves
+- **Verify signature blocks don't split pages**
 
 ## MVP Legal Formatting Checklist
 
@@ -272,7 +369,7 @@ class LegalPDFGenerator {
 - [ ] Double-spaced body
 - [ ] Page numbers
 - [ ] Clear document title
-- [ ] Signature block
+- [ ] Signature block (properly positioned)
 - [ ] Date line
 - [ ] Clean paragraph breaks
 - [ ] Professional appearance
@@ -291,6 +388,7 @@ class LegalPDFGenerator {
 3. "Maintains standard legal conventions"
 4. "Export-ready for filing"
 5. "Consistent formatting across all document types"
+6. **"Proper signature block placement"**
 
 ## Future Enhancements
 
