@@ -4,19 +4,33 @@
 
 ## Context
 
-I need a detailed development plan for a specific parent task from the CaseThread CLI POC implementation plan. The full project context is available in:
-- **docs/planning/cli-poc-plan.md** - Main project plan
-- **docs/tasks/tasks-cli-poc-plan.md** - Overall task breakdown  
+**UPDATE**: We are now working from the **Developer R Tasks List** as defined in the collaborative development plan.
+
+I need a detailed development plan for a specific parent task from the Developer R implementation plan. The full project context is available in:
+- **docs/planning/developer-r-tasks.md** - Developer R's specific task assignments (PRIMARY REFERENCE)
+- **docs/planning/MFD-roadmap.md** - Overall developer task breakdown and timeline
+- **docs/planning/MFD-gui-architecture-decisions.md** - Locked GUI architecture (3-pane design)
 - **docs/architecture/tech-stack.md** - IMMUTABLE tech stack (never change these technologies)
 - **AGENT-HANDOFF.md** - Current project state
 
-**CRITICAL**: The tech stack defined in docs/architecture/tech-stack.md is immutable. All implementation must use exactly these technologies and versions. Do not suggest alternatives or upgrades.
+**Developer R Focus Areas**:
+- PDF generation and export functionality
+- Legal document formatting (spacing, margins, fonts)
+- Signature block implementation and positioning
+- Backend API development for GUI integration
+- Document persistence and management
+
+**CRITICAL**: 
+1. The tech stack defined in docs/architecture/tech-stack.md is immutable. All implementation must use exactly these technologies and versions. Do not suggest alternatives or upgrades.
+2. We are working on the R branch. All development happens on R branch or feature branches off R.
+3. Coordinate with Developer G (working on GUI) for integration points.
 
 **CaseThread Specific Context**:
 - All development happens inside Docker container
-- Primary focus: CLI tool for legal document generation
+- Multi-agent architecture with ChromaDB integration
 - Key inputs: Template JSON, Explanation markdown, YAML scenario files
 - Output: Generated legal documents via OpenAI API
+- GUI: 3-pane Electron app with document management, viewer/editor, and features
 
 ## Using Internal Documentation
 
