@@ -27,6 +27,8 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
 
 ### Task Implementation
 - **One sub-task at a time:** Do **NOT** start the next sub-task until you ask the user for permission and they say "yes" or "y"
+- **Verify functionality works**: After implementing, test that the feature actually works in generated output, not just that tests pass
+- **Fix dependencies first**: If you discover a system dependency (e.g., OpenAI service needs updating for markers to work), pause and fix it before continuing
 - **Completion protocol:**
   1. When you finish a **sub-task**, immediately mark it as completed by changing `[ ]` to `[x]` in the task list file
   2. If **all** subtasks underneath a parent task are now `[x]`, also mark the **parent task** as completed
@@ -95,9 +97,18 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
    e. **Complete the approved task thoroughly**
       - Implement the task following the approved plan
       - Test the CLI commands thoroughly inside Docker container
+      - **Generate actual documents to verify features work in practice**
+      - **Check that new features appear in output (e.g., markers, formatting)**
       - Verify all functionality works as expected
       - Document any issues or deviations from the plan
       - Update relevant documentation
+
+## Cross-Task Dependencies and Integration Points
+
+When implementing tasks, be aware of system dependencies:
+- **Template changes may require service updates**: If adding new markers or features to templates, verify that the OpenAI service and other components can handle them
+- **Test actual output, not just unit tests**: Generate documents to verify features work end-to-end
+- **Fix dependencies immediately**: If a feature doesn't work due to a missing dependency, fix it before moving to the next task to avoid accumulating non-functional features
 
 4. Critical CaseThread Development Standards:
    - **File Size**: Maximum 500 lines per file (hard limit)
@@ -185,13 +196,21 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
     - **Signature Blocks**: Support single, side-by-side, and sequential layouts
     - **Initial Blocks**: Support page-by-page and section-specific placement
     - **Markers**: Text output includes [SIGNATURE_BLOCK:id] and [INITIALS_BLOCK:id] markers
+      - Note: Markers require OpenAI service prompt to preserve them in output
+      - Always verify markers appear in generated documents after template updates
 
 14. Command Structure:
     - `generate <document-type> <input-yaml-path>` - Main generation command
     - `--output <path>` - Optional output directory flag
     - `--debug` - Enable verbose logging flag
 
-15. MCP Integration: This project has Model Context Protocol (MCP) configured with RepoPrompt tools for efficient codebase navigation (search, multi-file reading, code analysis). Use these MCP tools instead of manual operations when possible. Key tools: mcp_RepoPrompt_search, mcp_RepoPrompt_read_selected_files. The tools enable parallel operations for faster development.
+15. MCP Integration: This project has Model Context Protocol (MCP) configured with RepoPrompt tools for efficient codebase navigation. 
+**USE THESE TOOLS EXTENSIVELY**:
+- Start every task with `mcp_RepoPrompt_manage_selection` to focus on relevant files
+- Use `mcp_RepoPrompt_search` for pattern discovery before making assumptions
+- Leverage parallel operations for faster development
+- Clear and re-select files when switching between different parts of the codebase
+Key tools: mcp_RepoPrompt_search, mcp_RepoPrompt_read_selected_files, mcp_RepoPrompt_manage_selection
 
 16. ## Critical Principle: Only Build What Doesn't Exist
 **NEVER replace working functionality with placeholders or simplified versions**
@@ -220,4 +239,4 @@ parent plan, task checklist and detailed checklist you are to proceed with devel
 docs/tasks/prd-parent-task-[PARENT-VAR].md
 docs/tasks/tasks-parent-[PARENT-VAR]-checklist.md
 docs/tasks/tasks-parent-[PARENT-VAR]-detailed.md
-where, PARENT-VAR = 
+where, PARENT-VAR = 6.0
