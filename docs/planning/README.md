@@ -4,6 +4,8 @@
 
 **Mission:** Build a transparent, affordable alternative to Harvey AI that helps IP attorneys generate documents faster while maintaining complete control.
 
+**Current Status:** ✅ CLI POC Complete | 🚧 Multi-Agent Integration in Progress
+
 ## 📁 Planning Documents
 
 1. **[Project Overview](./project-overview.md)**
@@ -56,26 +58,43 @@
 
 **What We're Building:**
 - CLI tool for template-based document generation
-- Learns from your firm's style and precedents
+- Multi-agent system with context-aware generation
+- Learns from your firm's style and precedents  
 - GUI interface coming in Phase 2
 - Local-first, transparent, customizable
 
 **Tech Stack:**
 - TypeScript + Commander.js (CLI)
+- Multi-Agent Architecture (Context Builder, Drafting Agent)
+- ChromaDB for vector search
+- Docker containerization
 - Electron + React (GUI - Phase 2)
-- Jest for TDD
+- Jest for TDD (266 tests passing)
 - OpenAI API (user provides key)
-- Local SQLite storage
 
-**Development Approach:**
+**Current Features:**
+- ✅ 8 document types fully functional
+- ✅ YAML-based input system
+- ✅ Template + Explanation system
+- ✅ Multi-agent pipeline with ChromaDB
+- ✅ Context learning via `learn` command
+- ✅ Graceful degradation without ChromaDB
+
+**Development Status:**
 ```
-Weeks 1-6: CLI MVP
+✅ Phase 1: CLI POC (Complete)
 ├── Core business logic
-├── Template system
+├── Template system  
 ├── Document generation
 └── Command-line interface
 
-Weeks 7-10: GUI Development
+🚧 Phase 2: Multi-Agent Integration (In Progress)
+├── PR #1 integrated to feature branch
+├── ChromaDB vector search working
+├── Test coverage: 65.77% (target: 80%)
+└── Performance: 33s avg generation
+
+📅 Phase 3: GUI Development (Planned)
 ├── Electron application
 ├── React interface
 ├── CLI core integration
@@ -89,17 +108,20 @@ Weeks 7-10: GUI Development
 - Currently priced out of Harvey ($100K+/year)
 
 **Timeline:**
-- Weeks 1-6: CLI MVP Development
-- Weeks 7-10: GUI Development
-- Weeks 11-12: Beta Launch
-- Months 4-6: Growth Phase
+- ✅ Weeks 1-6: CLI POC Development (Complete)
+- 🚧 Week 7: Multi-Agent Integration (Current)
+- 📅 Weeks 8-11: GUI Development  
+- 📅 Weeks 12-13: Beta Launch
+- 📅 Months 4-6: Growth Phase
 
 ## 📊 Key Metrics
 
 - **Cost:** Free core + $99/month premium (vs Harvey's $100K+/year)
-- **Speed:** <30 second document generation
+- **Speed:** 33 second average generation (with context retrieval)
 - **Quality:** 90% acceptance rate on first generation
-- **Privacy:** 100% local data (only prompts sent to OpenAI)
+- **Privacy:** Local ChromaDB + only prompts to OpenAI
+- **Test Coverage:** 65.77% (improving to 80%+)
+- **Document Types:** 8 fully functional templates
 
 ## 🤝 For the Dev Team
 
@@ -109,12 +131,36 @@ Weeks 7-10: GUI Development
 4. Log decisions in [decisions.md](./decisions.md)
 5. Check [Technical Implementation](./technical-implementation.md) for architecture
 
+## 🤖 Multi-Agent Integration (NEW)
+
+**PR #1 Status:** Integrated to `feature/integrate-multi-agent` branch
+
+**What's New:**
+- Context Builder Agent: Retrieves relevant context from ChromaDB
+- Drafting Agent: Generates documents with context awareness
+- Learn Command: Index existing documents for context
+- ChromaDB: Vector database for semantic search
+
+**Integration Documents:**
+- [Integration Plan](../testing/MULTIAGENT_INTEGRATION_PLAN.md)
+- [Test Results](../testing/test-results/MULTIAGENT_TEST_RESULTS_20250708.md)
+- [Test Plan](../testing/MULTIAGENT_TEST_PLAN.md)
+
 ## 🔄 Next Steps
 
-1. Review project overview for vision alignment
-2. Check roadmap for current sprint tasks
-3. See technical guide for CLI implementation
-4. Update roadmap weekly with progress
+1. **Immediate:** Increase test coverage to 80%+
+2. **This Week:** Merge multi-agent to main branch
+3. **Next Week:** Begin GUI development phase
+4. **Ongoing:** Performance optimization (target <20s generation)
+
+## 📁 Key Directories
+
+- `/docs/planning/` - Project planning and roadmaps
+- `/docs/architecture/` - Technical decisions and guides
+- `/docs/testing/` - Test plans and results
+- `/docs/tasks/` - Development task tracking
+- `/templates/` - Document templates and examples
+- `/mock-data/` - Test scenarios and sample data
 
 ---
 

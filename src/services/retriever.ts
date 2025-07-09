@@ -53,15 +53,26 @@ export class RetrieverService {
     };
 
     // ChromaDB client configuration - requires server to be running
-    // Default to localhost:8000 (standard ChromaDB server)
+    // Use CHROMADB_URL from environment or default to localhost:8000
+    const chromaUrl = process.env.CHROMADB_URL || 'http://localhost:8000';
+    
+    // Parse URL to get host and port for new ChromaDB client format
+    const url = new URL(chromaUrl);
+    const host = url.hostname;
+    const port = parseInt(url.port || '8000', 10);
+    const ssl = url.protocol === 'https:';
+    
     this.client = new ChromaClient({
-      path: 'http://localhost:8000'
+      host,
+      port,
+      ssl
     });
 
     if (this.config.enableLogging) {
       logger.info('RetrieverService initialized', {
         chromaPath: this.config.chromaPath,
-        collectionName: this.config.collectionName
+        collectionName: this.config.collectionName,
+        chromaUrl: chromaUrl
       });
     }
   }

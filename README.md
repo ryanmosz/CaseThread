@@ -1,10 +1,17 @@
-# CaseThread - Legal Document Generation for IP Attorneys
+# CaseThread - Multi-Agent Legal Document Generation for IP Attorneys
 
-CaseThread is an open-source legal AI agent designed specifically for intellectual property attorneys. It provides template-based document generation with AI assistance, offering a low-cost alternative to expensive legal tech solutions.
+CaseThread is an open-source, multi-agent AI system designed specifically for intellectual property attorneys. It provides context-aware document generation using advanced AI agents and vector search, offering a powerful yet affordable alternative to expensive legal tech solutions.
+
+## 🚀 New: Multi-Agent Architecture
+
+CaseThread now features a sophisticated multi-agent system that learns from your firm's documents:
+- **Context Builder Agent**: Retrieves relevant precedents using ChromaDB vector search
+- **Drafting Agent**: Generates documents with context awareness
+- **Learning System**: Index your existing documents to improve generation quality
 
 ## 🎯 Target Audience
 
-Licensed IP attorneys in small to mid-sized firms who need efficient document generation tools without the $100K+/year price tag of enterprise solutions.
+Licensed IP attorneys in small to mid-sized firms who need efficient, intelligent document generation tools without the $100K+/year price tag of enterprise solutions.
 
 ## 📋 Features
 
@@ -18,6 +25,9 @@ Licensed IP attorneys in small to mid-sized firms who need efficient document ge
   - Cease and Desist Letter
   - Technology Transfer Agreement
 
+- **Multi-Agent AI System**: Context-aware generation using specialized agents
+- **Vector Search**: ChromaDB integration for semantic document retrieval  
+- **Learning Capability**: Index and learn from your firm's existing documents
 - **AI-Enhanced Generation**: Strategic integration with OpenAI API for intelligent content generation
 - **Smart Validation**: Field-level validation and conditional logic
 - **Firm Customization**: Templates can be customized to match firm preferences
@@ -27,10 +37,13 @@ Licensed IP attorneys in small to mid-sized firms who need efficient document ge
 
 > **Quick Start**: Want to get running in 5 minutes? Check out [QUICKSTART.md](QUICKSTART.md)
 
+> **Validate Everything Works**: Run `./docs/testing/test-scripts/test-all-documents-demo.sh` to test all functionality!
+
 ### Prerequisites
 - Docker and Docker Compose
 - OpenAI API key (with access to o3 model)
 - Git
+- ChromaDB (included in Docker setup)
 
 ### Installation & Setup
 
@@ -56,28 +69,54 @@ CT_PARALLEL_DEFAULT=false
 EOF
 ```
 
-3. **Build and start Docker container**
+3. **Build and start Docker containers** (includes ChromaDB)
 ```bash
-# Build the Docker image
+# Build the Docker images
 docker-compose build
 
-# Start the container
+# Start the containers (CaseThread + ChromaDB)
 docker-compose up -d
 
-# Verify container is running
+# Verify containers are running
 docker ps
+# Should show: casethread-dev and casethread-chromadb
 ```
 
-4. **Run initial tests** (optional but recommended)
+4. **Index existing documents** (optional but recommended)
+```bash
+# Learn from mock law firm documents
+docker exec casethread-dev npm run cli -- learn
+
+# Or clear and re-index
+docker exec casethread-dev npm run cli -- learn --clear
+```
+
+5. **Run initial tests** (optional but recommended)
 ```bash
 docker exec casethread-dev npm test
 ```
 
+6. **Run comprehensive demo test** ⭐ RECOMMENDED
+```bash
+# This runs all 8 document types with visual progress
+./docs/testing/test-scripts/test-all-documents-demo.sh
+```
+This is our main testing script that validates all functionality!
+
 ### Using the CLI
 
-The CaseThread CLI generates legal documents from YAML input files using AI-powered templates.
+The CaseThread CLI provides two main commands: `learn` (index documents) and `generate` (create documents).
 
-#### Basic Command Structure
+#### Learn Command - Index Your Documents
+```bash
+# Index mock law firm documents for context retrieval
+docker exec casethread-dev npm run cli -- learn
+
+# Clear existing index and re-index
+docker exec casethread-dev npm run cli -- learn --clear
+```
+
+#### Generate Command - Create Documents
 ```bash
 docker exec casethread-dev npm run cli -- generate <document-type> <input-file> [options]
 ```
@@ -174,8 +213,9 @@ Example output location:
 CaseThread/
 ├── src/                    # TypeScript source code
 │   ├── index.ts           # CLI entry point
-│   ├── commands/          # CLI commands
-│   ├── services/          # Core services (OpenAI, template, etc.)
+│   ├── commands/          # CLI commands (generate, learn)
+│   ├── agents/            # Multi-agent system
+│   ├── services/          # Core services (OpenAI, ChromaDB, etc.)
 │   ├── utils/             # Utility functions
 │   └── types/             # TypeScript type definitions
 ├── templates/             # Document templates
@@ -191,11 +231,23 @@ CaseThread/
 └── package.json         # Node.js dependencies
 ```
 
-## 🧪 Development
+## 🧪 Testing & Validation
 
-### Running Tests
+### Comprehensive Functionality Test ⭐
 ```bash
-# Run all tests
+# Run the main demo test - validates ALL functionality
+./docs/testing/test-scripts/test-all-documents-demo.sh
+```
+This script:
+- Tests all 8 document types sequentially
+- Shows real-time generation progress
+- Displays input/output previews
+- Completes in ~4-5 minutes
+- Provides comprehensive success/failure summary
+
+### Unit Tests
+```bash
+# Run all unit tests (266 tests)
 docker exec casethread-dev npm test
 
 # Run tests in watch mode
@@ -284,21 +336,26 @@ docker exec casethread-dev ./test-all-documents.sh
 - **Runtime**: Node.js 20 (LTS)
 - **CLI Framework**: Commander.js v13
 - **AI Model**: OpenAI o3
-- **Container**: Docker
-- **Testing**: Jest
+- **Vector Database**: ChromaDB
+- **Multi-Agent System**: Custom TypeScript agents
+- **Container**: Docker & Docker Compose
+- **Testing**: Jest (266 tests)
 - **Logging**: Winston
 
 ## 📈 Development Roadmap
 
-### Phase 1: CLI MVP (Current)
+### Phase 1: CLI MVP ✅ COMPLETE
 - [x] CLI framework setup
 - [x] Core services (logging, YAML parsing, template loading)
 - [x] Template system with 8 document types
 - [x] OpenAI integration with o3 model
 - [x] Document generation with validation
 - [x] Docker containerization
-- [ ] Database schema (upcoming)
-- [ ] Batch processing (upcoming)
+- [x] Multi-agent system with ChromaDB
+- [x] Context-aware document generation
+- [x] Learning from existing documents
+- [ ] Database schema (Phase 2)
+- [ ] Batch processing (Phase 2)
 
 ### Phase 2: GUI Development (Weeks 7-10)
 - [ ] Electron app setup
