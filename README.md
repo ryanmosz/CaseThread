@@ -37,6 +37,8 @@ Licensed IP attorneys in small to mid-sized firms who need efficient, intelligen
 
 > **Quick Start**: Want to get running in 5 minutes? Check out [QUICKSTART.md](QUICKSTART.md)
 
+> **Validate Everything Works**: Run `./docs/testing/test-scripts/test-all-documents-demo.sh` to test all functionality!
+
 ### Prerequisites
 - Docker and Docker Compose
 - OpenAI API key (with access to o3 model)
@@ -88,6 +90,13 @@ docker exec casethread-dev npm run cli -- learn --clear
 ```bash
 docker exec casethread-dev npm test
 ```
+
+6. **Run comprehensive demo test** ⭐ RECOMMENDED
+```bash
+# This runs all 8 document types with visual progress
+./docs/testing/test-scripts/test-all-documents-demo.sh
+```
+This is our main testing script that validates all functionality!
 
 ### Using the CLI
 
@@ -202,11 +211,23 @@ CaseThread/
 └── package.json         # Node.js dependencies
 ```
 
-## 🧪 Development
+## 🧪 Testing & Validation
 
-### Running Tests
+### Comprehensive Functionality Test ⭐
 ```bash
-# Run all tests
+# Run the main demo test - validates ALL functionality
+./docs/testing/test-scripts/test-all-documents-demo.sh
+```
+This script:
+- Tests all 8 document types sequentially
+- Shows real-time generation progress
+- Displays input/output previews
+- Completes in ~4-5 minutes
+- Provides comprehensive success/failure summary
+
+### Unit Tests
+```bash
+# Run all unit tests (266 tests)
 docker exec casethread-dev npm test
 
 # Run tests in watch mode
