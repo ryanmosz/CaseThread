@@ -6,27 +6,56 @@ import { BaseAgent } from './BaseAgent';
 import { 
   DraftingAgentInput, 
   DraftingAgentOutput, 
+  PartialDraftOutput,
   CheckpointResult 
 } from '../types/agents';
 import { generateDocument } from '../services/openai';
 import { loadExplanation } from '../services/template';
 import { logger } from '../utils/logger';
+import { config } from '../config';
 
 export class DraftingAgent extends BaseAgent {
   readonly name = 'DraftingAgent';
   readonly description = 'Generates documents section-by-section using template metadata';
 
-  protected async execute(input: DraftingAgentInput): Promise<DraftingAgentOutput> {
+  protected async execute(input: DraftingAgentInput): Promise<DraftingAgentOutput | PartialDraftOutput> {
     logger.debug(`DraftingAgent processing: ${input.template.id} for ${input.matterContext.client}`);
 
     // Load template explanation
     const explanation = await loadExplanation(input.matterContext.documentType);
     
-    // Generate document using existing OpenAI service
+    // Determine which sections to generate
+    let workingTemplate = input.template;
+
+    if (input.sectionIds && input.sectionIds.length > 0) {
+      const filteredSections = input.template.sections.filter(section =>
+        input.sectionIds!.includes(section.id)
+      );
+
+      workingTemplate = {
+        ...input.template,
+        sections: filteredSections
+      };
+    }
+
+    // If we are drafting a subset, tweak the explanation so the model
+    // knows to generate ONLY those sections.
+    let taskExplanation = explanation;
+    if (input.sectionIds && input.sectionIds.length > 0) {
+      const orderedTitles = workingTemplate.sections.map(s => s.title).join(', ');
+      taskExplanation += `\n\nADDITIONAL INSTRUCTIONS:\nGenerate ONLY the following sections (in this exact order) and nothing else: ${orderedTitles}. Do NOT include any other document parts, cover pages, or duplicate sections.`;
+    }
+
+    // Generate document (partial or full) using OpenAI service
+    const modelOverride = input.sectionIds && input.sectionIds.length > 0
+      ? config.parallel.WORKER_MODEL
+      : undefined;
+
     const draftMarkdown = await generateDocument(
-      input.template,
-      explanation,
-      input.matterContext.yamlData
+      workingTemplate,
+      taskExplanation,
+      input.matterContext.yamlData,
+      modelOverride
     );
 
     // Analyze the generated document
@@ -34,7 +63,7 @@ export class DraftingAgent extends BaseAgent {
     const placeholdersRemaining = this.findPlaceholders(draftMarkdown);
     const tokenCount = this.estimateTokenCount(draftMarkdown);
 
-    return {
+    const baseOutput = {
       draftMarkdown,
       generationMetadata: {
         sectionsGenerated,
@@ -43,6 +72,13 @@ export class DraftingAgent extends BaseAgent {
         streamingChunks: 1 // Since we're not streaming yet
       }
     };
+
+    // If sectionIds provided, treat as PartialDraftOutput
+    if (input.sectionIds && input.sectionIds.length > 0) {
+      return baseOutput as PartialDraftOutput;
+    }
+
+    return baseOutput as DraftingAgentOutput;
   }
 
   protected validateInput(input: DraftingAgentInput): void {
@@ -87,7 +123,7 @@ export class DraftingAgent extends BaseAgent {
     return checkpoints;
   }
 
-  protected async runPostCheckpoints(output: DraftingAgentOutput): Promise<CheckpointResult[]> {
+  protected async runPostCheckpoints(output: DraftingAgentOutput | PartialDraftOutput): Promise<CheckpointResult[]> {
     const checkpoints: CheckpointResult[] = [];
 
     // Checkpoint: No placeholders remaining
