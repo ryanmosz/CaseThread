@@ -75,13 +75,21 @@
 #### 1. DocumentBrowser (Left Pane)
 ```typescript
 interface DocumentBrowserProps {
-  rootPath: string; // "/mock-data"
-  onDocumentSelect: (doc: Document) => void;
-  onFolderExpand: (path: string) => void;
+  documentTree: DirectoryEntry[];
+  onDocumentSelect: (filePath: string) => void;
 }
 
-// Using HeroUI components: Tree, Card, Spacer
-// Styled with Tailwind classes via HeroUI
+interface TreeNode {
+  id: string;
+  name: string;
+  isDirectory: boolean;
+  path: string;
+  children?: TreeNode[];
+}
+
+// Using react-arborist for tree navigation
+// Custom Node component with expand/collapse behavior
+// File system-like icons and navigation
 ```
 
 #### 2. TemplateSelector (Right Pane)
@@ -138,7 +146,7 @@ Template Selection → Form Modal → Field Validation → Generate Button → I
 
 ### 3. File System Integration
 ```
-Static Mock Data → File System Watcher → Tree View Updates → Document Preview → Context Loading
+Static Mock Data → Recursive Directory Tree → React-arborist Tree → Expand/Collapse Navigation → Document Selection → Context Loading
 ```
 
 ## Integration Patterns

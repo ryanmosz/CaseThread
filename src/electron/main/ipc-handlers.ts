@@ -26,6 +26,42 @@ export const IPC_CHANNELS = {
   SHOW_OPEN_DIALOG: 'dialog:showOpenDialog',
 } as const;
 
+// Recursively build directory tree structure
+async function buildDirectoryTree(dirPath: string): Promise<any[]> {
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
+  const result: any[] = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry.name);
+    const item: any = {
+      name: entry.name,
+      isDirectory: entry.isDirectory(),
+      path: fullPath,
+    };
+
+    if (entry.isDirectory()) {
+      try {
+        // Recursively build children for directories
+        const children = await buildDirectoryTree(fullPath);
+        item.children = children;
+      } catch (error) {
+        // If we can't read the directory, just leave it without children
+        console.warn(`Could not read directory ${fullPath}:`, error);
+        item.children = [];
+      }
+    }
+
+    result.push(item);
+  }
+
+  return result.sort((a: any, b: any) => {
+    // Sort directories first, then files
+    if (a.isDirectory && !b.isDirectory) return -1;
+    if (!a.isDirectory && b.isDirectory) return 1;
+    return a.name.localeCompare(b.name);
+  });
+}
+
 export function setupIpcHandlers(): void {
   // File system handlers
   ipcMain.handle(IPC_CHANNELS.READ_FILE, async (_, filePath: string) => {
@@ -57,12 +93,7 @@ export function setupIpcHandlers(): void {
       if (!isPathSafe(dirPath)) {
         throw new Error('Invalid directory path');
       }
-      const entries = await fs.readdir(dirPath, { withFileTypes: true });
-      const result = entries.map(entry => ({
-        name: entry.name,
-        isDirectory: entry.isDirectory(),
-        path: path.join(dirPath, entry.name),
-      }));
+      const result = await buildDirectoryTree(dirPath);
       return { success: true, data: result };
     } catch (error) {
       return { success: false, error: (error as Error).message };

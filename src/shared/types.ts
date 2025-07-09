@@ -4,6 +4,7 @@ export interface DirectoryEntry {
   name: string;
   isDirectory: boolean;
   path: string;
+  children?: DirectoryEntry[];
 }
 
 export interface Template {

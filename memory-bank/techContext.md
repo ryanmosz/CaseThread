@@ -13,6 +13,7 @@
 - **HeroUI**: React component library built on Tailwind CSS
 - **Tailwind CSS**: Utility-first CSS framework (via HeroUI)
 - **Lucide Icons**: Consistent icon library (compatible with HeroUI)
+- **React-arborist**: Professional tree component for file system navigation
 
 ### State Management
 - **React Context**: Global state management
@@ -83,7 +84,8 @@
     "lucide-react": "^0.300.0",
     "clsx": "^2.0.0",
     "react-hook-form": "^7.0.0",
-    "zod": "^3.0.0"
+    "zod": "^3.0.0",
+    "react-arborist": "^3.4.3"
   }
 }
 ```
