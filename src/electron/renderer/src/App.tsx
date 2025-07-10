@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardBody, Button, Spinner } from '@heroui/react';
+import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { ThemeProvider } from './components/ThemeProvider';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import DocumentBrowser from './components/DocumentBrowser';
-import DocumentViewer from './components/DocumentViewer';
+import EnhancedDocumentViewer from './components/EnhancedDocumentViewer';
 import TemplateSelector from './components/TemplateSelector';
 import { Template, DirectoryEntry } from '../../../shared/types';
 
@@ -202,6 +204,12 @@ const App: React.FC = () => {
             isLoading: false,
           }));
           
+          // Show success toast
+          toast.success(`${state.selectedTemplate?.name || 'Document'} generated successfully!`, {
+            duration: 5000,
+            icon: '📄',
+          });
+          
           console.log('App: Document generation successful');
         } else {
           throw new Error('Generated document is empty');
@@ -246,6 +254,12 @@ const App: React.FC = () => {
         }
       }
       
+      // Show error toast
+      toast.error(userFriendlyError, {
+        duration: 6000,
+        icon: '❌',
+      });
+      
       setState(prev => ({
         ...prev,
         error: userFriendlyError,
@@ -286,6 +300,52 @@ const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light">
       <ErrorBoundary>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: 'hsl(var(--heroui-background))',
+              color: 'hsl(var(--heroui-foreground))',
+              border: '1px solid hsl(var(--heroui-default-200))',
+              borderRadius: '0.5rem',
+              boxShadow: '0 4px 12px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            },
+            success: {
+              iconTheme: {
+                primary: 'hsl(var(--heroui-success))',
+                secondary: 'hsl(var(--heroui-success-foreground))',
+              },
+              style: {
+                background: 'hsl(var(--heroui-success) / 0.6)',
+                color: 'hsl(var(--heroui-foreground))',
+                border: '1px solid hsl(var(--heroui-success) / 0.2)',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: 'hsl(var(--heroui-danger))',
+                secondary: 'hsl(var(--heroui-danger-foreground))',
+              },
+              style: {
+                background: 'hsl(var(--heroui-danger) / 0.6)',
+                color: 'hsl(var(--heroui-foreground))',
+                border: '1px solid hsl(var(--heroui-danger) / 0.2)',
+              },
+            },
+            loading: {
+              iconTheme: {
+                primary: 'hsl(var(--heroui-primary))',
+                secondary: 'hsl(var(--heroui-primary-foreground))',
+              },
+              style: {
+                background: 'hsl(var(--heroui-primary) / 0.6)',
+                color: 'hsl(var(--heroui-foreground))',
+                border: '1px solid hsl(var(--heroui-primary) / 0.2)',
+              },
+            },
+          }}
+        />
         <div className="h-screen flex flex-col bg-background">
           {/* Header */}
           <header className="bg-card border-b border-divider/60 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
@@ -383,7 +443,7 @@ const App: React.FC = () => {
 
             {/* Middle Pane - Document Viewer */}
             <div className="flex-1 bg-card flex flex-col">
-              <DocumentViewer
+              <EnhancedDocumentViewer
                 content={state.selectedDocument}
                 isLoading={state.isLoading}
                 error={state.error}
