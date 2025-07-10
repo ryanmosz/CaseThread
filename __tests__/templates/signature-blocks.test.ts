@@ -1,0 +1,230 @@
+import { loadTemplate } from '../../src/services/template';
+import { MockOpenAIService } from '../../src/services/mock-openai';
+
+describe('Signature Blocks in Templates', () => {
+  const templatesWithSignatureBlocks = [
+    'patent-assignment-agreement',
+    'trademark-application', 
+    'cease-and-desist-letter',
+    'nda-ip-specific'
+  ];
+
+  describe('Template Structure', () => {
+    templatesWithSignatureBlocks.forEach(templateId => {
+      it(`${templateId} should have signatureBlocks defined`, async () => {
+        const template = await loadTemplate(templateId);
+        // @ts-ignore - signatureBlocks is optional on Template type
+        expect(template.signatureBlocks).toBeDefined();
+        // @ts-ignore
+        expect(Array.isArray(template.signatureBlocks)).toBe(true);
+        // @ts-ignore
+        expect(template.signatureBlocks.length).toBeGreaterThan(0);
+      });
+
+      it(`${templateId} should have signature markers in content`, async () => {
+        const template = await loadTemplate(templateId);
+        
+        // Find all signature block markers in the template
+        const content = template.sections.map(s => s.content).join(' ');
+        const signatureMarkers = content.match(/\[SIGNATURE_BLOCK:[^\]]+\]/g) || [];
+        
+        // Verify each signature block has a corresponding marker
+        // @ts-ignore
+        template.signatureBlocks?.forEach((block: any) => {
+          const markerPattern = `[SIGNATURE_BLOCK:${block.id}]`;
+          expect(signatureMarkers).toContain(markerPattern);
+        });
+      });
+
+      it(`${templateId} should not have redundant signature text`, async () => {
+        const template = await loadTemplate(templateId);
+        const content = template.sections.map(s => s.content).join(' ');
+        
+        // Check for patterns we removed
+        const redundantPatterns = [
+          /By:\s*_{3,}/,  // "By: ____" lines
+          /\[ATTORNEY NAME\]/,  // Placeholder text
+          /\[FIRM NAME\]/,
+          /SIGNATURE:.*\/\{\{.*\}\}\//  // TEAS format
+        ];
+        
+        redundantPatterns.forEach(pattern => {
+          expect(content).not.toMatch(pattern);
+        });
+      });
+    });
+  });
+
+  describe('Initial Blocks', () => {
+    it('patent-assignment-agreement should have initial blocks', async () => {
+      const template = await loadTemplate('patent-assignment-agreement');
+      // @ts-ignore
+      expect(template.initialBlocks).toBeDefined();
+      // @ts-ignore
+      expect(Array.isArray(template.initialBlocks)).toBe(true);
+      // @ts-ignore
+      expect(template.initialBlocks.length).toBeGreaterThan(0);
+      
+      // Check marker in content
+      const content = template.sections.map(s => s.content).join(' ');
+      // @ts-ignore
+      template.initialBlocks?.forEach((block: any) => {
+        const marker = `[INITIALS_BLOCK:${block.id}]`;
+        expect(content).toContain(marker);
+      });
+    });
+
+    it('nda-ip-specific should have page initial blocks', async () => {
+      const template = await loadTemplate('nda-ip-specific');
+      // @ts-ignore
+      expect(template.initialBlocks).toBeDefined();
+      // @ts-ignore
+      expect(Array.isArray(template.initialBlocks)).toBe(true);
+      
+      // Verify page initials configuration
+      // @ts-ignore
+      const pageInitials = template.initialBlocks?.find((b: any) => b.id === 'page-initials');
+      expect(pageInitials).toBeDefined();
+      expect(pageInitials?.placement.locations).toContain('each-page-footer');
+    });
+  });
+
+  describe('Notary Blocks', () => {
+    it('patent-assignment-agreement should have notary blocks', async () => {
+      const template = await loadTemplate('patent-assignment-agreement');
+      // @ts-ignore
+      expect(template.notaryBlocks).toBeDefined();
+      // @ts-ignore
+      expect(Array.isArray(template.notaryBlocks)).toBe(true);
+      // @ts-ignore
+      expect(template.notaryBlocks.length).toBeGreaterThan(0);
+      
+      // Check marker in content
+      const content = template.sections.map(s => s.content).join(' ');
+      // @ts-ignore
+      template.notaryBlocks?.forEach((block: any) => {
+        const marker = `[NOTARY_BLOCK:${block.id}]`;
+        expect(content).toContain(marker);
+      });
+    });
+  });
+
+  describe('Document Generation', () => {
+    let mockOpenAI: MockOpenAIService;
+    
+    beforeEach(() => {
+      mockOpenAI = new MockOpenAIService({
+        apiKey: 'test-key',
+        model: 'test-model',
+        temperature: 0.7
+      });
+    });
+
+    templatesWithSignatureBlocks.forEach(templateId => {
+      it(`${templateId} should generate documents with signature markers`, async () => {
+        const template = await loadTemplate(templateId);
+        
+        // Create minimal YAML data for the template
+        const yamlData: any = {
+          document_type: templateId,
+          client: 'Test Client',
+          attorney: 'Test Attorney'
+        };
+        
+        // Add required fields based on template
+        template.requiredFields.forEach(field => {
+          if (!yamlData[field.id]) {
+            switch (field.type) {
+              case 'text':
+                yamlData[field.id] = `Test ${field.name}`;
+                break;
+              case 'select':
+                yamlData[field.id] = field.options?.[0] || 'default';
+                break;
+              case 'boolean':
+                yamlData[field.id] = true;
+                break;
+              case 'number':
+                yamlData[field.id] = 10;
+                break;
+              case 'date':
+                yamlData[field.id] = '2025-01-08';
+                break;
+              case 'multiselect':
+                yamlData[field.id] = field.options ? [field.options[0]] : [];
+                break;
+              default:
+                // For any type not explicitly handled (including potential textarea)
+                // treat as text
+                yamlData[field.id] = `Test ${field.name}`;
+            }
+          }
+        });
+        
+        // Generate document
+        const result = await mockOpenAI.generateDocument(template, yamlData, yamlData);
+        
+        // Verify signature markers are present
+        // @ts-ignore
+        template.signatureBlocks?.forEach((block: any) => {
+          const marker = `[SIGNATURE_BLOCK:${block.id}]`;
+          expect(result.content).toContain(marker);
+        });
+        
+        // Verify no redundant signature text
+        expect(result.content).not.toMatch(/By:\s*_{3,}/);
+        expect(result.content).not.toMatch(/\[ATTORNEY NAME\]/);
+        expect(result.content).not.toMatch(/SIGNATURE:.*\/[^\/]+\//);
+      });
+    });
+  });
+
+  describe('Signature Block Schema', () => {
+    templatesWithSignatureBlocks.forEach(templateId => {
+      it(`${templateId} signature blocks should have valid schema`, async () => {
+        const template = await loadTemplate(templateId);
+        
+        // @ts-ignore
+        template.signatureBlocks?.forEach((block: any) => {
+          // Required fields
+          expect(block.id).toBeDefined();
+          expect(block.type).toBeDefined();
+          expect(block.placement).toBeDefined();
+          expect(block.placement.marker).toBe(`[SIGNATURE_BLOCK:${block.id}]`);
+          
+          // Party information
+          expect(block.party).toBeDefined();
+          expect(block.party.role).toBeDefined();
+          expect(block.party.fields).toBeDefined();
+          
+          // Common fields
+          if (block.party.fields.name) {
+            expect(block.party.fields.name.required).toBeDefined();
+            expect(block.party.fields.name.label).toBeDefined();
+          }
+        });
+      });
+    });
+  });
+
+  describe('Templates without signature blocks', () => {
+    const templatesWithoutSignatureBlocks = [
+      'office-action-response',
+      'patent-license-agreement',
+      'provisional-patent-application',
+      'technology-transfer-agreement'
+    ];
+
+    templatesWithoutSignatureBlocks.forEach(templateId => {
+      it(`${templateId} should not have signature blocks yet`, async () => {
+        const template = await loadTemplate(templateId);
+        // @ts-ignore
+        expect(template.signatureBlocks).toBeUndefined();
+        
+        // Verify no markers in content
+        const content = template.sections.map(s => s.content).join(' ');
+        expect(content).not.toMatch(/\[SIGNATURE_BLOCK:[^\]]+\]/);
+      });
+    });
+  });
+}); 
