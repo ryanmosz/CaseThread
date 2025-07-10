@@ -33,6 +33,16 @@ This document outlines the technology stack used for the CaseThread CLI proof of
 - **js-yaml** (v4.x) - YAML parsing and validation
 - **fs/promises** - Native Node.js file system operations
 
+### PDF Generation
+- **PDFKit** (v0.17.x) - JavaScript PDF generation library
+  - Pure JavaScript implementation
+  - No system dependencies required
+  - Built-in font support (Times-Roman)
+  - Programmatic PDF creation
+  - Letter size support
+  - Custom margins and spacing
+  - Page numbering capabilities
+
 ### User Interface
 - **Ora** (v7.x) - Terminal spinner for progress indication
 - **Chalk** (v5.x) - Terminal string styling
@@ -67,6 +77,13 @@ Business logic separated into services:
 - `template.ts` - Template management
 - `yaml.ts` - Data parsing
 
+### PDF Generation Layer
+PDF creation separated into services:
+- `LegalPDFGenerator.ts` - Main PDF generation logic
+- `DocumentFormatter.ts` - Formatting rules by document type
+- `SignatureBlockParser.ts` - Signature marker parsing
+- `PDFLayoutEngine.ts` - Layout and positioning logic
+
 ### Error Handling
 Centralized error handling with user-friendly messages and detailed debug logs.
 
@@ -77,6 +94,7 @@ Centralized error handling with user-friendly messages and detailed debug logs.
 │   ├── index.ts              # Entry point
 │   ├── commands/             # CLI commands
 │   ├── services/             # Business logic
+│   │   └── pdf/              # PDF generation services
 │   ├── utils/                # Utilities
 │   └── types/                # TypeScript types
 ├── __tests__/                # Test files
@@ -147,6 +165,9 @@ Due to 'o3' model limitations:
 - Additional LLM providers
 - Batch processing
 - Web interface
+- PDF/A archival format support
+- Digital signature integration
+- Advanced PDF features (bookmarks, forms)
 
 ### Scalability
 - Microservice architecture ready

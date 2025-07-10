@@ -6,11 +6,11 @@
 ## Subtasks
 
 ### Setup and Foundation
-- [ ] 2.1 Install and Configure PDFKit (Details: tasks-parent-2.1-detailed.md)
-  - [ ] 2.1.1 Install PDFKit and TypeScript types
-  - [ ] 2.1.2 Verify PDFKit works in Docker container
-  - [ ] 2.1.3 Create basic PDF test to validate setup
-  - [ ] 2.1.4 Update tech stack documentation
+- [x] 2.1 Install and Configure PDFKit (Details: tasks-parent-2.1-detailed.md)
+  - [x] 2.1.1 Install PDFKit and TypeScript types
+  - [x] 2.1.2 Verify PDFKit works in Docker container
+  - [x] 2.1.3 Create basic PDF test to validate setup
+  - [x] 2.1.4 Update tech stack documentation
 
 ### Core PDF Generation
 - [ ] 2.2 Create Base PDF Generator Class (Details: tasks-parent-2.2-detailed.md)

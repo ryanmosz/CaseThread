@@ -80,8 +80,10 @@ output/
 generated-documents/
 
 # Test output directories
+test-output/
 test-output*/
 test-output-*/
+test-output.pdf
 temp-parallel/
 temp-regular/
 test-errors/

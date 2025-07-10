@@ -167,5 +167,30 @@ The task files to review are:
 - Checklist: `docs/tasks/tasks-parent-[TASK-ID]-checklist.md`
 - Details: `docs/tasks/tasks-parent-[TASK-ID].[SUBTASK-ID]-detailed.md`
 
+## Task Analysis and Sequencing
+
+Before implementing, analyze the subtasks to determine the optimal approach:
+
+1. **Review Task Dependencies**: Identify which subtasks block others and which can be done in parallel
+2. **Consider Testing Strategy**: 
+   - Can some subtasks be tested independently?
+   - Would it be better to test after each major component or wait until integration?
+3. **Minimize Risk**: 
+   - Complete foundation tasks first
+   - Test critical functionality early
+   - Avoid accumulating untested code
+
+For each parent task, present your sequencing recommendation:
+- **Sequential Approach**: Complete tasks in order with testing after each
+- **Parallel Approach**: Identify independent tasks that can be done simultaneously
+- **Hybrid Approach**: Mix of sequential critical path and parallel independent work
+
+Justify your recommendation based on:
+- Dependencies between subtasks
+- Risk of bugs accumulating
+- Ability to test components independently
+- Overall efficiency
+
+Remember: Quality over speed. It's better to have fewer working components than many untested ones.
+
 Current task to implement:
-**TASK ID:**
