@@ -61,4 +61,43 @@ export interface TextOptions {
   lineGap?: number;
   align?: 'left' | 'center' | 'right' | 'justify';
   continued?: boolean;
+}
+
+/**
+ * Supported document types for legal documents
+ */
+export type DocumentType = 
+  | 'provisional-patent-application'
+  | 'trademark-application'
+  | 'office-action-response'
+  | 'nda-ip-specific'
+  | 'patent-assignment-agreement'
+  | 'patent-license-agreement'
+  | 'technology-transfer-agreement'
+  | 'cease-and-desist-letter';
+
+/**
+ * Document-specific formatting rules
+ */
+export interface DocumentFormattingRules {
+  lineSpacing: 'single' | 'one-half' | 'double';
+  fontSize: number;
+  font: string;
+  margins: Margins;
+  pageNumberPosition: 'bottom-center' | 'bottom-right' | 'bottom-left';
+  titleCase: boolean;
+  sectionNumbering: boolean;
+  paragraphIndent: number;
+  paragraphSpacing: number;
+  blockQuoteIndent: number;
+  signatureLineSpacing: 'single' | 'double';
+}
+
+/**
+ * Line spacing configuration in points
+ */
+export interface LineSpacingConfig {
+  single: number;
+  oneHalf: number;
+  double: number;
 } 
