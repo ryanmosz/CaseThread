@@ -288,17 +288,67 @@ const App: React.FC = () => {
       <ErrorBoundary>
         <div className="h-screen flex flex-col bg-background">
           {/* Header */}
-          <header className="bg-card border-b border-divider px-6 py-4">
+          <header className="bg-card border-b border-divider/60 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">CaseThread</h1>
-                <p className="text-sm text-foreground/70">Legal Document Generator</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                {state.isLoading && <Spinner size="sm" />}
-                <div className="text-sm text-foreground/60">
-                  {state.templates.length} templates loaded
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <svg 
+                      className="w-6 h-6 text-primary" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                      />
+                    </svg>
+                  </div>
+                  {state.isLoading && (
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4">
+                      <Spinner size="sm" className="text-primary" />
+                    </div>
+                  )}
                 </div>
+                <div>
+                  <div className="flex items-baseline space-x-2">
+                    <h1 className="text-2xl font-bold text-foreground tracking-tight">
+                      CaseThread
+                    </h1>
+                    <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                      Beta
+                    </div>
+                  </div>
+                  <p className="text-sm text-foreground/60 mt-0.5">
+                    Legal Document Generator
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-card border border-divider/60">
+                  <svg 
+                    className="w-4 h-4 text-foreground/40" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" 
+                    />
+                  </svg>
+                  <span className="text-sm text-foreground/70">
+                    {state.templates.length} templates
+                  </span>
+                </div>
+                <div className="w-px h-6 bg-divider/60" />
                 <ThemeSwitcher />
               </div>
             </div>

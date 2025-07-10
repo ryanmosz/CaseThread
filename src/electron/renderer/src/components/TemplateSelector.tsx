@@ -14,9 +14,8 @@ import {
   Select,
   SelectItem,
   Checkbox,
-  DatePicker,
   Chip,
-  Spinner
+  Divider
 } from '@heroui/react';
 import { Template, TemplateField } from '../../../../shared/types';
 
@@ -31,6 +30,20 @@ interface FormErrors {
   [key: string]: string;
 }
 
+interface SelectOption {
+  key: string;
+  label: string;
+}
+
+const formatOptionLabel = (value: string): string => {
+  return value.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
+const createSelectOption = (value: string): SelectOption => ({
+  key: value,
+  label: formatOptionLabel(value)
+});
+
 const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   templates,
   selectedTemplate,
@@ -43,22 +56,23 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Inject custom scrollbar styles
-  React.useEffect(() => {
+  useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
       .custom-scrollbar::-webkit-scrollbar {
-        width: 4px;
+        width: 6px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
+        background: rgb(var(--background) / 0.1);
+        border-radius: 3px;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 2px;
-        transition: background 0.2s ease;
+        background: rgb(var(--primary) / 0.2);
+        border-radius: 3px;
+        transition: all 0.2s ease;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgb(var(--primary) / 0.3);
       }
     `;
     document.head.appendChild(style);
@@ -68,7 +82,6 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   }, []);
 
   const handleTemplateClick = (template: Template) => {
-    console.log('Template clicked:', template.id);
     onTemplateSelect(template);
     setFormData({});
     setFormErrors({});
@@ -76,12 +89,8 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   };
 
   const handleFieldChange = (fieldId: string, value: any) => {
-    console.log('Field changed:', fieldId, '=', value, typeof value);
-    
-    // Ensure the value is serializable
     let serializableValue = value;
     if (typeof value === 'object' && value !== null) {
-      // For objects, ensure they are plain objects
       serializableValue = JSON.parse(JSON.stringify(value));
     }
     
@@ -90,7 +99,6 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
       [fieldId]: serializableValue
     }));
     
-    // Clear error when user starts typing
     if (formErrors[fieldId]) {
       setFormErrors(prev => ({
         ...prev,
@@ -107,14 +115,12 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     selectedTemplate.requiredFields.forEach(field => {
       const value = formData[field.id];
       
-      // Check required fields
       if (field.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
         errors[field.id] = `${field.name} is required`;
         return;
       }
       
       if (value && field.validation) {
-        // Check string length
         if (typeof value === 'string') {
           if (field.validation.minLength && value.length < field.validation.minLength) {
             errors[field.id] = `${field.name} must be at least ${field.validation.minLength} characters`;
@@ -127,7 +133,6 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           }
         }
         
-        // Check number range
         if (field.type === 'number' && typeof value === 'number') {
           if (field.validation.min !== undefined && value < field.validation.min) {
             errors[field.id] = `${field.name} must be at least ${field.validation.min}`;
@@ -144,28 +149,15 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   };
 
   const handleGenerate = async () => {
-    if (!selectedTemplate || !validateForm()) {
-      console.log('Validation failed or no template selected');
-      return;
-    }
+    if (!selectedTemplate || !validateForm()) return;
     
     setIsGenerating(true);
     try {
-      console.log('Generating document with data:', formData);
-      
-      // Create a clean, serializable copy of form data
       const cleanFormData = JSON.parse(JSON.stringify(formData));
-      
-      // Ensure all required fields are present
-      const processedData = { ...cleanFormData };
-      
-      console.log('Processed form data:', processedData);
-      
-      await onGenerateDocument(processedData);
+      await onGenerateDocument(cleanFormData);
       onClose();
     } catch (error) {
       console.error('Generation failed:', error);
-      // Don't close the modal on error so user can try again
     } finally {
       setIsGenerating(false);
     }
@@ -175,53 +167,105 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     const value = formData[field.id];
     const error = formErrors[field.id];
     
+    const commonProps = {
+      key: field.id,
+      label: field.name,
+      description: field.description,
+      isRequired: field.required,
+      isInvalid: !!error,
+      errorMessage: error,
+      'aria-label': field.name,
+      'aria-describedby': field.description ? `${field.id}-description` : undefined,
+      className: 'w-full transition-all duration-200 focus:ring-2 focus:ring-primary/20'
+    };
+
+    const renderFieldLabel = () => (
+      <div className="flex items-center justify-between mb-1.5">
+        <label 
+          htmlFor={field.id}
+          className="block text-sm font-medium text-foreground"
+        >
+          {field.name}
+          {field.required && (
+            <span className="text-danger ml-1" aria-hidden="true">*</span>
+          )}
+        </label>
+        {field.validation?.maxLength && (
+          <span className="text-xs text-foreground/50">
+            {value?.length || 0}/{field.validation.maxLength}
+          </span>
+        )}
+      </div>
+    );
+
+    const renderFieldDescription = () => (
+      field.description && (
+        <p 
+          id={`${field.id}-description`}
+          className="mt-1 text-xs text-foreground/60"
+        >
+          {field.description}
+        </p>
+      )
+    );
+
+    const renderFieldError = () => (
+      error && (
+        <p className="mt-1 text-xs text-danger">
+          {error}
+        </p>
+      )
+    );
+
+    const fieldWrapper = (children: React.ReactNode) => (
+      <div key={field.id} className="relative space-y-1">
+        {renderFieldLabel()}
+        {children}
+        {renderFieldDescription()}
+        {renderFieldError()}
+      </div>
+    );
+    
     switch (field.type) {
       case 'textarea':
-        return (
+        return fieldWrapper(
           <Textarea
-            key={field.id}
-            label={field.name}
-            description={field.description}
+            id={field.id}
             placeholder={field.placeholder}
             value={value || ''}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            isRequired={field.required}
-            isInvalid={!!error}
-            errorMessage={error}
             minRows={4}
+            className="resize-y rounded-lg bg-background border-divider focus:border-primary"
           />
         );
         
       case 'select':
-        return (
+        const selectOptions = field.options?.map(createSelectOption) || [];
+        return fieldWrapper(
           <Select
-            key={field.id}
-            label={field.name}
-            description={field.description}
+            id={field.id}
             placeholder={`Select ${field.name.toLowerCase()}`}
             selectedKeys={value ? [value] : []}
             onSelectionChange={(keys) => {
               const selectedValue = Array.from(keys)[0];
               handleFieldChange(field.id, selectedValue);
             }}
-            isRequired={field.required}
-            isInvalid={!!error}
-            errorMessage={error}
+            className="rounded-lg bg-background border-divider focus:border-primary"
           >
-            {field.options?.map((option) => (
-              <SelectItem key={option}>
-                {option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            {selectOptions.map((option) => (
+              <SelectItem key={option.key} className="capitalize">
+                {option.label}
               </SelectItem>
-            )) || []}
+            ))}
           </Select>
         );
         
       case 'multiselect':
-        return (
-          <div key={field.id} className="space-y-2">
+        const multiselectOptions = field.options?.map(createSelectOption) || [];
+        return fieldWrapper(
+          <>
             <Select
-              label={field.name}
-              description={field.description}
+              id={field.id}
               placeholder={`Select ${field.name.toLowerCase()}`}
               selectionMode="multiple"
               selectedKeys={value || []}
@@ -229,97 +273,103 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                 const selectedValues = Array.from(keys);
                 handleFieldChange(field.id, selectedValues);
               }}
-              isRequired={field.required}
-              isInvalid={!!error}
-              errorMessage={error}
+              className="rounded-lg bg-background border-divider focus:border-primary"
             >
-              {field.options?.map((option) => (
-                <SelectItem key={option}>
-                  {option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              {multiselectOptions.map((option) => (
+                <SelectItem key={option.key} className="capitalize">
+                  {option.label}
                 </SelectItem>
-              )) || []}
+              ))}
             </Select>
             {value && value.length > 0 && (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1.5 mt-2 pb-1">
                 {value.map((item: string) => (
-                  <Chip key={item} size="sm" color="primary" variant="flat">
-                    {item.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  <Chip
+                    key={item}
+                    size="sm"
+                    color="primary"
+                    variant="flat"
+                    className="capitalize"
+                  >
+                    {formatOptionLabel(item)}
                   </Chip>
                 ))}
               </div>
             )}
-          </div>
+          </>
         );
         
       case 'date':
-        return (
+        return fieldWrapper(
           <Input
-            key={field.id}
+            id={field.id}
             type="date"
-            label={field.name}
-            description={field.description}
             value={value || ''}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            isRequired={field.required}
-            isInvalid={!!error}
-            errorMessage={error}
+            className="rounded-lg bg-background border-divider focus:border-primary"
           />
         );
         
       case 'number':
-        return (
+        return fieldWrapper(
           <Input
-            key={field.id}
+            id={field.id}
             type="number"
-            label={field.name}
-            description={field.description}
             placeholder={field.placeholder}
             value={value?.toString() || ''}
             onChange={(e) => {
               const numValue = parseFloat(e.target.value);
               handleFieldChange(field.id, isNaN(numValue) ? 0 : numValue);
             }}
-            isRequired={field.required}
-            isInvalid={!!error}
-            errorMessage={error}
+            className="rounded-lg bg-background border-divider focus:border-primary"
           />
         );
         
       case 'boolean':
         return (
-          <div key={field.id} className="flex flex-row gap-2 items-center">
-            <Checkbox
-              isSelected={Boolean(value)}
-              onValueChange={(checked) => handleFieldChange(field.id, checked)}
-              isInvalid={!!error}
-              size="lg"
-              color="success"
-              aria-label={field.name}
-            >
-              <div className="flex flex-col">
-                <span>{field.name}{field.required && ' *'}</span>
+          <div key={field.id} className="relative py-2">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id={field.id}
+                isSelected={Boolean(value)}
+                onValueChange={(checked) => handleFieldChange(field.id, checked)}
+                isInvalid={!!error}
+                size="lg"
+                color="primary"
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <label 
+                  htmlFor={field.id}
+                  className="block text-sm font-medium text-foreground cursor-pointer"
+                >
+                  {field.name}
+                  {field.required && (
+                    <span className="text-danger ml-1" aria-hidden="true">*</span>
+                  )}
+                </label>
                 {field.description && (
-                  <span className="text-sm text-gray-600">{field.description}</span>
+                  <p className="mt-0.5 text-xs text-foreground/60">
+                    {field.description}
+                  </p>
                 )}
-                {error && <span className="text-sm text-danger">{error}</span>}
+                {error && (
+                  <p className="mt-1 text-xs text-danger">{error}</p>
+                )}
               </div>
-            </Checkbox>
+            </div>
           </div>
         );
         
       default:
-        return (
+        return fieldWrapper(
           <Input
-            key={field.id}
+            id={field.id}
             type="text"
-            label={field.name}
-            description={field.description}
             placeholder={field.placeholder}
             value={value || ''}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            isRequired={field.required}
-            isInvalid={!!error}
-            errorMessage={error}
+            className="rounded-lg bg-background border-divider focus:border-primary"
           />
         );
     }
@@ -329,11 +379,24 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
         <div className="w-16 h-16 mb-6 bg-primary/10 rounded-full flex items-center justify-center">
-          <svg className="w-8 h-8 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          <svg 
+            className="w-8 h-8 text-primary/60" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" 
+            />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">No Templates Found</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">
+          No Templates Found
+        </h3>
         <p className="text-sm text-foreground/60 mb-4 max-w-xs">
           Templates will appear here once available
         </p>
@@ -346,59 +409,109 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   return (
     <>
-      <div className="custom-scrollbar overflow-y-auto h-full p-4">
-        <div className="space-y-3">
-          {templates.map((template) => (
-            <div
-              key={template.id}
-              className="cursor-pointer group"
-              onClick={() => handleTemplateClick(template)}
+      <div 
+        className="custom-scrollbar overflow-y-auto h-full p-4 space-y-3"
+        role="list"
+        aria-label="Available templates"
+      >
+        {templates.map((template) => (
+          <div
+            key={template.id}
+            role="listitem"
+            className="cursor-pointer group focus-within:outline-none"
+            onClick={() => handleTemplateClick(template)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleTemplateClick(template);
+              }
+            }}
+            tabIndex={0}
+          >
+            <Card 
+              className={`
+                transition-all duration-200 hover:shadow-lg border
+                ${selectedTemplate?.id === template.id 
+                  ? 'border-primary bg-primary/5 shadow-md' 
+                  : 'border-divider hover:border-primary/30 hover:bg-foreground/5'}
+                focus-visible:ring-2 focus-visible:ring-primary/30
+              `}
             >
-              <Card 
-                className={`transition-all duration-200 hover:shadow-lg border ${
-                  selectedTemplate?.id === template.id 
-                    ? 'border-primary bg-primary/5 shadow-md' 
-                    : 'border-divider hover:border-primary/30 hover:bg-foreground/5'
-                }`}
-              >
-                <CardBody className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-sm text-foreground mb-1 group-hover:text-primary transition-colors">
-                        {template.name}
-                      </h3>
-                      <p className="text-xs text-foreground/60 leading-relaxed">{template.description}</p>
-                    </div>
-                    <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <CardBody className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm text-foreground mb-1 group-hover:text-primary transition-colors">
+                      {template.name}
+                    </h3>
+                    <p className="text-xs text-foreground/60 leading-relaxed">
+                      {template.description}
+                    </p>
+                  </div>
+                  <div 
+                    className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-hidden="true"
+                  >
+                    <svg 
+                      className="w-4 h-4 text-primary" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M9 5l7 7-7 7" 
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <Chip
+                    size="sm"
+                    color="primary"
+                    variant="flat"
+                    className="capitalize"
+                  >
+                    {template.metadata.category}
+                  </Chip>
+                  <div className="flex items-center gap-3">
+                    <span 
+                      className="text-xs text-foreground/50 flex items-center gap-1"
+                      title={`${template.requiredFields?.length || 0} required fields`}
+                    >
+                      <svg 
+                        className="w-3 h-3" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                        />
                       </svg>
-                    </div>
+                      {template.requiredFields?.length || 0} fields
+                    </span>
+                    <Chip
+                      size="sm"
+                      color="warning"
+                      variant="flat"
+                      className="capitalize"
+                    >
+                      {template.complexity}
+                    </Chip>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
-                      {template.metadata.category}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-foreground/50 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        {template.requiredFields?.length || 0} fields
-                      </span>
-                      <span className="text-xs text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full font-medium">
-                        {template.complexity}
-                      </span>
-                    </div>
-                  </div>
-                </CardBody>
-              </Card>
-            </div>
-          ))}
-        </div>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        ))}
       </div>
 
-      {/* Enhanced Template Form Modal */}
       <Modal 
         isOpen={isOpen} 
         onClose={onClose}
@@ -408,26 +521,26 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
         backdrop="blur"
         classNames={{
           base: "min-h-[600px] max-h-[90vh]",
-          body: "max-h-[60vh] overflow-y-auto",
-          footer: "border-t border-gray-200 bg-gray-50"
+          body: "max-h-[60vh] overflow-y-auto custom-scrollbar px-6",
+          header: "border-b border-divider px-6",
+          footer: "border-t border-divider bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6"
         }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1 border-b border-gray-200">
-                <div>
-                  <h3 className="text-lg font-semibold">{selectedTemplate?.name}</h3>
-                  <p className="text-sm text-gray-600 font-normal">
-                    {selectedTemplate?.description}
-                  </p>
-                </div>
+              <ModalHeader className="flex flex-col gap-1 py-4">
+                <h2 className="text-xl font-semibold text-foreground">
+                  {selectedTemplate?.name}
+                </h2>
+                <p className="text-sm text-foreground/60 font-normal">
+                  {selectedTemplate?.description}
+                </p>
               </ModalHeader>
-              <ModalBody className="py-6">
+              <ModalBody>
                 {selectedTemplate && (
-                  <div className="space-y-6">
-                    {/* Template metadata */}
-                    <div className="flex flex-wrap gap-2 pb-4 border-b border-gray-200">
+                  <div className="space-y-8">
+                    <div className="flex flex-wrap gap-2 pb-4">
                       <Chip size="sm" color="primary" variant="flat">
                         {selectedTemplate.metadata.category}
                       </Chip>
@@ -439,14 +552,15 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                       </Chip>
                     </div>
                     
-                    {/* Form fields */}
-                    <div className="space-y-6">
+                    <Divider className="my-6" />
+                    
+                    <div className="grid gap-6">
                       {selectedTemplate.requiredFields.map(renderFormField)}
                     </div>
                   </div>
                 )}
               </ModalBody>
-              <ModalFooter className="flex justify-end gap-3 py-4 px-6">
+              <ModalFooter className="flex justify-end gap-3 py-4">
                 <Button 
                   variant="flat" 
                   onPress={onClose}
@@ -454,8 +568,19 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   size="md"
                   className="bg-foreground/5 hover:bg-foreground/10 transition-colors border border-divider/50 hover:border-divider px-6"
                   startContent={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg 
+                      className="w-4 h-4" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M6 18L18 6M6 6l12 12" 
+                      />
                     </svg>
                   }
                 >
@@ -471,8 +596,19 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   className="bg-primary hover:bg-primary/90 text-white px-6 font-medium transition-colors min-w-[160px]"
                   startContent={
                     !isGenerating ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      <svg 
+                        className="w-4 h-4" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                        />
                       </svg>
                     ) : undefined
                   }
