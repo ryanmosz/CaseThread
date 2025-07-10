@@ -3,6 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { createDocumentPaths } from '../../utils/file-naming';
 
 const execAsync = promisify(exec);
 
@@ -154,20 +155,23 @@ export function setupIpcHandlers(): void {
       // Ensure form data is clean and serializable
       const cleanFormData = JSON.parse(JSON.stringify(formData));
       
-      // Create temporary YAML file with form data
-      const tempYamlPath = path.join(process.cwd(), 'temp', `input-${Date.now()}.yaml`);
-      const tempOutputDir = path.join(process.cwd(), 'temp', 'output');
+      // Create organized folder structure for this document
+      const baseOutputDir = path.join(process.cwd(), 'output');
+      const documentPaths = createDocumentPaths(baseOutputDir, templateId);
       const yamlContent = createYamlFromFormData(cleanFormData, templateId);
       
+      console.log('IPC: Creating document folder:', documentPaths.folderName);
       console.log('IPC: Generated YAML content:', yamlContent);
       
-      // Ensure temp directories exist
-      await fs.mkdir(path.dirname(tempYamlPath), { recursive: true });
-      await fs.mkdir(tempOutputDir, { recursive: true });
-      await fs.writeFile(tempYamlPath, yamlContent, 'utf-8');
+      // Create the document folder structure
+      await fs.mkdir(documentPaths.folderPath, { recursive: true });
+      
+      // Save form data as YAML in the folder
+      await fs.writeFile(documentPaths.formDataPath, yamlContent, 'utf-8');
+      console.log('IPC: Form data saved to:', documentPaths.formDataPath);
 
-      // Execute CLI command with temp output directory
-      const command = `npm run cli -- generate ${templateId} "${tempYamlPath}" --output "${tempOutputDir}"`;
+      // Execute CLI command to generate document in the folder
+      const command = `npm run cli -- generate ${templateId} "${documentPaths.formDataPath}" --output "${documentPaths.folderPath}"`;
       console.log('IPC: Executing command:', command);
       
       const { stdout, stderr } = await execAsync(command, {
@@ -182,41 +186,28 @@ export function setupIpcHandlers(): void {
         stderr: stderr 
       });
 
-      // Find and read the generated document file
+      // Read the generated document file and move it to organized location
       let documentContent = '';
+      let finalDocumentPath = '';
       try {
-        const outputFiles = await fs.readdir(tempOutputDir);
+        const outputFiles = await fs.readdir(documentPaths.folderPath);
         const documentFile = outputFiles.find(file => file.startsWith(templateId) && file.endsWith('.md'));
         
         if (documentFile) {
-          const documentPath = path.join(tempOutputDir, documentFile);
-          documentContent = await fs.readFile(documentPath, 'utf-8');
-          console.log('IPC: Document content loaded, length:', documentContent.length);
+          const generatedDocPath = path.join(documentPaths.folderPath, documentFile);
+          documentContent = await fs.readFile(generatedDocPath, 'utf-8');
           
-          // Clean up the generated file
-          await fs.unlink(documentPath).catch(err => {
-            console.warn('Failed to cleanup generated file:', err);
-          });
+          // Move the generated document to the standard "document.md" name
+          await fs.rename(generatedDocPath, documentPaths.documentPath);
+          finalDocumentPath = documentPaths.documentPath;
+          
+          console.log('IPC: Document content loaded, length:', documentContent.length);
+          console.log('IPC: Document organized and saved to:', finalDocumentPath);
         } else {
-          console.warn('IPC: No generated document file found in output directory');
+          console.warn('IPC: No generated document file found in output folder');
         }
       } catch (error) {
-        console.error('IPC: Failed to read generated document:', error);
-      }
-
-      // Clean up temporary files
-      await fs.unlink(tempYamlPath).catch((err) => {
-        console.warn('Failed to cleanup temp YAML file:', err);
-      });
-      
-      // Clean up temp output directory if empty
-      try {
-        const remainingFiles = await fs.readdir(tempOutputDir);
-        if (remainingFiles.length === 0) {
-          await fs.rmdir(tempOutputDir);
-        }
-      } catch (err) {
-        console.warn('Failed to cleanup temp output directory:', err);
+        console.error('IPC: Failed to read/organize generated document:', error);
       }
 
       return { 
@@ -225,7 +216,11 @@ export function setupIpcHandlers(): void {
           output: documentContent || stdout, // Use document content if available, fallback to stdout
           cliOutput: stdout,
           errors: stderr,
-          documentContent: documentContent
+          documentContent: documentContent,
+          savedFilePath: finalDocumentPath, // Path to the document file
+          folderPath: documentPaths.folderPath, // Path to the folder containing both files
+          folderName: documentPaths.folderName, // Name of the generated folder
+          formDataPath: documentPaths.formDataPath // Path to the form data YAML file
         }
       };
     } catch (error) {
