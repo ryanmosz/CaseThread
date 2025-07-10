@@ -157,3 +157,15 @@ At end of session:
 
 ---
 **Remember**: Quality over speed. Test thoroughly. One sub-task at a time.
+
+## Task to Implement
+
+Using the guidelines above, analyze the current task and create a plan to implement it. Review the PRD, checklist, and detailed task files to understand what needs to be built.
+
+The task files to review are:
+- PRD: `docs/tasks/prd-parent-task-[TASK-ID].md`
+- Checklist: `docs/tasks/tasks-parent-[TASK-ID]-checklist.md`
+- Details: `docs/tasks/tasks-parent-[TASK-ID].[SUBTASK-ID]-detailed.md`
+
+Current task to implement:
+**TASK ID:**
