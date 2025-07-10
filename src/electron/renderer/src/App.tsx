@@ -104,20 +104,27 @@ const App: React.FC = () => {
         }
       }
 
-      // Load mock data directory tree with fallback
-      console.log('Loading mock data...');
-      const mockDataResult = await window.electronAPI.readDirectory('./mock-data');
-      console.log('Mock data result:', mockDataResult);
+      // Load output directory tree with fallback
+      console.log('Loading output directory...');
+      const outputResult = await window.electronAPI.readDirectory('./output');
+      console.log('Output directory result:', outputResult);
       
-      // Don't fail the entire app if mock data fails to load
-      if (!mockDataResult.success) {
-        console.warn('Mock data loading failed:', mockDataResult.error);
+      // Create output directory if it doesn't exist
+      if (!outputResult.success && outputResult.error?.includes('ENOENT')) {
+        console.log('Creating output directory...');
+        await window.electronAPI.writeFile('./output/.gitkeep', '');
+        // Try loading again after creating directory
+        const retryResult = await window.electronAPI.readDirectory('./output');
+        if (retryResult.success) {
+          outputResult.success = true;
+          outputResult.data = retryResult.data;
+        }
       }
       
       setState(prev => ({
         ...prev,
         templates: templatesResult.data || [],
-        documentTree: mockDataResult.success ? mockDataResult.data || [] : [],
+        documentTree: outputResult.success ? outputResult.data || [] : [],
         isLoading: false,
       }));
     } catch (error) {
@@ -147,6 +154,21 @@ const App: React.FC = () => {
 
   const handleTemplateSelect = (template: Template) => {
     setState(prev => ({ ...prev, selectedTemplate: template }));
+  };
+
+  const refreshDocumentTree = async () => {
+    try {
+      console.log('Refreshing document tree...');
+      const outputResult = await window.electronAPI.readDirectory('./output');
+      if (outputResult.success) {
+        setState(prev => ({
+          ...prev,
+          documentTree: outputResult.data || [],
+        }));
+      }
+    } catch (error) {
+      console.error('Error refreshing document tree:', error);
+    }
   };
 
   const handleDocumentSelect = async (filePath: string) => {
@@ -204,11 +226,18 @@ const App: React.FC = () => {
             isLoading: false,
           }));
           
-          // Show success toast
-          toast.success(`${state.selectedTemplate?.name || 'Document'} generated successfully!`, {
-            duration: 5000,
-            icon: '📄',
-          });
+          // Show success toast with folder path
+          const folderName = result.data.folderName || 'document-folder';
+          toast.success(
+            `${state.selectedTemplate?.name || 'Document'} generated successfully!\nSaved to folder: output/${folderName}`, 
+            {
+              duration: 7000,
+              icon: '📄',
+            }
+          );
+          
+          // Refresh document tree to show the new file
+          await refreshDocumentTree();
           
           console.log('App: Document generation successful');
         } else {
@@ -348,7 +377,7 @@ const App: React.FC = () => {
         />
         <div className="h-screen flex flex-col bg-background">
           {/* Header */}
-          <header className="bg-card border-b border-divider/60 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
+          <header className="bg-card border-b border-dashed border-divider/60 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="relative">
@@ -368,11 +397,6 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  {state.isLoading && (
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4">
-                      <Spinner size="sm" className="text-primary" />
-                    </div>
-                  )}
                 </div>
                 <div>
                   <div className="flex items-baseline space-x-2">
@@ -417,8 +441,8 @@ const App: React.FC = () => {
           {/* Main Content - Three Pane Layout */}
           <main className="flex-1 flex overflow-hidden">
             {/* Left Pane - Document Browser */}
-            <div className="w-80 bg-card border-r border-divider flex flex-col">
-              <div className="px-6 py-4 border-b border-divider bg-gradient-to-r from-background to-background/50 backdrop-blur-sm">
+            <div className="w-80 bg-card border-r border-dashed border-divider flex flex-col">
+              <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -428,16 +452,16 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground tracking-tight">Documents</h2>
-                    <p className="text-xs text-foreground/60 mt-0.5">Browse your legal documents</p>
+                    <h2 className="font-semibold text-sm text-foreground">Documents</h2>
+                    <p className="text-xs text-foreground/60">Browse your legal documents</p>
                   </div>
                 </div>
               </div>
               <div className="flex-1 overflow-hidden">
-                <DocumentBrowser
-                  documentTree={state.documentTree}
-                  onDocumentSelect={handleDocumentSelect}
-                />
+                          <DocumentBrowser
+            documentTree={state.documentTree}
+            onDocumentSelect={handleDocumentSelect}
+          />
               </div>
             </div>
 
@@ -453,8 +477,8 @@ const App: React.FC = () => {
             </div>
 
             {/* Right Pane - Template Selector */}
-            <div className="w-80 bg-card border-l border-divider flex flex-col">
-              <div className="px-6 py-4 border-b border-divider bg-gradient-to-r from-background to-background/50 backdrop-blur-sm">
+            <div className="w-80 bg-card border-l border-dashed border-divider flex flex-col">
+              <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -464,8 +488,8 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground tracking-tight">Templates</h2>
-                    <p className="text-xs text-foreground/60 mt-0.5">Generate new documents</p>
+                    <h2 className="font-semibold text-sm text-foreground">Templates</h2>
+                    <p className="text-xs text-foreground/60">Generate new documents</p>
                   </div>
                 </div>
               </div>

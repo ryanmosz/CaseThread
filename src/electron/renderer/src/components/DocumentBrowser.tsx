@@ -17,7 +17,7 @@ interface TreeNode {
 
 const DocumentBrowser: React.FC<DocumentBrowserProps> = ({ 
   documentTree, 
-  onDocumentSelect 
+  onDocumentSelect
 }) => {
   // Inject custom scrollbar and tree styles
   React.useEffect(() => {
@@ -192,14 +192,14 @@ const DocumentBrowser: React.FC<DocumentBrowserProps> = ({
           Documents will appear here once available
         </p>
         <div className="text-xs text-foreground/40 bg-foreground/5 px-3 py-1 rounded-md">
-          Check mock-data directory
+          Generated documents will appear in output/
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full overflow-hidden">
+    <div className="h-full w-full overflow-hidden relative">
       <Tree
         data={treeData}
         openByDefault={false}

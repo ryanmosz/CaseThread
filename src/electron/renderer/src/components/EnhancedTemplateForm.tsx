@@ -15,10 +15,8 @@ import {
   SelectItem,
   Checkbox,
   Chip,
-  Divider,
   Progress,
-  Accordion,
-  AccordionItem
+
 } from '@heroui/react';
 import toast from 'react-hot-toast';
 import { Template, TemplateField } from '../../../../shared/types';
@@ -149,13 +147,7 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
     setFormErrors({});
   }, [template.id]);
 
-  // Close loading toast when form closes or generation completes
-  useEffect(() => {
-    if (!isOpen && !isGenerating) {
-      // Dismiss any loading toasts when form closes
-      toast.dismiss();
-    }
-  }, [isOpen, isGenerating]);
+  // Note: Removed toast.dismiss() to allow success toasts to be visible
 
   // Calculate which fields should be visible based on current form data
   const visibleFields = useMemo(() => {
@@ -288,11 +280,6 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
       });
       return;
     }
-    
-    // Show loading toast
-    const loadingToast = toast.loading("Generating document...", {
-      duration: Infinity, // Keep showing until we dismiss it
-    });
     
     // Only submit data for visible fields
     const visibleFormData = Object.fromEntries(
@@ -543,7 +530,7 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
         <ModalBody className="px-6 py-4">
           <div className="space-y-6">
             {Object.entries(groupedFields).map(([groupName, fields]) => (
-              <Card key={groupName} className="border-divider">
+              <Card key={groupName} className="border-dashed border-divider">
                 <CardHeader className="pb-3">
                   <h3 className="text-lg font-semibold text-foreground">
                     {groupName}
