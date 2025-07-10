@@ -12,34 +12,34 @@
 ### Week 1-2: Foundation & CLI Framework
 - [x] Initialize TypeScript project
 - [x] Set up Jest testing framework
-- [ ] Create CLI structure (using Commander.js or Yargs)
+- [x] Create CLI structure (using Commander.js or Yargs)
 - [x] Design core data models
-- [ ] Set up GitHub Projects board
-- [ ] Basic CLI commands scaffold
+- [x] Set up GitHub Projects board
+- [x] Basic CLI commands scaffold
 
 ### Week 3-4: Core Engine (CLI)
 - [x] Template system implementation
-- [ ] OpenAI service integration
-- [ ] Basic prompt engineering
-- [ ] Firm context learning module
-- [ ] CLI command: `casethread generate <template> <output>`
-- [ ] CLI command: `casethread learn <firm-docs-folder>`
+- [x] OpenAI service integration
+- [x] Basic prompt engineering
+- [x] Firm context learning module
+- [x] CLI command: `casethread generate <template> <output>`
+- [x] CLI command: `casethread learn <firm-docs-folder>`
 - [x] Unit tests for core logic
 
 ### Week 5-6: CLI Features & Testing
-- [ ] Document preview in terminal
+- [x] Document preview in terminal
 - [ ] Export functionality (DOCX/PDF/TXT)
 - [ ] Configuration management (`casethread config`)
 - [ ] Template listing (`casethread templates`)
 - [ ] Integration testing
-- [ ] CLI documentation
+- [x] CLI documentation
 
 ## 🎯 Phase 2: GUI Development (Weeks 7-10)
 
 ### Week 7-8: Electron Shell
-- [ ] Create Electron application structure
-- [ ] Integrate CLI core as backend
-- [ ] Basic React UI setup
+- [x] Create Electron application structure
+- [x] Integrate CLI core as backend
+- [x] Basic React UI setup
 - [ ] Template selection interface
 - [ ] Document preview component
 

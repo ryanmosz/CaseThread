@@ -23,7 +23,7 @@
 ### Document Formatting
 - [ ] 2.3 Implement Document Formatting Rules (Details: tasks-parent-2.3-detailed.md)
   - [x] 2.3.1 Create DocumentFormatter class
-  - [ ] 2.3.2 Define formatting rules by document type
+  - [x] 2.3.2 Define formatting rules by document type
   - [ ] 2.3.3 Implement line spacing logic
   - [ ] 2.3.4 Handle special margin requirements
   - [ ] 2.3.5 Create formatting configuration
@@ -96,8 +96,9 @@ Before marking complete, verify:
 - `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (complete with all methods)
 - `src/services/pdf/DocumentFormatter.ts` - Document-specific formatting rules manager
 - `__tests__/services/pdf/LegalPDFGenerator.test.ts` - Unit tests for PDF generator (33 tests)
-- `__tests__/services/pdf/DocumentFormatter.test.ts` - Unit tests for formatter (4 tests)
+- `__tests__/services/pdf/DocumentFormatter.test.ts` - Unit tests for formatter (15 tests)
 - `__tests__/services/pdf/pdfkit-setup.test.ts` - PDFKit setup validation tests (3 tests)
+- `src/scripts/test-document-formatting.ts` - Script to generate test PDFs for each document type
 
 ## Notes
 
