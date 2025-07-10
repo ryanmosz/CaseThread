@@ -298,8 +298,66 @@
       "title": "Signatures",
       "order": 13,
       "required": true,
-      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\nLICENSOR:\n{{licensor_name}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\nLICENSEE:\n{{licensee_name}}\n\nBy: _____________________________\nName:\nTitle:\nDate:",
+      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\n[SIGNATURE_BLOCK:licensor-signature]\n\n[SIGNATURE_BLOCK:licensee-signature]",
       "firmCustomizable": false
+    }
+  ],
+  "signatureBlocks": [
+    {
+      "id": "licensor-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-section-13",
+        "marker": "[SIGNATURE_BLOCK:licensor-signature]"
+      },
+      "layout": "side-by-side",
+      "party": {
+        "role": "licensor",
+        "label": "LICENSOR",
+        "entityName": "{{licensor_name}}",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "title": {
+            "required": true,
+            "label": "Title"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      }
+    },
+    {
+      "id": "licensee-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-section-13",
+        "marker": "[SIGNATURE_BLOCK:licensee-signature]"
+      },
+      "layout": "side-by-side",
+      "party": {
+        "role": "licensee",
+        "label": "LICENSEE",
+        "entityName": "{{licensee_name}}",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "title": {
+            "required": true,
+            "label": "Title"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      }
     }
   ]
 } 

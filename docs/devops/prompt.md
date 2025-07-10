@@ -51,6 +51,47 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
 5. Stop and ask for permission to continue
 6. Only proceed to next sub-task after receiving "yes" or "y"
 
+### Testing Requirements for Each Task
+
+⚠️ **CRITICAL TDD PRINCIPLE**: Tests define the contract. When tests fail, fix the implementation, not the test. Modifying tests requires explicit justification and must be documented in the Testing Report.
+
+1. **Before implementation (when feasible):**
+   - Write tests for the new functionality
+   - Tests should fail initially (red phase)
+   - Document what the tests are checking
+
+2. **During implementation:**
+   - Make tests pass (green phase) by fixing the FUNCTIONALITY, not the test
+   - CRITICAL: When a test fails, your PRIMARY action is to fix the code being tested
+   - ONLY modify a test if you can prove the test itself is flawed
+   - If you need to change a test, you MUST:
+     * Document WHY the test was wrong
+     * Explain what the test SHOULD be checking
+     * Ensure the corrected test still validates the intended functionality
+   - Refactor if needed while keeping tests green
+   - Add edge case tests as you discover them
+
+3. **Testing Report - REQUIRED before marking task complete:**
+   - Number of tests created
+   - Test results (X passed, Y failed)
+   - Coverage of new functionality
+   - Any tests skipped and why
+
+4. **Task Completion Gate:**
+   - Do NOT mark a task complete if tests are failing
+   - Do NOT proceed to next sub-task if current tests fail
+   - Fix failing tests or document why they're acceptable to skip
+
+5. **Test Integrity Principle:**
+   - Tests are the specification - they define what the code SHOULD do
+   - NEVER change a test just to make it pass
+   - If a test fails, assume the implementation is wrong, not the test
+   - Changing a test requires explicit justification:
+     * What was wrong with the original test?
+     * How does the new test better reflect requirements?
+     * Does the change maintain or improve quality?
+   - Report any test modifications in your Testing Report
+
 ## Core Guidelines
 
 1. Review the repository rules and key project documents:
@@ -103,12 +144,36 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
       - Document any issues or deviations from the plan
       - Update relevant documentation
 
+16. Technology Transfer Agreement (Federal): Inter-institutional agreements for technology commercialization
+
+17. Test Output Management Requirements:
+    - **CRITICAL**: All test-generated documents MUST go to `docs/testing/test-results/`
+    - **Automatic Detection**: The file-writer service automatically detects test contexts:
+      * When NODE_ENV=test
+      * When TEST_MODE=true
+      * When running via Jest
+    - **Manual Testing**: Use the helper script:
+      * `./docs/testing/test-scripts/generate-test-document.sh <type> <yaml>`
+      * This ensures TEST_MODE is set and outputs go to the right place
+    - **Test Files**: Set environment at the top of test files:
+      ```typescript
+      process.env.TEST_MODE = 'true';
+      process.env.TEST_NAME = 'your-test-name';
+      ```
+    - **Organization**:
+      * `docs/testing/test-results/` - All generated documents
+      * `docs/testing/test-errors/` - Error logs and failures
+      * `docs/testing/test-scripts/` - Helper scripts
+    - **NEVER**: Save test outputs to the root directory
+    - **ALWAYS**: Check root directory is clean after testing
+
 ## Cross-Task Dependencies and Integration Points
 
 When implementing tasks, be aware of system dependencies:
 - **Template changes may require service updates**: If adding new markers or features to templates, verify that the OpenAI service and other components can handle them
 - **Test actual output, not just unit tests**: Generate documents to verify features work end-to-end
 - **Fix dependencies immediately**: If a feature doesn't work due to a missing dependency, fix it before moving to the next task to avoid accumulating non-functional features
+- **Testing cascade**: When fixing a dependency, ensure all related tests are updated and passing
 
 4. Critical CaseThread Development Standards:
    - **File Size**: Maximum 500 lines per file (hard limit)
@@ -204,7 +269,40 @@ When implementing tasks, be aware of system dependencies:
     - `--output <path>` - Optional output directory flag
     - `--debug` - Enable verbose logging flag
 
-15. MCP Integration: This project has Model Context Protocol (MCP) configured with RepoPrompt tools for efficient codebase navigation. 
+15. Test-Driven Development (TDD) Requirements:
+    - **Test First Approach**: Create tests before or immediately after implementing new functionality
+    - **Test Types Required**:
+      * Unit tests for new functions/modules
+      * Integration tests for features touching multiple components
+      * Template tests for any template modifications
+      * CLI command tests for new commands or options
+    - **Testing Standards**:
+      * All new code must have corresponding tests (unless technically infeasible)
+      * Tests must be meaningful - no placeholder tests
+      * Test edge cases, error conditions, and happy paths
+      * Mock external dependencies (OpenAI, file system) appropriately
+    - **Testing Report Format** (include in every task completion):
+      ```
+      ## Testing Report
+      - Tests Created: X new tests
+      - Test Results: Y passed, Z failed
+      - Coverage: [describe what was tested]
+      - Test Modifications: [if any tests were changed, explain why]
+      - Issues: [any failing tests or gaps]
+      ```
+    - **Quality Gates**:
+      * All existing tests must pass before starting new work
+      * New tests must pass before marking sub-task complete
+      * Fix functionality to make tests pass - do NOT fix tests to pass
+      * Document any legitimate test failures with explanation
+      * If modifying a test, provide clear justification
+      * Run full test suite (`npm test`) before task completion
+    - **Special Considerations**:
+      * Template changes: Update signature-blocks.test.ts
+      * Service changes: Update corresponding service tests
+      * Generated output: Test actual document generation, not just unit tests
+
+16. MCP Integration: This project has Model Context Protocol (MCP) configured with RepoPrompt tools for efficient codebase navigation. 
 **USE THESE TOOLS EXTENSIVELY**:
 - Start every task with `mcp_RepoPrompt_manage_selection` to focus on relevant files
 - Use `mcp_RepoPrompt_search` for pattern discovery before making assumptions
@@ -212,13 +310,13 @@ When implementing tasks, be aware of system dependencies:
 - Clear and re-select files when switching between different parts of the codebase
 Key tools: mcp_RepoPrompt_search, mcp_RepoPrompt_read_selected_files, mcp_RepoPrompt_manage_selection
 
-16. ## Critical Principle: Only Build What Doesn't Exist
+17. ## Critical Principle: Only Build What Doesn't Exist
 **NEVER replace working functionality with placeholders or simplified versions**
 - If it works, leave it alone
 - Only create new components that are missing
 - Integrate existing components as-is, unless absolutely necessary, and, if necessary, call special attention to this as part of planning before making changes
 
-17. ## Tech Stack Compliance
+18. ## Tech Stack Compliance
 **The tech stack defined in docs/architecture/tech-stack.md is IMMUTABLE**
 - Never suggest dependency upgrades
 - Never change module systems (stay with CommonJS)
@@ -226,12 +324,12 @@ Key tools: mcp_RepoPrompt_search, mcp_RepoPrompt_read_selected_files, mcp_RepoPr
 - Never modify TypeScript configuration
 - If you encounter a limitation, work within the constraints
 
-18. ## Cursor Rules Compliance
+19. ## Cursor Rules Compliance
 - **ALWAYS** follow `.cursor/rules/npm-package-check.mdc` before installing packages
 - **ALWAYS** follow `.cursor/rules/terminal-path-verification.mdc` before file operations
 - Review and apply all other cursor rules as appropriate
 
-19. Update AGENT-HANDOFF.md at the end of every chat response
+20. Update AGENT-HANDOFF.md at the end of every chat response
 
 Using the guidelines above, produce your plan to implement and verify the current task from **docs/tasks/prd-parent-task-6.0.md**. Analyze the plan and decide if it would be more efficient to do all subtasks defined at **docs/tasks/tasks-parent-6.0-checklist.md** at once and then test everything, or if it would be better to stop after some of the subtasks and test them individually before moving on. Remember, our goal is to write quality software at each step, minimizing bugs and mistakes and thus minimizing the need for backtracking, confusion and wasted effort.
 

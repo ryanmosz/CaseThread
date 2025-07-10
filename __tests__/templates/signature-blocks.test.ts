@@ -1,12 +1,20 @@
 import { loadTemplate } from '../../src/services/template';
 import { MockOpenAIService } from '../../src/services/mock-openai';
 
+// Set test environment to ensure outputs go to test-results folder
+process.env.TEST_MODE = 'true';
+process.env.TEST_NAME = 'signature-blocks';
+
 describe('Signature Blocks in Templates', () => {
   const templatesWithSignatureBlocks = [
     'patent-assignment-agreement',
     'trademark-application', 
     'cease-and-desist-letter',
-    'nda-ip-specific'
+    'nda-ip-specific',
+    'office-action-response',
+    'patent-license-agreement',
+    'provisional-patent-application',
+    'technology-transfer-agreement'
   ];
 
   describe('Template Structure', () => {
@@ -189,42 +197,160 @@ describe('Signature Blocks in Templates', () => {
           // Required fields
           expect(block.id).toBeDefined();
           expect(block.type).toBeDefined();
-          expect(block.placement).toBeDefined();
-          expect(block.placement.marker).toBe(`[SIGNATURE_BLOCK:${block.id}]`);
           
-          // Party information
-          expect(block.party).toBeDefined();
-          expect(block.party.role).toBeDefined();
-          expect(block.party.fields).toBeDefined();
-          
-          // Common fields
-          if (block.party.fields.name) {
-            expect(block.party.fields.name.required).toBeDefined();
-            expect(block.party.fields.name.label).toBeDefined();
+          // Office action response has a different structure
+          if (templateId === 'office-action-response') {
+            expect(block.label).toBeDefined();
+            expect(block.position).toBeDefined();
+            expect(block.fields).toBeDefined();
+            expect(Array.isArray(block.fields)).toBe(true);
+          } else {
+            expect(block.placement).toBeDefined();
+            expect(block.placement.marker).toBe(`[SIGNATURE_BLOCK:${block.id}]`);
+            
+            // Party information
+            expect(block.party).toBeDefined();
+            expect(block.party.role).toBeDefined();
+            expect(block.party.fields).toBeDefined();
+            
+            // Common fields
+            if (block.party.fields.name) {
+              expect(block.party.fields.name.required).toBeDefined();
+              expect(block.party.fields.name.label).toBeDefined();
+            }
           }
         });
       });
     });
+
+    it('office-action-response should have USPTO registration number field', async () => {
+      const template = await loadTemplate('office-action-response');
+      
+      // @ts-ignore
+      const signatureBlock = template.signatureBlocks?.find((b: any) => b.id === 'attorney-signature');
+      expect(signatureBlock).toBeDefined();
+      
+      // Verify USPTO-specific fields
+      const fields = signatureBlock?.fields;
+      const registrationField = fields?.find((f: any) => f.id === 'registration_number');
+      expect(registrationField).toBeDefined();
+      expect(registrationField?.label).toContain('USPTO Registration');
+      expect(registrationField?.required).toBe(true);
+    });
+
+    it('patent-license-agreement should have two-party signatures', async () => {
+      const template = await loadTemplate('patent-license-agreement');
+      
+      // @ts-ignore
+      expect(template.signatureBlocks).toBeDefined();
+      // @ts-ignore
+      expect(template.signatureBlocks?.length).toBe(2);
+      
+      // @ts-ignore
+      const licensorBlock = template.signatureBlocks?.find((b: any) => b.id === 'licensor-signature');
+      // @ts-ignore
+      const licenseeBlock = template.signatureBlocks?.find((b: any) => b.id === 'licensee-signature');
+      
+      expect(licensorBlock).toBeDefined();
+      expect(licenseeBlock).toBeDefined();
+      
+      // Verify both have appropriate labels in party object
+      expect(licensorBlock?.party?.label).toContain('LICENSOR');
+      expect(licenseeBlock?.party?.label).toContain('LICENSEE');
+      
+      // Verify side-by-side layout
+      expect(licensorBlock?.layout).toBe('side-by-side');
+      expect(licenseeBlock?.layout).toBe('side-by-side');
+    });
+
+    it('provisional-patent-application should have inventor signature(s)', async () => {
+      const template = await loadTemplate('provisional-patent-application');
+      
+      // @ts-ignore
+      expect(template.signatureBlocks).toBeDefined();
+      // @ts-ignore
+      expect(template.signatureBlocks?.length).toBeGreaterThanOrEqual(1);
+      
+      // @ts-ignore
+      const inventorBlock = template.signatureBlocks?.find((b: any) => b.id === 'inventor-signature');
+      expect(inventorBlock).toBeDefined();
+      
+      // Verify inventor signature has appropriate fields
+      expect(inventorBlock?.party?.label).toContain('Inventor');
+      expect(inventorBlock?.party?.fields?.name).toBeDefined();
+      expect(inventorBlock?.party?.fields?.date).toBeDefined();
+      
+      // Check for optional witness blocks (common for patent documents)
+      // @ts-ignore
+      const witnessBlock = template.signatureBlocks?.find((b: any) => b.id === 'witness-signature');
+      if (witnessBlock) {
+        expect(witnessBlock.party?.label).toContain('Witness');
+      }
+    });
   });
 
-  describe('Templates without signature blocks', () => {
-    const templatesWithoutSignatureBlocks = [
-      'office-action-response',
-      'patent-license-agreement',
-      'provisional-patent-application',
-      'technology-transfer-agreement'
-    ];
+  describe('Technology Transfer Agreement Specific Tests', () => {
+    it('technology-transfer-agreement should have provider and recipient signatures', async () => {
+      const template = await loadTemplate('technology-transfer-agreement');
+      
+      // @ts-ignore
+      expect(template.signatureBlocks).toBeDefined();
+      // @ts-ignore
+      expect(template.signatureBlocks?.length).toBe(2);
+      
+      // @ts-ignore
+      const providerBlock = template.signatureBlocks?.find((b: any) => b.id === 'provider-signature');
+      // @ts-ignore
+      const recipientBlock = template.signatureBlocks?.find((b: any) => b.id === 'recipient-signature');
+      
+      expect(providerBlock).toBeDefined();
+      expect(recipientBlock).toBeDefined();
+      
+      // Verify labels
+      expect(providerBlock?.party?.label).toBe('PROVIDER');
+      expect(recipientBlock?.party?.label).toBe('RECIPIENT');
+      
+      // Verify side-by-side layout
+      expect(providerBlock?.layout).toBe('side-by-side');
+      expect(recipientBlock?.layout).toBe('side-by-side');
+    });
 
-    templatesWithoutSignatureBlocks.forEach(templateId => {
-      it(`${templateId} should not have signature blocks yet`, async () => {
-        const template = await loadTemplate(templateId);
-        // @ts-ignore
-        expect(template.signatureBlocks).toBeUndefined();
-        
-        // Verify no markers in content
-        const content = template.sections.map(s => s.content).join(' ');
-        expect(content).not.toMatch(/\[SIGNATURE_BLOCK:[^\]]+\]/);
-      });
+    it('technology-transfer-agreement should have initial blocks for critical sections', async () => {
+      const template = await loadTemplate('technology-transfer-agreement');
+      
+      // @ts-ignore
+      expect(template.initialBlocks).toBeDefined();
+      // @ts-ignore
+      expect(template.initialBlocks?.length).toBe(4);
+      
+      // Verify all initial blocks
+      // @ts-ignore
+      const initialIds = template.initialBlocks?.map((b: any) => b.id);
+      expect(initialIds).toContain('technology-transfer-initials');
+      expect(initialIds).toContain('financial-terms-initials');
+      expect(initialIds).toContain('ip-provisions-initials');
+      expect(initialIds).toContain('export-control-initials');
+      
+      // Verify export control is conditional
+      // @ts-ignore
+      const exportInitials = template.initialBlocks?.find((b: any) => b.id === 'export-control-initials');
+      expect(exportInitials?.conditional).toBe(true);
+    });
+
+    it('technology-transfer-agreement should have initial markers in critical sections', async () => {
+      const template = await loadTemplate('technology-transfer-agreement');
+      
+      const techSection = template.sections.find(s => s.id === 'technology_transfer');
+      expect(techSection?.content).toContain('[INITIALS_BLOCK:technology-transfer]');
+      
+      const financialSection = template.sections.find(s => s.id === 'financial_terms');
+      expect(financialSection?.content).toContain('[INITIALS_BLOCK:financial-terms]');
+      
+      const ipSection = template.sections.find(s => s.id === 'ip_provisions');
+      expect(ipSection?.content).toContain('[INITIALS_BLOCK:ip-provisions]');
+      
+      const exportSection = template.sections.find(s => s.id === 'export_control');
+      expect(exportSection?.content).toContain('[INITIALS_BLOCK:export-control]');
     });
   });
 }); 

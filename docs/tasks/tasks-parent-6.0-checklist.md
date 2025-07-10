@@ -40,21 +40,22 @@
     - [x] 6.5.1 Investigate signature/initial requirements and positions
     - [x] 6.5.2 Implement blocks and test
     (Details: tasks-parent-6.5-detailed.md)
-  - [ ] 6.6 Office Action Response signature/initial blocks
-    - [ ] 6.6.1 Investigate signature/initial requirements and positions
-    - [ ] 6.6.2 Implement blocks and test
+  - [x] 6.6 Office Action Response signature/initial blocks
+    - [x] 6.6.1 Investigate signature/initial requirements and positions
+    - [x] 6.6.2 Implement blocks and test
     (Details: tasks-parent-6.6-detailed.md)
-  - [ ] 6.7 Patent License Agreement signature/initial blocks
-    - [ ] 6.7.1 Investigate signature/initial requirements and positions
-    - [ ] 6.7.2 Implement blocks and test
+  - [x] 6.7 Patent License Agreement signature/initial blocks
+    - [x] 6.7.1 Investigate signature/initial requirements and positions
+    - [x] 6.7.2 Implement blocks and test
     (Details: tasks-parent-6.7-detailed.md)
-  - [ ] 6.8 Provisional Patent Application signature/initial blocks
-    - [ ] 6.8.1 Investigate signature/initial requirements and positions
-    - [ ] 6.8.2 Implement blocks and test
+  - [x] 6.8 Provisional Patent Application signature/initial blocks
+    - [x] 6.8.1 Investigate signature/initial requirements and positions
+    - [x] 6.8.2 Implement blocks and test
     (Details: tasks-parent-6.8-detailed.md)
-  - [ ] 6.9 Technology Transfer Agreement signature/initial blocks
-    - [ ] 6.9.1 Investigate signature/initial requirements and positions
-    - [ ] 6.9.2 Implement blocks and test
+  - [x] 6.9 Technology Transfer Agreement signature/initial blocks
+    - [x] 6.9.1 Investigate signature/initial requirements and positions
+    - [x] 6.9.2 Implement blocks and test
+    - [ ] 6.9.3 Create GUI field requirements documentation
     (Details: tasks-parent-6.9-detailed.md)
   - [ ] 6.10 Update TypeScript interfaces and types (Details: tasks-parent-6.10-detailed.md)
   - [ ] 6.11 Run and verify all existing tests pass (Details: tasks-parent-6.11-detailed.md)

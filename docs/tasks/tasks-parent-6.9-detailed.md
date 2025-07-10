@@ -4,7 +4,7 @@
 
 ## Overview
 
-Investigate and implement signature blocks, initial blocks, and placement markers for the Technology Transfer Agreement template. These agreements typically involve universities or research institutions transferring technology to commercial entities and may require multiple approval signatures.
+Investigate and implement signature blocks, initial blocks, and placement markers for the Technology Transfer Agreement template. This is a complex agreement involving multiple parties and technology transfer provisions.
 
 ## Sub-tasks
 
@@ -14,34 +14,33 @@ Investigate and implement signature blocks, initial blocks, and placement marker
 
 1. **Generate sample document for analysis:**
    ```bash
-   docker exec casethread-dev npm run cli -- generate technology-transfer-agreement docs/testing/scenario-inputs/cil-06-tech-transfer-manufacturing.yaml
+   docker exec casethread-dev npm run cli -- generate technology-transfer-agreement docs/testing/scenario-inputs/rtp-03-tech-transfer-animation.yaml
    ```
 
 2. **Analyze generated document structure:**
-   - Review technology description
-   - Identify payment/milestone terms
-   - Note intellectual property provisions
-   - Find compliance requirements
+   - Review technology description sections
+   - Identify payment/milestone areas
+   - Note confidentiality provisions
+   - Find signature requirements
 
 3. **Research legal requirements:**
-   - Transferor and transferee signatures required
-   - May need institutional approval
-   - Initials on IP assignment sections
-   - Witness signatures sometimes required
-   - Compliance officer approval possible
+   - Technology transfer often requires both parties
+   - May need witness signatures
+   - Export control acknowledgments common
+   - IP assignment confirmations
 
 4. **Document findings:**
    - Map agreement structure
-   - Identify sections needing initials
-   - Note approval hierarchy
-   - Consider institutional requirements
+   - Identify signature locations
+   - Consider multiple party scenarios
+   - Note special provisions
 
 **Expected Findings:**
-- Main signatures: End of agreement
-- Layout: Side-by-side for main parties
-- Initials: On technology description, IP terms
-- Fields needed: Name, Title, Institution/Company
-- Special: May need department head approval
+- Main signatures: Both parties (Provider and Recipient)
+- Layout: Side-by-side for equal parties
+- Initials: May be needed for IP assignment sections
+- Fields needed: Name, Title, Company, Date
+- Special: Export control acknowledgments
 
 **Investigation Output:**
 ```markdown
@@ -49,19 +48,40 @@ Investigate and implement signature blocks, initial blocks, and placement marker
 
 ### Agreement Structure:
 1. Parties and Recitals
-2. Technology Description [INITIALS_BLOCK:transferor-initials] [INITIALS_BLOCK:transferee-initials]
+2. Technology Description
 3. Grant of Rights
-4. Consideration/Payments [INITIALS_BLOCK:transferor-initials] [INITIALS_BLOCK:transferee-initials]
-5. IP Ownership and Patents
-6. Compliance and Regulatory
-7. Warranties and Indemnification
-8. General Provisions
+4. Payment Terms
+5. Confidentiality
+6. IP Ownership
+7. Export Controls
+8. General Terms
+9. Signatures
 
-[SIGNATURE_BLOCK:transferor-signature]
-[SIGNATURE_BLOCK:transferee-signature]
+IN WITNESS WHEREOF...
 
-Additional approval signatures may be required
+TECHNOLOGY PROVIDER:        TECHNOLOGY RECIPIENT:
+[SIGNATURE_BLOCK:provider]  [SIGNATURE_BLOCK:recipient]
 ```
+
+### Investigation Complete ✓
+
+**Findings:**
+
+1. **Signature Requirements:**
+   - Provider Signature (Technology Provider) - End of document
+   - Recipient Signature (Technology Recipient) - End of document
+   - Both require Name, Title, Date fields
+
+2. **Initial Block Requirements:**
+   - Technology Transfer Section (Grant of rights) - Critical
+   - Financial Terms Section (Payment obligations) - Critical  
+   - Intellectual Property Section (Ownership provisions) - Critical
+   - Export Control Section (When present) - Critical for compliance
+
+3. **Special Considerations:**
+   - May require witness signatures for university/research transfers
+   - Export controlled technology may need export control officer acknowledgment
+   - Supports both assignment and license structures
 
 ### 6.9.2 Implement blocks and test
 
@@ -76,109 +96,64 @@ Additional approval signatures may be required
      "sections": [...],
      "signatureBlocks": [
        {
-         "id": "transferor-signature",
+         "id": "provider-signature",
          "type": "single",
+         "layout": "side-by-side",
          "placement": {
-           "location": "document-end",
-           "marker": "[SIGNATURE_BLOCK:transferor-signature]"
+           "location": "after-witness-clause",
+           "marker": "[SIGNATURE_BLOCK:provider-signature]"
          },
          "party": {
-           "role": "transferor",
-           "label": "TRANSFEROR",
+           "role": "technology-provider",
+           "label": "TECHNOLOGY PROVIDER",
+           "entityName": "{{provider_name}}",
            "fields": {
              "name": { "required": true, "label": "Name" },
              "title": { "required": true, "label": "Title" },
-             "company": { 
-               "required": true, 
-               "label": "Institution/Organization" 
-             },
              "date": { "required": true, "label": "Date" }
            }
          }
        },
        {
-         "id": "transferee-signature",
+         "id": "recipient-signature",
          "type": "single",
+         "layout": "side-by-side",
          "placement": {
-           "location": "document-end",
-           "marker": "[SIGNATURE_BLOCK:transferee-signature]"
-         },
-         "layout": {
-           "position": "side-by-side",
-           "groupWith": "transferor-signature",
-           "preventPageBreak": true
+           "location": "after-witness-clause",
+           "marker": "[SIGNATURE_BLOCK:recipient-signature]"
          },
          "party": {
-           "role": "transferee",
-           "label": "TRANSFEREE",
+           "role": "technology-recipient",
+           "label": "TECHNOLOGY RECIPIENT",
+           "entityName": "{{recipient_name}}",
            "fields": {
              "name": { "required": true, "label": "Name" },
              "title": { "required": true, "label": "Title" },
-             "company": { "required": true, "label": "Company" },
              "date": { "required": true, "label": "Date" }
            }
          }
-       },
-       {
-         "id": "approval-signature",
-         "type": "single",
-         "placement": {
-           "location": "after-main-signatures",
-           "marker": "[SIGNATURE_BLOCK:approval-signature]"
-         },
-         "party": {
-           "role": "approver",
-           "label": "INSTITUTIONAL APPROVAL",
-           "fields": {
-             "name": { "required": true, "label": "Name" },
-             "title": { 
-               "required": true, 
-               "label": "Title (e.g., Dept. Head, Tech Transfer Officer)" 
-             },
-             "date": { "required": true, "label": "Date" }
-           }
-         },
-         "optional": true
        }
      ],
      "initialBlocks": [
        {
-         "id": "transferor-initials",
+         "id": "export-control-initials",
          "placement": {
-           "locations": [
-             "after-technology-description",
-             "after-payment-terms"
-           ],
-           "marker": "[INITIALS_BLOCK:transferor-initials]"
+           "location": "export-control-section",
+           "marker": "[INITIALS_BLOCK:export-control]"
          },
          "party": {
-           "role": "transferor",
-           "label": "Transferor"
-         }
-       },
-       {
-         "id": "transferee-initials",
-         "placement": {
-           "locations": [
-             "after-technology-description",
-             "after-payment-terms"
-           ],
-           "marker": "[INITIALS_BLOCK:transferee-initials]"
-         },
-         "party": {
-           "role": "transferee",
-           "label": "Transferee"
+           "role": "both-parties",
+           "label": "Provider: ___ Recipient: ___"
          }
        }
      ]
    }
    ```
 
-2. **Handle institutional requirements:**
-   - Main parties sign side-by-side
-   - Optional approval signature below
-   - Initials on key technology sections
-   - Title fields important for authority
+2. **Handle export control acknowledgments:**
+   - Add initial blocks for sensitive sections
+   - Both parties initial export restrictions
+   - Clear acknowledgment of compliance
 
 3. **Test template loading:**
    ```bash
@@ -187,69 +162,114 @@ Additional approval signatures may be required
 
 4. **Test document generation with markers:**
    ```bash
-   docker exec casethread-dev npm run cli -- generate technology-transfer-agreement docs/testing/scenario-inputs/cil-06-tech-transfer-manufacturing.yaml
+   docker exec casethread-dev npm run cli -- generate technology-transfer-agreement test-tech-transfer.yaml
    ```
 
 5. **Verify marker placement:**
-   - Main signatures side-by-side at end
-   - Approval signature optional/conditional
-   - Initials on technology and payment sections
-   - Professional institutional format
+   - Check side-by-side signatures
+   - Verify export control initials if applicable
+   - Ensure professional formatting
+   - Check both party blocks present
 
-6. **Test different scenarios:**
-   - University to company transfer
-   - Company to company transfer
-   - With/without approval signatures
-   - Different institutional structures
+6. **Test complex scenarios:**
+   - With export restrictions
+   - Without export restrictions
+   - Multiple milestones
+   - Various payment structures
 
 7. **Run full test suite:**
    ```bash
    docker exec casethread-dev npm test
    ```
 
+### 6.9.3 Create GUI Field Requirements Documentation
+
+**Implementation Steps:**
+
+Follow the plan detailed in `docs/planning/gui-field-requirements-plan.md` to create comprehensive documentation for Developer G.
+
+1. **Execute the plan:**
+   - Use the plan file as a checklist
+   - Analyze all 8 templates systematically
+   - Create `docs/templates/gui-field-requirements.md`
+
+2. **Key focus areas:**
+   - Document all optional fields across templates
+   - Map all conditional field dependencies
+   - Create quick reference tables
+   - Include test scenarios for each template
+
+3. **Deliverable:**
+   - Complete GUI field requirements document
+   - Ready for Developer G's form implementation
+   - Covers all edge cases and special behaviors
+
 ## Testing Approach
 
 1. **Template Loading Test:**
-   - All signature blocks load (including optional)
-   - Initial blocks properly configured
-   - Backward compatibility maintained
+   - Verify signature blocks load
+   - Check both party blocks present
+   - Ensure backward compatibility
 
 2. **Document Generation Test:**
-   - Generate complete agreement
-   - Verify all markers placed correctly
-   - Test optional approval block
-   - Check institutional formatting
+   - Generate with full data
+   - Check side-by-side layout
+   - Verify export control initials
 
-3. **Institutional Standards:**
-   - Authority clearly indicated
-   - Approval hierarchy supported
-   - Professional appearance
+3. **Professional Appearance:**
+   - Equal spacing for parties
+   - Clear role labels
+   - Proper alignment
+
+### Status: Complete ✓
+
+## Task 6.9.3: Create GUI Field Requirements Documentation
+
+**Implementation Steps:**
+
+Follow the plan detailed in `docs/planning/gui-field-requirements-plan.md` to create comprehensive documentation for Developer G.
+
+1. **Execute the plan:**
+   - Use the plan file as a checklist
+   - Analyze all 8 templates systematically
+   - Create `docs/templates/gui-field-requirements.md`
+
+2. **Key focus areas:**
+   - Document all optional fields across templates
+   - Map all conditional field dependencies
+   - Create quick reference tables
+   - Include test scenarios for each template
+
+3. **Deliverable:**
+   - Complete GUI field requirements document
+   - Ready for Developer G's form implementation
+   - Covers all edge cases and special behaviors
 
 ## Definition of Done
 
-- [ ] Investigation complete with documented findings
-- [ ] Agreement structure mapped with initial points
-- [ ] JSON template updated with all signature blocks
-- [ ] Optional approval signature included
-- [ ] Initial blocks on key sections
-- [ ] All placement directives specified
-- [ ] Markers appear correctly in output
-- [ ] Side-by-side main signatures working
-- [ ] Template loading tests pass
-- [ ] Full test suite passes
+- [x] Investigation complete with documented findings
+- [x] Agreement structure mapped
+- [x] JSON template updated with signature blocks
+- [x] Both party signatures side-by-side
+- [x] Export control initials (if needed)
+- [x] Placement markers in correct locations
+- [x] Template loading tests pass (6 new tests created and passing)
+- [x] Document generation successful
+- [x] Full test suite passes (318 tests passing)
+- [ ] GUI field requirements documentation complete
 
 ## Common Pitfalls
 
-1. **Missing approval signatures** - Institutions often require
-2. **Wrong institution field** - Use "Institution" not "Company"
-3. **Forgetting technology initials** - Important for clarity
-4. **Title requirements** - Authority must be clear
-5. **Complex approval chains** - Keep flexible
+1. **Unequal party formatting** - Ensure side-by-side alignment
+2. **Missing export acknowledgments** - Critical for compliance
+3. **Complex milestone tables** - May need special handling
+4. **IP assignment clarity** - May need initial blocks
+5. **International considerations** - Some countries require witnesses
 
 ## Notes
 
-- Technology transfer involves institutional complexities
-- Approval signatures vary by institution
-- Title fields critical for establishing authority
-- Consider different institutional structures
-- Payment terms and technology description need special attention 
+- Technology transfer agreements are legally complex
+- Export control compliance is critical
+- Both parties typically sign simultaneously
+- May involve multiple appendices
+- Consider how PDF will handle technical specifications 

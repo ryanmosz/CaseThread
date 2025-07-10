@@ -232,7 +232,7 @@
       "title": "Technology Transfer",
       "order": 5,
       "required": true,
-      "content": "2. TECHNOLOGY TRANSFER\n\n2.1 Grant of Rights. Provider hereby {{#if assignment}}assigns{{else}}grants to Recipient {{#if exclusive}}an exclusive{{else}}a non-exclusive{{/if}} license to{{/if}} the Technology{{#if field_of_use}} in the Field of Use{{/if}} in the Territory.\n\n2.2 Delivery. Provider shall deliver to Recipient within [30] days:\n(a) All documentation related to the Technology;\n(b) {{#if software}}Source code and technical documentation;{{/if}}\n(c) {{#if materials}}Physical materials and samples;{{/if}}\n(d) Know-How in written and electronic form.\n\n2.3 Transfer Method. Delivery shall be made via [secure file transfer/physical shipment] with appropriate confidentiality protections.",
+      "content": "2. TECHNOLOGY TRANSFER\n\n2.1 Grant of Rights. Provider hereby {{#if assignment}}assigns{{else}}grants to Recipient {{#if exclusive}}an exclusive{{else}}a non-exclusive{{/if}} license to{{/if}} the Technology{{#if field_of_use}} in the Field of Use{{/if}} in the Territory.\n\n2.2 Delivery. Provider shall deliver to Recipient within [30] days:\n(a) All documentation related to the Technology;\n(b) {{#if software}}Source code and technical documentation;{{/if}}\n(c) {{#if materials}}Physical materials and samples;{{/if}}\n(d) Know-How in written and electronic form.\n\n2.3 Transfer Method. Delivery shall be made via [secure file transfer/physical shipment] with appropriate confidentiality protections.\n\n[INITIALS_BLOCK:technology-transfer]",
       "firmCustomizable": true,
       "variables": {
         "assignment": {
@@ -276,7 +276,7 @@
       "title": "Financial Terms",
       "order": 7,
       "required": true,
-      "content": "4. FINANCIAL TERMS\n\n4.1 Technology Transfer Fee. Recipient shall pay Provider ${{number upfront_fee}} within thirty (30) days of the Effective Date.\n\n{{#if milestone_payments}}4.2 Milestone Payments. Recipient shall pay the following milestone payments:\n(a) $[AMOUNT] upon [MILESTONE 1];\n(b) $[AMOUNT] upon [MILESTONE 2];\n(c) $[AMOUNT] upon [MILESTONE 3].{{/if}}\n\n{{#if royalties}}4.3 Royalties. Recipient shall pay Provider {{royalty_rate}}% of Net Sales of products incorporating the Technology.{{/if}}\n\n4.4 Payment Terms. All payments shall be made in US dollars via wire transfer. Late payments bear interest at 1.5% per month.",
+      "content": "4. FINANCIAL TERMS\n\n4.1 Technology Transfer Fee. Recipient shall pay Provider ${{number upfront_fee}} within thirty (30) days of the Effective Date.\n\n{{#if milestone_payments}}4.2 Milestone Payments. Recipient shall pay the following milestone payments:\n(a) $[AMOUNT] upon [MILESTONE 1];\n(b) $[AMOUNT] upon [MILESTONE 2];\n(c) $[AMOUNT] upon [MILESTONE 3].{{/if}}\n\n{{#if royalties}}4.3 Royalties. Recipient shall pay Provider {{royalty_rate}}% of Net Sales of products incorporating the Technology.{{/if}}\n\n4.4 Payment Terms. All payments shall be made in US dollars via wire transfer. Late payments bear interest at 1.5% per month.\n\n[INITIALS_BLOCK:financial-terms]",
       "firmCustomizable": true,
       "variables": {
         "royalties": {
@@ -298,7 +298,7 @@
       "title": "Intellectual Property",
       "order": 9,
       "required": true,
-      "content": "6. INTELLECTUAL PROPERTY\n\n6.1 Ownership. {{#if assignment}}All rights in the Technology transfer to Recipient upon payment of the Technology Transfer Fee.{{else}}Provider retains all ownership rights in the Technology.{{/if}}\n\n6.2 Improvements. {{#if exclusive}}Recipient owns all improvements made to the Technology. Provider receives a non-exclusive license back.{{else}}Each Party owns its improvements, with cross-licenses granted.{{/if}}\n\n6.3 No Other Rights. No other intellectual property rights are granted except as expressly stated herein.",
+      "content": "6. INTELLECTUAL PROPERTY\n\n6.1 Ownership. {{#if assignment}}All rights in the Technology transfer to Recipient upon payment of the Technology Transfer Fee.{{else}}Provider retains all ownership rights in the Technology.{{/if}}\n\n6.2 Improvements. {{#if exclusive}}Recipient owns all improvements made to the Technology. Provider receives a non-exclusive license back.{{else}}Each Party owns its improvements, with cross-licenses granted.{{/if}}\n\n6.3 No Other Rights. No other intellectual property rights are granted except as expressly stated herein.\n\n[INITIALS_BLOCK:ip-provisions]",
       "firmCustomizable": true
     },
     {
@@ -318,7 +318,7 @@
         "field": "export_controlled",
         "value": true
       },
-      "content": "8. EXPORT CONTROL\n\n8.1 Compliance. Both Parties shall comply with all applicable export control laws and regulations.\n\n8.2 Classification. The Technology is classified as [EAR99/ECCN] under US export regulations.\n\n8.3 Restrictions. Recipient shall not export, re-export, or transfer the Technology without appropriate licenses.\n\n8.4 Certifications. Recipient certifies it is not on any prohibited party lists.",
+      "content": "8. EXPORT CONTROL\n\n8.1 Compliance. Both Parties shall comply with all applicable export control laws and regulations.\n\n8.2 Classification. The Technology is classified as [EAR99/ECCN] under US export regulations.\n\n8.3 Restrictions. Recipient shall not export, re-export, or transfer the Technology without appropriate licenses.\n\n8.4 Certifications. Recipient certifies it is not on any prohibited party lists.\n\n[INITIALS_BLOCK:export-control]",
       "firmCustomizable": true
     },
     {
@@ -350,8 +350,95 @@
       "title": "Signatures",
       "order": 15,
       "required": true,
-      "content": "IN WITNESS WHEREOF, the Parties have executed this Agreement as of the Effective Date.\n\nPROVIDER:\n{{provider_name}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\nRECIPIENT:\n{{recipient_name}}\n\nBy: _____________________________\nName:\nTitle:\nDate:",
+      "content": "IN WITNESS WHEREOF, the Parties have executed this Agreement as of the Effective Date.\n\n[SIGNATURE_BLOCK:provider-signature]\n[SIGNATURE_BLOCK:recipient-signature]",
       "firmCustomizable": false
+    }
+  ],
+  "signatureBlocks": [
+    {
+      "id": "provider-signature",
+      "type": "single",
+      "layout": "side-by-side",
+      "placement": {
+        "location": "signatures-section",
+        "marker": "[SIGNATURE_BLOCK:provider-signature]"
+      },
+      "party": {
+        "role": "provider",
+        "label": "PROVIDER",
+        "entityName": "{{provider_name}}",
+        "fields": {
+          "name": { "required": true, "label": "Name" },
+          "title": { "required": true, "label": "Title" },
+          "date": { "required": true, "label": "Date" }
+        }
+      }
+    },
+    {
+      "id": "recipient-signature",
+      "type": "single",
+      "layout": "side-by-side",
+      "placement": {
+        "location": "signatures-section",
+        "marker": "[SIGNATURE_BLOCK:recipient-signature]"
+      },
+      "party": {
+        "role": "recipient",
+        "label": "RECIPIENT",
+        "entityName": "{{recipient_name}}",
+        "fields": {
+          "name": { "required": true, "label": "Name" },
+          "title": { "required": true, "label": "Title" },
+          "date": { "required": true, "label": "Date" }
+        }
+      }
+    }
+  ],
+  "initialBlocks": [
+    {
+      "id": "technology-transfer-initials",
+      "placement": {
+        "location": "technology-transfer-section",
+        "marker": "[INITIALS_BLOCK:technology-transfer]"
+      },
+      "party": {
+        "role": "both-parties",
+        "label": "Provider: ___ Recipient: ___"
+      }
+    },
+    {
+      "id": "financial-terms-initials",
+      "placement": {
+        "location": "financial-terms-section",
+        "marker": "[INITIALS_BLOCK:financial-terms]"
+      },
+      "party": {
+        "role": "both-parties",
+        "label": "Provider: ___ Recipient: ___"
+      }
+    },
+    {
+      "id": "ip-provisions-initials",
+      "placement": {
+        "location": "ip-provisions-section",
+        "marker": "[INITIALS_BLOCK:ip-provisions]"
+      },
+      "party": {
+        "role": "both-parties",
+        "label": "Provider: ___ Recipient: ___"
+      }
+    },
+    {
+      "id": "export-control-initials",
+      "placement": {
+        "location": "export-control-section",
+        "marker": "[INITIALS_BLOCK:export-control]"
+      },
+      "party": {
+        "role": "both-parties",
+        "label": "Provider: ___ Recipient: ___"
+      },
+      "conditional": true
     }
   ]
 } 

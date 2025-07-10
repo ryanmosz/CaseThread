@@ -39,10 +39,13 @@ describe('File Writer Service', () => {
 
       const result = await saveDocument(content, outputPath);
 
-      expect(fs.mkdir).toHaveBeenCalledWith('/output', { recursive: true });
-      expect(fs.writeFile).toHaveBeenCalledWith(outputPath, content, 'utf-8');
+      // In test mode, the path should be redirected to test-results
+      const expectedPath = 'docs/testing/test-results/general-tests/test-doc.md';
+      
+      expect(fs.mkdir).toHaveBeenCalledWith('docs/testing/test-results/general-tests', { recursive: true });
+      expect(fs.writeFile).toHaveBeenCalledWith(expectedPath, content, 'utf-8');
       expect(result).toMatchObject({
-        path: outputPath,
+        path: expectedPath,
         size: content.length
       });
     });
