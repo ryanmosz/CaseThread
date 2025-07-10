@@ -59,4 +59,4 @@
     (Details: tasks-parent-6.9-detailed.md)
   - [x] 6.10 Update TypeScript interfaces and types (Details: tasks-parent-6.10-detailed.md)
   - [x] 6.11 Run and verify all existing tests pass (Details: tasks-parent-6.11-detailed.md)
-  - [ ] 6.12 Create documentation for signature block schema (Details: tasks-parent-6.12-detailed.md) 
+  - [x] 6.12 Create documentation for signature block schema (Details: tasks-parent-6.12-detailed.md) 

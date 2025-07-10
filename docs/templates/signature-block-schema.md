@@ -1,32 +1,50 @@
 # Signature Block Schema Documentation
 
+## Table of Contents
+1. [Overview](#overview)
+2. [Schema Structure](#schema-structure)
+3. [Field Definitions](#field-definitions)
+4. [Layout Options](#layout-options)
+5. [Examples by Document Type](#examples-by-document-type)
+6. [Initial Blocks](#initial-blocks)
+7. [Notary Blocks](#notary-blocks)
+8. [Best Practices](#best-practices)
+9. [Migration Guide](#migration-guide)
+10. [Quick Reference](#quick-reference)
+
 ## Overview
 
-This document defines the JSON schema for signature blocks, initial blocks, and placement directives used in CaseThread legal document templates. The schema enables proper PDF generation with correctly positioned signature areas, initial blocks, and related legal elements (witnesses, notaries).
+The signature block schema defines how signature areas are structured in CaseThread legal document templates. This schema enables:
+
+- **Consistent signature placement** across all document types
+- **Flexible layouts** supporting single or side-by-side signatures
+- **Rich metadata** for PDF generation with proper spacing and formatting
+- **Support for initials, witnesses, and notary blocks**
+
+Signature blocks are defined in the template JSON files and rendered as markers in the generated documents, which are then parsed by the PDF generator to create properly formatted signature areas.
 
 ## Schema Structure
 
-### SignatureBlock
-
-The core structure for defining signature areas in documents.
+### TypeScript Interfaces
 
 ```typescript
-interface SignatureBlock {
+// Standard signature block format (most templates)
+interface StandardSignatureBlock {
   id: string;                              // Unique identifier
   type: 'single' | 'multiple';            // Block type
   placement: {
-    location: string;                      // Where in document
-    marker: string;                        // Text marker for placement
+    location: string;                      // e.g., "after-section-5"
+    marker: string;                        // e.g., "[SIGNATURE_BLOCK:assignor-signature]"
   };
-  layout?: {                              // Optional layout hints
+  layout?: string | {                      // Layout configuration
     position: 'standalone' | 'side-by-side';
     groupWith?: string;                    // ID of block to group with
     preventPageBreak?: boolean;            // Keep together on same page
   };
   party: {
-    role: string;                          // Party identifier
-    label: string;                         // Display label
-    fields: {                              // Signature fields
+    role: string;                          // e.g., "assignor", "licensee"
+    label: string;                         // Display label, e.g., "ASSIGNOR"
+    fields: {
       name: FieldDefinition;
       title?: FieldDefinition;
       company?: FieldDefinition;
@@ -39,32 +57,22 @@ interface SignatureBlock {
   witnessRequired?: boolean;
   notaryRequired?: boolean;
 }
-```
 
-### InitialBlock
-
-Structure for defining initial areas throughout documents.
-
-```typescript
-interface InitialBlock {
+// Office action response format (simplified)
+interface OfficeActionSignatureBlock {
   id: string;
-  placement: {
-    locations: string[];                   // Multiple possible locations
-    marker: string;                        // Text marker
-  };
-  party: {
-    role: string;                          // Links to signature party role
-    label: string;                         // Display label
-  };
-  customText?: string;                     // Optional instructional text
+  type: 'single' | 'multiple';
+  label: string;
+  position: string;
+  fields: Array<{
+    id: string;
+    type: string;
+    label: string;
+    required: boolean;
+  }>;
 }
-```
 
-### FieldDefinition
-
-Defines individual fields within signature blocks.
-
-```typescript
+// Field definition
 interface FieldDefinition {
   required: boolean;
   label: string;
@@ -73,525 +81,656 @@ interface FieldDefinition {
 }
 ```
 
-## Placement System
+## Field Definitions
 
-The placement system uses semantic location identifiers to specify where signature and initial blocks appear in the document.
+### Core Fields
 
-### Relative Placements
+| Field | Description | Typically Required | Common Usage |
+|-------|-------------|-------------------|--------------|
+| `name` | Signatory's full name | Always | All signature blocks |
+| `title` | Professional title or position | Sometimes | Corporate signers |
+| `company` | Organization name | Context-dependent | When signing on behalf of entity |
+| `date` | Date of signature | Usually | Most agreements |
+| `registrationNumber` | Professional license/bar number | For attorneys | USPTO filings |
+| `email` | Email address | Rarely | Electronic signature systems |
 
-- `after-section-{id}` - After a specific section (e.g., "after-section-assignment")
-- `before-section-{id}` - Before a specific section
-- `end-of-section-{id}` - At the end of a section's content
+### Field Properties
 
-### Absolute Placements
-
-- `document-end` - At the end of the entire document
-- `document-start` - At the beginning (rare)
-- `each-page-footer` - Bottom of every page (for initials)
-- `each-page-header` - Top of every page (rare)
-
-### Special Placements
-
-- `after-recitals` - After WHEREAS clauses
-- `before-general-provisions` - Before boilerplate sections
-- `after-party-definitions` - After party introductions
-
-## Marker System
-
-Markers are text placeholders inserted into generated documents to indicate where signature/initial blocks will be rendered in the PDF.
-
-### Marker Formats
-
-1. **Signature Blocks**: `[SIGNATURE_BLOCK:{id}]`
-   - Example: `[SIGNATURE_BLOCK:assignor-signature]`
-
-2. **Initial Blocks**: `[INITIALS_BLOCK:{id}]`
-   - Example: `[INITIALS_BLOCK:assignor-initials]`
-
-3. **Witness Blocks**: `[WITNESS_BLOCK:{id}]`
-   - Example: `[WITNESS_BLOCK:assignor-witness]`
-
-4. **Notary Blocks**: `[NOTARY_BLOCK:{id}]`
-   - Example: `[NOTARY_BLOCK:assignor-notary]`
-
-### Marker Usage in Text
-
-```markdown
-5. ASSIGNMENT
-
-The Assignor hereby assigns all rights, title, and interest...
-
-[SIGNATURE_BLOCK:assignor-signature]
-[SIGNATURE_BLOCK:assignee-signature]
-
-6. GOVERNING LAW
-```
-
-## Initial Blocks
-
-Initial blocks serve different purposes in legal documents:
-
-1. **Page-by-page acknowledgment** - Confirms each page was reviewed
-2. **Section-specific agreement** - Acknowledges key terms
-3. **Change acknowledgment** - Confirms acceptance of modifications
-
-### Common Patterns
-
-```json
-{
-  "initialBlocks": [
-    {
-      "id": "page-initials",
-      "placement": {
-        "locations": ["each-page-footer"],
-        "marker": "[INITIALS_BLOCK:page-initials]"
-      },
-      "party": {
-        "role": "all-parties",
-        "label": "Initials"
-      }
-    }
-  ]
-}
-```
+- **`required`**: Boolean indicating if the field must be filled
+- **`label`**: Display text shown above/beside the field
+- **`defaultValue`**: Optional pre-filled value (e.g., current date)
+- **`maxLength`**: Maximum character length for the field
 
 ## Layout Options
 
-### Side-by-Side Signatures
+### 1. Standalone (Default)
+Single signature block on its own line:
 
-For two parties signing together (common in assignments):
+```
+________________________     ____________
+Signature                    Date
 
+John Doe
+Title: CEO
+Company: Acme Corp
+```
+
+**JSON Example:**
 ```json
 {
-  "signatureBlocks": [
-    {
-      "id": "party1-sig",
-      "type": "single",
-      "placement": {
-        "location": "after-section-assignment",
-        "marker": "[SIGNATURE_BLOCK:party1-sig]"
-      },
-      "party": {
-        "role": "assignor",
-        "label": "ASSIGNOR",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "date": { "required": true, "label": "Date" }
-        }
-      }
-    },
-    {
-      "id": "party2-sig",
-      "type": "single",
-      "placement": {
-        "location": "after-section-assignment",
-        "marker": "[SIGNATURE_BLOCK:party2-sig]"
-      },
-      "layout": {
-        "position": "side-by-side",
-        "groupWith": "party1-sig",
-        "preventPageBreak": true
-      },
-      "party": {
-        "role": "assignee",
-        "label": "ASSIGNEE",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": true, "label": "Title" },
-          "date": { "required": true, "label": "Date" }
-        }
-      }
+  "id": "ceo-signature",
+  "type": "single",
+  "placement": {
+    "location": "after-section-signatures",
+    "marker": "[SIGNATURE_BLOCK:ceo-signature]"
+  },
+  "party": {
+    "role": "ceo",
+    "label": "CHIEF EXECUTIVE OFFICER",
+    "fields": {
+      "name": { "required": true, "label": "Name" },
+      "title": { "required": true, "label": "Title" },
+      "company": { "required": true, "label": "Company" },
+      "date": { "required": true, "label": "Date" }
     }
-  ]
+  }
 }
 ```
 
-### Sequential Signatures
+### 2. Side-by-Side
+Two or more signature blocks on the same line:
 
-For multiple parties signing in order:
+```
+ASSIGNOR                                    ASSIGNEE
+________________________                    ________________________
+Signature                                   Signature
+
+Name: ___________________                   Name: ___________________
+Date: ___________________                   Date: ___________________
+```
+
+**JSON Example:**
+```json
+{
+  "id": "assignor-signature",
+  "type": "single",
+  "layout": "side-by-side",  // Can be string
+  "placement": {
+    "location": "after-section-signatures",
+    "marker": "[SIGNATURE_BLOCK:assignor-signature]"
+  },
+  "party": {
+    "role": "assignor",
+    "label": "ASSIGNOR",
+    "fields": {
+      "name": { "required": true, "label": "Name" },
+      "date": { "required": true, "label": "Date" }
+    }
+  }
+}
+```
+
+### 3. Grouped with Page Break Prevention
+Ensures related signatures stay together:
 
 ```json
 {
-  "signatureBlocks": [
-    {
-      "id": "licensor-sig",
-      "type": "single",
-      "placement": {
-        "location": "document-end",
-        "marker": "[SIGNATURE_BLOCK:licensor-sig]"
-      },
-      "party": {
-        "role": "licensor",
-        "label": "LICENSOR",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": true, "label": "Title" },
-          "company": { "required": true, "label": "By" },
-          "date": { "required": true, "label": "Date" }
-        }
-      }
-    },
-    {
-      "id": "licensee-sig",
-      "type": "single",
-      "placement": {
-        "location": "document-end",
-        "marker": "[SIGNATURE_BLOCK:licensee-sig]"
-      },
-      "party": {
-        "role": "licensee",
-        "label": "LICENSEE",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": true, "label": "Title" },
-          "company": { "required": true, "label": "By" },
-          "date": { "required": true, "label": "Date" }
-        }
-      }
-    }
-  ]
+  "layout": {
+    "position": "side-by-side",
+    "groupWith": "assignor-signature",
+    "preventPageBreak": true
+  }
 }
 ```
 
 ## Examples by Document Type
 
 ### 1. Patent Assignment Agreement
-
-Side-by-side signatures with optional notary:
+**Layout**: Side-by-side with notary
+**Reason**: Standard for property transfers requiring witnessed execution
 
 ```json
-{
-  "signatureBlocks": [
-    {
-      "id": "assignor-signature",
-      "type": "single",
-      "placement": {
-        "location": "after-section-general",
-        "marker": "[SIGNATURE_BLOCK:assignor-signature]"
-      },
-      "party": {
-        "role": "assignor",
-        "label": "ASSIGNOR",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "date": { "required": true, "label": "Date" }
-        }
-      },
-      "notaryRequired": true
+"signatureBlocks": [
+  {
+    "id": "assignor-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-section-signature",
+      "marker": "[SIGNATURE_BLOCK:assignor-signature]"
     },
-    {
-      "id": "assignee-signature",
-      "type": "single",
-      "placement": {
-        "location": "after-section-general",
-        "marker": "[SIGNATURE_BLOCK:assignee-signature]"
-      },
-      "layout": {
-        "position": "side-by-side",
-        "groupWith": "assignor-signature",
-        "preventPageBreak": true
-      },
-      "party": {
-        "role": "assignee",
-        "label": "ASSIGNEE",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": true, "label": "Title" },
-          "company": { "required": true, "label": "By" },
-          "date": { "required": true, "label": "Date" }
-        }
-      }
-    }
-  ],
-  "initialBlocks": [
-    {
-      "id": "assignment-initials",
-      "placement": {
-        "locations": ["after-section-assignment"],
-        "marker": "[INITIALS_BLOCK:assignment-initials]"
-      },
-      "party": {
-        "role": "all-parties",
-        "label": "Initial to acknowledge assignment terms"
-      }
-    }
-  ],
-  "notaryBlocks": [
-    {
-      "id": "assignor-notary",
-      "forSignatureId": "assignor-signature",
-      "placement": {
-        "location": "after-signature",
-        "marker": "[NOTARY_BLOCK:assignor-notary]"
-      }
-    }
-  ]
-}
-```
-
-### 2. NDA (Mutual)
-
-Sequential signatures with page initials:
-
-```json
-{
-  "signatureBlocks": [
-    {
-      "id": "first-party-signature",
-      "type": "single",
-      "placement": {
-        "location": "document-end",
-        "marker": "[SIGNATURE_BLOCK:first-party-signature]"
-      },
-      "party": {
-        "role": "first-party",
-        "label": "FIRST PARTY",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": false, "label": "Title" },
-          "date": { "required": true, "label": "Date" }
-        }
+    "party": {
+      "role": "assignor",
+      "label": "ASSIGNOR",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "date": { "required": true, "label": "Date" }
       }
     },
-    {
-      "id": "second-party-signature",
-      "type": "single",
-      "placement": {
-        "location": "document-end",
-        "marker": "[SIGNATURE_BLOCK:second-party-signature]"
-      },
-      "party": {
-        "role": "second-party",
-        "label": "SECOND PARTY",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": false, "label": "Title" },
-          "date": { "required": true, "label": "Date" }
-        }
-      }
-    }
-  ],
-  "initialBlocks": [
-    {
-      "id": "page-initials",
-      "placement": {
-        "locations": ["each-page-footer"],
-        "marker": "[INITIALS_BLOCK:page-initials]"
-      },
-      "party": {
-        "role": "all-parties",
-        "label": "___ / ___"
-      }
-    }
-  ]
-}
-```
-
-### 3. Office Action Response
-
-Single attorney signature:
-
-```json
-{
-  "signatureBlocks": [
-    {
-      "id": "attorney-signature",
-      "type": "single",
-      "placement": {
-        "location": "document-end",
-        "marker": "[SIGNATURE_BLOCK:attorney-signature]"
-      },
-      "party": {
-        "role": "attorney",
-        "label": "Respectfully submitted",
-        "fields": {
-          "name": { "required": true, "label": "Attorney Name" },
-          "registrationNumber": { "required": true, "label": "Registration No." },
-          "date": { "required": true, "label": "Date" }
-        }
-      }
-    }
-  ]
-}
-```
-
-### 4. Patent License Agreement
-
-Sequential signatures with witness option:
-
-```json
-{
-  "signatureBlocks": [
-    {
-      "id": "licensor-signature",
-      "type": "single",
-      "placement": {
-        "location": "document-end",
-        "marker": "[SIGNATURE_BLOCK:licensor-signature]"
-      },
-      "party": {
-        "role": "licensor",
-        "label": "LICENSOR",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": true, "label": "Title" },
-          "date": { "required": true, "label": "Date" }
-        }
-      },
-      "witnessRequired": true
+    "notaryRequired": true
+  },
+  {
+    "id": "assignee-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-section-signature",
+      "marker": "[SIGNATURE_BLOCK:assignee-signature]"
     },
-    {
-      "id": "licensee-signature",
-      "type": "single",
-      "placement": {
-        "location": "document-end",
-        "marker": "[SIGNATURE_BLOCK:licensee-signature]"
-      },
-      "party": {
-        "role": "licensee",
-        "label": "LICENSEE",
-        "fields": {
-          "name": { "required": true, "label": "Name" },
-          "title": { "required": true, "label": "Title" },
-          "date": { "required": true, "label": "Date" }
-        }
-      },
-      "witnessRequired": true
-    }
-  ],
-  "initialBlocks": [
-    {
-      "id": "royalty-initials",
-      "placement": {
-        "locations": ["after-section-royalties"],
-        "marker": "[INITIALS_BLOCK:royalty-initials]"
-      },
-      "party": {
-        "role": "licensee",
-        "label": "Licensee acknowledges royalty terms"
+    "layout": {
+      "position": "side-by-side",
+      "groupWith": "assignor-signature",
+      "preventPageBreak": true
+    },
+    "party": {
+      "role": "assignee",
+      "label": "ASSIGNEE",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "title": { "required": false, "label": "Title" },
+        "company": { "required": false, "label": "By" },
+        "date": { "required": true, "label": "Date" }
       }
     }
-  ]
-}
+  }
+]
 ```
 
-### 5. Cease and Desist Letter
-
-Single signature in letter format:
+### 2. Trademark Application
+**Layout**: Single attorney signature
+**Reason**: Only authorized practitioner signs USPTO filings
 
 ```json
-{
-  "signatureBlocks": [
-    {
-      "id": "attorney-signature",
-      "type": "single",
-      "placement": {
-        "location": "document-end",
-        "marker": "[SIGNATURE_BLOCK:attorney-signature]"
-      },
-      "party": {
-        "role": "attorney",
-        "label": "Sincerely",
-        "fields": {
-          "name": { "required": true, "label": "[ATTORNEY NAME]" },
-          "firmName": { "required": true, "label": "[FIRM NAME]" },
-          "phone": { "required": true, "label": "[PHONE]" },
-          "email": { "required": true, "label": "[EMAIL]" }
-        }
+"signatureBlocks": [
+  {
+    "id": "attorney-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-declaration",
+      "marker": "[SIGNATURE_BLOCK:attorney-signature]"
+    },
+    "party": {
+      "role": "attorney",
+      "label": "ATTORNEY OF RECORD",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "registrationNumber": { "required": true, "label": "Registration Number" },
+        "date": { "required": true, "label": "Date" }
       }
     }
-  ]
-}
+  }
+]
 ```
 
-## Investigation Guidelines
+### 3. Cease and Desist Letter
+**Layout**: Single sender signature
+**Reason**: Unilateral correspondence from one party
 
-When adding signature blocks to a new document type:
+```json
+"signatureBlocks": [
+  {
+    "id": "sender-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-section-signature",
+      "marker": "[SIGNATURE_BLOCK:sender-signature]"
+    },
+    "party": {
+      "role": "sender",
+      "label": "SENDER",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "title": { "required": false, "label": "Title" },
+        "company": { "required": false, "label": "Company" },
+        "date": { "required": true, "label": "Date" }
+      }
+    }
+  }
+]
+```
 
-1. **Analyze the current template**:
-   - Look for existing signature sections
-   - Identify all parties mentioned
-   - Note any special requirements (notary, witness)
+### 4. NDA IP Specific
+**Layout**: Side-by-side for mutual NDA
+**Reason**: Both parties sign mutual confidentiality agreements
 
-2. **Research legal requirements**:
-   - Does this document type require notarization?
-   - Are witness signatures needed?
-   - Are initials required on specific sections?
+```json
+"signatureBlocks": [
+  {
+    "id": "disclosing-party-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-section-signature",
+      "marker": "[SIGNATURE_BLOCK:disclosing-party-signature]"
+    },
+    "layout": "side-by-side",
+    "party": {
+      "role": "disclosing-party",
+      "label": "DISCLOSING PARTY",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "title": { "required": false, "label": "Title" },
+        "company": { "required": false, "label": "Company" },
+        "date": { "required": true, "label": "Date" }
+      }
+    }
+  },
+  {
+    "id": "receiving-party-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-section-signature",
+      "marker": "[SIGNATURE_BLOCK:receiving-party-signature]"
+    },
+    "layout": "side-by-side",
+    "party": {
+      "role": "receiving-party",
+      "label": "RECEIVING PARTY",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "title": { "required": false, "label": "Title" },
+        "company": { "required": false, "label": "Company" },
+        "date": { "required": true, "label": "Date" }
+      }
+    }
+  }
+]
+```
 
-3. **Consider jurisdiction**:
-   - Federal documents may have specific formats
-   - State requirements vary for notarization
-   - International agreements may need apostilles
+### 5. Office Action Response
+**Layout**: Simplified structure for USPTO forms
+**Reason**: Specific formatting requirements for government filings
 
-4. **Review similar documents**:
-   - Look at examples from legal databases
-   - Check USPTO, court filing requirements
-   - Consult bar association guidelines
+```json
+"signatureBlocks": [
+  {
+    "id": "attorney-signature",
+    "type": "single",
+    "label": "Attorney/Agent Signature",
+    "position": "signature",
+    "fields": [
+      {
+        "id": "name",
+        "type": "text",
+        "label": "Attorney/Agent Name",
+        "required": true
+      },
+      {
+        "id": "registration_number",
+        "type": "text",
+        "label": "USPTO Registration No.",
+        "required": true
+      },
+      {
+        "id": "phone",
+        "type": "text",
+        "label": "Phone Number",
+        "required": true
+      },
+      {
+        "id": "email",
+        "type": "text",
+        "label": "Email Address",
+        "required": true
+      }
+    ]
+  }
+]
+```
+
+### 6. Patent License Agreement
+**Layout**: Side-by-side
+**Reason**: Standard bilateral agreement format
+
+```json
+"signatureBlocks": [
+  {
+    "id": "licensor-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-section-13",
+      "marker": "[SIGNATURE_BLOCK:licensor-signature]"
+    },
+    "layout": "side-by-side",
+    "party": {
+      "role": "licensor",
+      "label": "LICENSOR",
+      "entityName": "{{licensor_name}}",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "title": { "required": true, "label": "Title" },
+        "date": { "required": true, "label": "Date" }
+      }
+    }
+  },
+  {
+    "id": "licensee-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-section-13",
+      "marker": "[SIGNATURE_BLOCK:licensee-signature]"
+    },
+    "layout": "side-by-side",
+    "party": {
+      "role": "licensee",
+      "label": "LICENSEE",
+      "entityName": "{{licensee_name}}",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "title": { "required": true, "label": "Title" },
+        "date": { "required": true, "label": "Date" }
+      }
+    }
+  }
+]
+```
+
+### 7. Provisional Patent Application
+**Layout**: Single inventor with optional witness
+**Reason**: USPTO requires inventor signature, witness adds evidentiary value
+
+```json
+"signatureBlocks": [
+  {
+    "id": "inventor-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-section-signature",
+      "marker": "[SIGNATURE_BLOCK:inventor-signature]"
+    },
+    "party": {
+      "role": "inventor",
+      "label": "Inventor",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "date": { "required": true, "label": "Date" }
+      }
+    }
+  },
+  {
+    "id": "witness-signature",
+    "type": "single",
+    "placement": {
+      "location": "after-inventor-signature",
+      "marker": "[SIGNATURE_BLOCK:witness-signature]"
+    },
+    "party": {
+      "role": "witness",
+      "label": "Witness (Optional)",
+      "fields": {
+        "name": { "required": false, "label": "Name" },
+        "date": { "required": false, "label": "Date" }
+      }
+    }
+  }
+]
+```
+
+### 8. Technology Transfer Agreement
+**Layout**: Complex multi-party with initials
+**Reason**: High-value agreements require extra acknowledgments
+
+```json
+"signatureBlocks": [
+  {
+    "id": "provider-signature",
+    "type": "single",
+    "layout": "side-by-side",
+    "placement": {
+      "location": "signatures-section",
+      "marker": "[SIGNATURE_BLOCK:provider-signature]"
+    },
+    "party": {
+      "role": "provider",
+      "label": "PROVIDER",
+      "entityName": "{{provider_name}}",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "title": { "required": true, "label": "Title" },
+        "date": { "required": true, "label": "Date" }
+      }
+    }
+  },
+  {
+    "id": "recipient-signature",
+    "type": "single",
+    "layout": "side-by-side",
+    "placement": {
+      "location": "signatures-section",
+      "marker": "[SIGNATURE_BLOCK:recipient-signature]"
+    },
+    "party": {
+      "role": "recipient",
+      "label": "RECIPIENT",
+      "entityName": "{{recipient_name}}",
+      "fields": {
+        "name": { "required": true, "label": "Name" },
+        "title": { "required": true, "label": "Title" },
+        "date": { "required": true, "label": "Date" }
+      }
+    }
+  }
+]
+```
+
+## Initial Blocks
+
+Initial blocks are used for page-by-page acknowledgment or critical section confirmation:
+
+```json
+"initialBlocks": [
+  {
+    "id": "page-initials",
+    "placement": {
+      "locations": ["each-page-footer"],
+      "marker": "[INITIALS_BLOCK:page-initials]"
+    },
+    "party": {
+      "role": "all-parties",
+      "label": "Page __ of __  Initials: _____ / _____"
+    }
+  },
+  {
+    "id": "critical-section-initials",
+    "placement": {
+      "locations": ["end-of-section-assignment"],
+      "marker": "[INITIALS_BLOCK:critical-section]"
+    },
+    "party": {
+      "role": "all-parties",
+      "label": "Initials"
+    },
+    "customText": "By initialing here, all parties acknowledge understanding of the assignment terms",
+    "conditional": true  // Only shown based on template logic
+  }
+]
+```
+
+## Notary Blocks
+
+For documents requiring notarization:
+
+```json
+"notaryBlocks": [
+  {
+    "id": "assignor-notary",
+    "forSignatureId": "assignor-signature",
+    "placement": {
+      "location": "after-assignor-signature",
+      "marker": "[NOTARY_BLOCK:assignor-notary]"
+    }
+  }
+]
+```
 
 ## Best Practices
 
-1. **Keep schemas simple**: Start with minimal required fields, add complexity only when needed
+### 1. Consistent Naming
+- Use role-based IDs: `licensor-signature`, `assignee-signature`
+- Match marker names to IDs for clarity
+- Use standard role names across similar documents
 
-2. **Use consistent party roles**: Maintain standard roles across document types (e.g., "assignor/assignee", "licensor/licensee")
+### 2. Field Selection
+- Always require `name` and `date`
+- Include `title` for corporate signers
+- Add `registrationNumber` for attorney signatures
+- Use `company` when signing on behalf of an entity
 
-3. **Plan for PDF rendering**: Include layout hints to help PDF generator position elements correctly
+### 3. Layout Decisions
+- Use side-by-side for bilateral agreements
+- Keep related signatures grouped
+- Prevent page breaks between paired signatures
+- Consider signature block width for side-by-side layouts
 
-4. **Consider page breaks**: Use `preventPageBreak` for signature blocks that must stay together
+### 4. Marker Placement
+- Place markers at the end of signature sections
+- Ensure markers are on their own lines
+- Don't embed markers within paragraphs
+- Keep consistent spacing around markers
 
-5. **Document placement clearly**: Use semantic location names that are self-explanatory
+### 5. Optional Fields
+- Make fields optional when they may not apply
+- Witness signatures should typically be optional
+- Consider jurisdiction-specific requirements
 
-6. **Support flexibility**: Allow optional fields for different use cases
+## Migration Guide
 
-7. **Think about accessibility**: Labels should be clear for screen readers
+### Adding Signature Blocks to Existing Templates
 
-8. **Version your schemas**: As requirements evolve, maintain backward compatibility
+1. **Analyze current signature placement**
+   - Identify where signatures currently appear
+   - Note any special formatting requirements
 
-## Implementation Notes
+2. **Define the signature blocks**
+   ```json
+   "signatureBlocks": [
+     // Add appropriate blocks
+   ]
+   ```
 
-- Signature blocks are added to templates as optional properties
-- The text generation process inserts markers at specified locations
-- PDF generation reads markers and renders signature areas
-- Backward compatibility is maintained - templates without signature blocks continue to work
-- The schema is extensible for future requirements (e.g., digital signatures)
+3. **Place markers in content**
+   - Replace manual signature lines with markers
+   - Remove redundant text like "By: _____"
 
-## Electronic vs Physical Signatures Decision
+4. **Test the template**
+   - Verify template loads without errors
+   - Generate a document and check marker placement
+   - Ensure backward compatibility
 
-### Background
-During implementation, we discovered that some document types (particularly the Trademark Application) have different signature requirements based on their filing method:
-- **Electronic filing (TEAS)**: Uses `/Name/` format typed directly into web forms
-- **Physical filing**: Requires traditional handwritten signatures
+### Common Migration Patterns
 
-### Decision
-For the CaseThread MVP, we will:
-1. **Use traditional signature blocks only** in all templates
-2. **Generate PDFs optimized for printing and physical signatures**
-3. **Not attempt to generate electronic signature formats**
-
-### Rationale
-1. **Electronic signatures are system-specific**: The `/Name/` format is only valid when typed directly into the USPTO TEAS system, not in PDFs
-2. **Users need reviewable documents**: Even when filing electronically, attorneys need PDFs to review and get client approval
-3. **Simplicity**: One format per document type reduces complexity without limiting functionality
-4. **Real-world workflow**: When filing electronically, users will:
-   - Generate PDF from CaseThread
-   - Review and approve content
-   - Copy relevant information into electronic filing systems
-   - Type electronic signatures directly in those systems
-
-### Implementation Notes
-- All signature blocks use traditional format with signature lines
-- The PDF generator should render these as professional signature areas
-- No special handling needed for different filing methods
-- Future versions could add electronic filing integration if needed
-
-### Example Impact
-The Trademark Application template originally included:
+**Before:**
 ```
-SIGNATURE: /{{attorney_name}}/
-```
-
-This has been replaced with:
-```
-[SIGNATURE_BLOCK:attorney-signature]
+By: _________________________
+Name: [CLIENT NAME]
+Title: _____________________
+Date: ______________________
 ```
 
-Which will render as a traditional signature block in the PDF.
+**After:**
+```
+[SIGNATURE_BLOCK:client-signature]
+```
+
+## Quick Reference
+
+### Single Signature Block
+```json
+{
+  "id": "sender-signature",
+  "type": "single",
+  "placement": {
+    "location": "after-section-X",
+    "marker": "[SIGNATURE_BLOCK:sender-signature]"
+  },
+  "party": {
+    "role": "sender",
+    "label": "SENDER",
+    "fields": {
+      "name": { "required": true, "label": "Name" },
+      "date": { "required": true, "label": "Date" }
+    }
+  }
+}
+```
+
+### Side-by-Side Signatures
+```json
+// First block
+{
+  "id": "party-a-signature",
+  "type": "single",
+  "layout": "side-by-side",
+  // ... rest of block
+}
+// Second block
+{
+  "id": "party-b-signature",
+  "type": "single",
+  "layout": "side-by-side",
+  // ... rest of block
+}
+```
+
+### Attorney Signature
+```json
+{
+  "party": {
+    "role": "attorney",
+    "label": "ATTORNEY OF RECORD",
+    "fields": {
+      "name": { "required": true, "label": "Name" },
+      "registrationNumber": { "required": true, "label": "Bar No." },
+      "date": { "required": true, "label": "Date" }
+    }
+  }
+}
+```
+
+### Initial Block
+```json
+{
+  "id": "section-initials",
+  "placement": {
+    "locations": ["end-of-section"],
+    "marker": "[INITIALS_BLOCK:section-initials]"
+  },
+  "party": {
+    "role": "all-parties",
+    "label": "Initials: ___ / ___"
+  }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Marker not appearing in generated document**
+   - Check marker is properly placed in section content
+   - Verify marker syntax matches exactly
+   - Ensure section is not conditionally excluded
+
+2. **TypeScript compilation errors**
+   - Verify all required fields are present
+   - Check field types match interface definitions
+   - Use type guards for union types
+
+3. **Layout not working as expected**
+   - Confirm layout property syntax (string vs object)
+   - Check groupWith references valid block ID
+   - Verify both blocks have compatible layouts
+
+### Validation Checklist
+
+- [ ] All signature blocks have unique IDs
+- [ ] Markers match block IDs
+- [ ] Required fields are marked appropriately
+- [ ] Layout options are valid
+- [ ] Party roles are consistent
+- [ ] Field labels are clear and professional
+
+## Future Enhancements
+
+- Support for digital signature integration
+- Multi-page signature blocks
+- Conditional signature requirements
+- Signature block templates/inheritance
+- Custom validation rules per field
