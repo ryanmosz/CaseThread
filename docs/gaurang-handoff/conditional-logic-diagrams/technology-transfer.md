@@ -29,12 +29,12 @@ flowchart TD
     OptionalFields --> RoyaltyCheck{royalty_rate > 0?}
     
     RoyaltyCheck -->|true| DetailedRoyalty[Include detailed<br/>royalty provisions]
-    RoyaltyCheck -->|false| MinimalRoyalty[Minimal royalty<br/>section (paid-up)]
+    RoyaltyCheck -->|false| MinimalRoyalty[Minimal royalty<br/>section - paid-up]
     
     DetailedRoyalty --> Generate[Generate Agreement<br/>with selected sections]
     MinimalRoyalty --> Generate
     
-    Generate --> ComplexSigning[Provider & Recipient Sign<br/>Initial blocks on:<br/>- Tech transfer<br/>- Financial terms<br/>- IP provisions<br/>- Export (if applicable)]
+    Generate --> ComplexSigning[Provider & Recipient Sign<br/>Initial blocks on:<br/>- Tech transfer<br/>- Financial terms<br/>- IP provisions<br/>- Export if applicable]
     
     ComplexSigning --> End([Agreement Complete])
     

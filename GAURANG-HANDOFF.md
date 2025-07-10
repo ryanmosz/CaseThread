@@ -1,4 +1,16 @@
-# 📋 Developer G - GUI Implementation Guide
+# CaseThread - Developer Handoff for GAURANG
+
+## 🎨 Visual Diagrams - PNG Images Available!
+
+The conditional logic diagrams are available as **PNG image files** in `docs/gaurang-handoff/conditional-logic-diagrams/`:
+
+- Just open them like any regular image - no special tools needed!
+- 8 PNG files showing conditional logic for each template
+- Ordered from simplest to most complex
+
+**Note for AI Assistants**: The source Mermaid diagrams (`.md` files) are the authoritative truth - PNGs are generated from these for human viewing.
+
+## 📋 Developer G - GUI Implementation Guide
 
 ## Overview
 
@@ -105,10 +117,10 @@ Frontend validation needed for:
 - Date relationships (e.g., first_use_date <= first_use_commerce_date)
 - Format validation (USPTO numbers, patent numbers)
 
-## Quick Start Checklist
+## 📋 Quick Start Checklist
 
 1. [ ] Read `docs/templates/gui-field-requirements.md` thoroughly
-2. [ ] Review the visual diagrams in `docs/gaurang-handoff/conditional-logic-diagrams/`
+2. [ ] Review the PNG images in `docs/gaurang-handoff/conditional-logic-diagrams/`
 3. [ ] Start with simplest template (cease-and-desist) as shown in diagrams
 4. [ ] Review the quick reference tables for conditional logic
 5. [ ] Check each template's JSON file for the complete field list
@@ -163,4 +175,4 @@ If something is unclear after reading the GUI field requirements document:
 
 ---
 
-**Remember**: The `docs/templates/gui-field-requirements.md` file is your comprehensive reference. It was specifically created to answer all questions about field behavior, validation, and conditional logic for the GUI implementation. 
+**Remember**: The `docs/templates/gui-field-requirements.md` file is your comprehensive reference. It was specifically created to answer all questions about field behavior, validation, and conditional logic for the GUI implementation.

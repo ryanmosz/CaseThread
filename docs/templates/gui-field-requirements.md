@@ -27,7 +27,8 @@ This document defines field behavior, validation rules, and conditional logic fo
 | provisional-patent | include_claims | claims section | = true |
 | patent-assignment | consideration_type | dollar_amount | = "monetary" |
 | nda-ip-specific | mutual | section labels change | = true/false |
-| office-action | has_amendments | amendments_text, claims_amended | = true |
+| office-action | amendment_strategy | amendments section (document) | = "amend_claims" or "amend_and_argue" |
+| office-action | interview_conducted | interview_date, interview summary section | = true |
 | patent-license | exclusivity | field_restrictions | = "field_exclusive" |
 | technology-transfer | training_required | training_details, training_support section | = true |
 | technology-transfer | export_controlled | export_control section | = true |
@@ -60,7 +61,8 @@ This document defines field behavior, validation rules, and conditional logic fo
 | provisional-patent | claims | include_claims = true | claims_text |
 | provisional-patent | drawings | has_drawings = true | drawing_descriptions |
 | patent-assignment | consideration | always | consideration_type, dollar_amount (if monetary) |
-| office-action | amendments | has_amendments = true | amendments_text |
+| office-action | amendments | amendment_strategy = "amend_claims" or "amend_and_argue" | claims_to_amend (always visible field) |
+| office-action | interview | interview_conducted = true | interview summary |
 | patent-license | royalties | royalty_rate > 0 | payment calculation details |
 | technology-transfer | training | training_required = true | training_details |
 | technology-transfer | export control | export_controlled = true | none (uses defaults) |
@@ -204,28 +206,30 @@ None - but `mutual` field changes party labels throughout
 
 ### 6. Office Action Response
 
-#### Always Visible Fields
-- **application_number** (required): USPTO application
-- **examiner_name** (required): USPTO examiner
-- **response_type** (required, select): "non_final" or "final"
-- **rejections** (required, multiselect): Types of rejections
-- **arguments** (required): Legal arguments
-- **has_amendments** (required, boolean): Triggers amendment section
-- **attorney_name** (required): Representative
-- **attorney_registration** (required): USPTO number
+**Category**: Patent Response
+**Complexity**: Medium (2 conditional sections)
 
-#### Conditional Fields
-- **amendments_text** (required if has_amendments = true): Claim changes
-- **remarks_text** (always visible but more important with amendments)
+**Always Required Fields**:
+- **application_number** (required, pattern: XX/XXX,XXX): Patent app number
+- **examiner_name** (required): USPTO examiner name
+- **art_unit** (required, pattern: XXXX): 4-digit art unit
+- **office_action_date** (required, date): When office action was mailed
+- **rejection_types** (required, multiselect): Types of rejections received
+- **amendment_strategy** (required, select): Response approach
+- **claims_rejected** (required): Which claims were rejected
+- **attorney_name** (required): Responding attorney
+- **attorney_registration** (required, pattern): USPTO reg number
 
-#### Validation Rules
-- application_number: valid USPTO format
-- attorney_registration: valid USPTO format
+**Conditional Fields**:
+- **interview_date** (required if interview_conducted = true): Date of examiner interview
 
-#### Special Behaviors
-- Attorney signature includes USPTO registration
-- Amendments section only if changes made
-- Different strategies for final vs non-final
+**Always Optional Fields**:
+- **claims_to_amend** (optional): Description of claim amendments
+- **prior_art_references** (optional): List of cited references
+
+**Conditional Sections**:
+1. **Amendments Section**: Shown when amendment_strategy = "amend_claims" or "amend_and_argue"
+2. **Interview Summary**: Shown when interview_conducted = true
 
 ### 7. Patent License Agreement
 

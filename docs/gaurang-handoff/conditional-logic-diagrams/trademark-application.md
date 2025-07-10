@@ -21,7 +21,7 @@ flowchart TD
     NoSpecimenSection --> AttorneyFields
     
     AttorneyFields --> Generate[Generate Application]
-    Generate --> AttorneySign[Attorney Signature Only<br/>(Applicant doesn't sign)]
+    Generate --> AttorneySign[Attorney Signature Only<br/>Applicant does not sign]
     AttorneySign --> End([Application Complete])
     
     style Start fill:#e1f5e1

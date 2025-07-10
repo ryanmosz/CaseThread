@@ -19,7 +19,7 @@ flowchart TD
     ValidateField --> CheckRoyalty
     
     CheckRoyalty -->|true| IncludeRoyaltySection[Include detailed<br/>royalty section<br/>in document]
-    CheckRoyalty -->|false| NoRoyaltySection[Minimal royalty<br/>section (0%)]
+    CheckRoyalty -->|false| NoRoyaltySection[Minimal royalty<br/>section - 0% rate]
     
     IncludeRoyaltySection --> Generate[Generate Agreement]
     NoRoyaltySection --> Generate

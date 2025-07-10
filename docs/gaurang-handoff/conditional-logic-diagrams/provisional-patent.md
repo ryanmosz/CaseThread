@@ -23,13 +23,13 @@ flowchart TD
     ShowDrawings --> IncludeDrawings[Include Drawings<br/>section in document]
     HideDrawings --> NoDrawings[Exclude Drawings<br/>section from document]
     
-    IncludeClaims --> OptionalDate[Optional: first_invented_date<br/>(always visible)]
+    IncludeClaims --> OptionalDate[Optional: first_invented_date<br/>Always visible]
     NoClaims --> OptionalDate
     IncludeDrawings --> OptionalDate
     NoDrawings --> OptionalDate
     
     OptionalDate --> Generate[Generate Application]
-    Generate --> Signatures[Inventor Signature(s)<br/>Witness Optional]
+    Generate --> Signatures[Inventor Signatures<br/>Witness Optional]
     Signatures --> End([Application Complete])
     
     style Start fill:#e1f5e1
