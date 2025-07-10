@@ -82,6 +82,10 @@ export interface ElectronAPI {
       cliOutput: string;
       errors: string; 
       documentContent: string;
+      savedFilePath: string;
+      folderPath: string;
+      folderName: string;
+      formDataPath: string;
     }; 
     error?: string 
   }>;
