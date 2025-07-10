@@ -7,7 +7,7 @@
 **UPDATE**: We are now working from the **Developer R Tasks List** as defined in the collaborative development plan.
 
 I need a detailed development plan for a specific parent task from the Developer R implementation plan. The full project context is available in:
-- **docs/planning/developer-r-tasks.md** - Developer R's specific task assignments (PRIMARY REFERENCE)
+- **docs/tasks/complete/developer-r-tasks.md** - Developer R's specific task assignments (PRIMARY REFERENCE)
 - **docs/planning/MFD-roadmap.md** - Overall developer task breakdown and timeline
 - **docs/architecture/tech-stack.md** - IMMUTABLE tech stack (never change these technologies)
 - **AGENT-HANDOFF.md** - Current project state
@@ -24,9 +24,10 @@ I need a detailed development plan for a specific parent task from the Developer
 
 **CaseThread Specific Context**:
 - All development happens inside Docker container
-- CLI tool using Multi-agent architecture with ChromaDB integration
+- CLI tool with completed multi-agent architecture and vector search integration
 - Key inputs: Template JSON, Explanation markdown, YAML scenario files
 - Output: Generated legal documents via OpenAI API
+- Current focus: Adding PDF export capability with legal formatting
 
 ## Using Internal Documentation
 
@@ -36,7 +37,7 @@ I need a detailed development plan for a specific parent task from the Developer
 - Code examples and best practices for each technology
 - Version-specific information matching our dependencies
 
-**Note**: For CaseThread, the relevant docs are TypeScript, Jest, Commander.js. LangGraph and n8n references can be ignored for this project.
+**Note**: For CaseThread, the relevant docs are TypeScript, Jest, Commander.js, and PDFKit for PDF generation.
 
 **Always prefer internal documentation over web searches** - it's faster, more accurate, and version-matched to our project.
 
@@ -145,6 +146,7 @@ Generate a comprehensive development plan for the parent task shown at the botto
 - Run all tests inside Docker container: `docker exec casethread-dev npm test`
 - Mock OpenAI API responses for unit tests
 - Test template loading and YAML parsing thoroughly
+- PDF generation tests should verify formatting and layout
 
 ### Example Test Implementation:
 ```typescript
