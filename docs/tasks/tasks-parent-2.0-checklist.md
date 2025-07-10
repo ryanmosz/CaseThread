@@ -14,9 +14,9 @@
 
 ### Core PDF Generation
 - [ ] 2.2 Create Base PDF Generator Class (Details: tasks-parent-2.2-detailed.md)
-  - [ ] 2.2.1 Create LegalPDFGenerator class structure
-  - [ ] 2.2.2 Implement basic document creation
-  - [ ] 2.2.3 Add text writing methods
+  - [x] 2.2.1 Create LegalPDFGenerator class structure
+  - [x] 2.2.2 Implement basic document creation
+  - [x] 2.2.3 Add text writing methods
   - [ ] 2.2.4 Implement page management
   - [ ] 2.2.5 Add page numbering
 
@@ -89,6 +89,13 @@ Before marking complete, verify:
 - [ ] Check print preview for margins/formatting
 - [ ] Test with documents of various lengths
 - [ ] Verify signature blocks don't split pages
+
+## Relevant Files
+
+- `src/types/pdf.ts` - TypeScript interfaces for PDF generation
+- `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (with text writing methods)
+- `__tests__/services/pdf/LegalPDFGenerator.test.ts` - Unit tests for PDF generator (15 tests)
+- `__tests__/services/pdf/pdfkit-setup.test.ts` - PDFKit setup validation tests (3 tests)
 
 ## Notes
 
