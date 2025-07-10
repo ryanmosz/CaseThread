@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # CaseThread CLI Demo Test Script - Shows real-time output for all 8 document types
-# Demo-friendly version with live output display
+# Demo-friendly version with live output display and stage timing
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -53,7 +53,63 @@ mkdir -p "$OUTPUT_DIR"
 sleep 1
 echo ""
 
-# Function to run a test with live output
+# Function to parse timing from logs
+parse_timing() {
+    local log_file=$1
+    
+    if [ -f "$log_file" ]; then
+        # Extract stage timings using the new format
+        local startup_time=$(grep -oE "Stage: Startup & Validation - [0-9]+ms" "$log_file" 2>/dev/null | grep -oE "[0-9]+" | tail -1)
+        local context_time=$(grep -oE "Stage: Context Search - [0-9]+ms" "$log_file" 2>/dev/null | grep -oE "[0-9]+" | tail -1)
+        local drafting_time=$(grep -oE "Stage: Document Generation - [0-9]+ms" "$log_file" 2>/dev/null | grep -oE "[0-9]+" | tail -1)
+        local saving_time=$(grep -oE "Stage: Saving Document - [0-9]+ms" "$log_file" 2>/dev/null | grep -oE "[0-9]+" | tail -1)
+        
+        # Extract timing summary line
+        local timing_summary=$(grep "📊 Timing Summary:" "$log_file" 2>/dev/null | tail -1)
+        
+        # Extract agent execution info
+        local agents_executed=$(grep -oE "Agents executed: [^\\n]+" "$log_file" 2>/dev/null | tail -1)
+        
+        # Extract total generation time
+        local total_time=$(grep -oE "Generation time: [0-9]+ seconds" "$log_file" 2>/dev/null | grep -oE "[0-9]+" | tail -1)
+        
+        # Display timing breakdown if available
+        if [ -n "$startup_time" ] || [ -n "$context_time" ] || [ -n "$drafting_time" ] || [ -n "$timing_summary" ]; then
+            echo ""
+            echo -e "${BLUE}⏱️  Detailed Timing Breakdown:${NC}"
+            
+            if [ -n "$startup_time" ]; then
+                echo -e "  • ${YELLOW}Startup & Validation:${NC} ${startup_time}ms"
+            fi
+            
+            if [ -n "$context_time" ]; then
+                echo -e "  • ${YELLOW}Context Search (ChromaDB):${NC} ${context_time}ms"
+            fi
+            
+            if [ -n "$drafting_time" ]; then
+                echo -e "  • ${YELLOW}Document Generation (AI):${NC} ${drafting_time}ms"
+            fi
+            
+            if [ -n "$saving_time" ]; then
+                echo -e "  • ${YELLOW}Saving Document:${NC} ${saving_time}ms"
+            fi
+            
+            if [ -n "$timing_summary" ]; then
+                echo -e "  • ${CYAN}$timing_summary${NC}"
+            fi
+            
+            if [ -n "$total_time" ]; then
+                echo -e "  • ${BOLD}Total Time: ${total_time}s${NC}"
+            fi
+            
+            if [ -n "$agents_executed" ]; then
+                echo -e "  • $agents_executed"
+            fi
+        fi
+    fi
+}
+
+# Function to run a test with live output and timing
 run_test_demo() {
     local doc_type=$1
     local input_file=$2
@@ -79,15 +135,18 @@ run_test_demo() {
     # Track timing
     local start_time=$(date +%s)
     
-    # Run command and capture output
-    # Remove -t flag to avoid TTY issues with tee
-    if docker exec casethread-dev npm run cli -- generate "$doc_type" "$input_file" --output "$OUTPUT_DIR" 2>&1 | tee "$OUTPUT_DIR/$doc_type.log"; then
+    # Run command with debug flag to get more timing info
+    local log_file="$OUTPUT_DIR/$doc_type.log"
+    if docker exec casethread-dev npm run cli -- generate "$doc_type" "$input_file" --output "$OUTPUT_DIR" --debug 2>&1 | tee "$log_file"; then
         local end_time=$(date +%s)
         local duration=$((end_time - start_time))
         TOTAL_TIME=$((TOTAL_TIME + duration))
         
         echo ""
-        echo -e "${GREEN}✅ SUCCESS!${NC} Generated in ${BOLD}${duration}s${NC}"
+        echo -e "${GREEN}✅ SUCCESS!${NC}"
+        
+        # Parse and display timing information
+        parse_timing "$log_file"
         
         # Show a preview of the generated document
         echo ""
@@ -107,6 +166,13 @@ run_test_demo() {
         if [ -n "$generated_file" ] && [ -f "$generated_file" ]; then
             head -n 10 "$generated_file" 2>/dev/null | sed 's/^/  /'
             echo "  ..."
+            
+            # Check for signature markers
+            local sig_count=$(grep -c "SIGNATURE_BLOCK\|INITIALS_BLOCK\|NOTARY_BLOCK" "$generated_file" 2>/dev/null || echo "0")
+            if [ "$sig_count" -gt 0 ]; then
+                echo -e "  ${GREEN}✓ Contains $sig_count signature/initial markers${NC}"
+            fi
+            
             echo -e "  ${CYAN}Full document saved to: $(basename "$generated_file")${NC}"
         else
             echo -e "  ${YELLOW}Document preview not available immediately${NC}"
