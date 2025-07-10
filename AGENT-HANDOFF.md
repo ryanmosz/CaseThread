@@ -110,4 +110,16 @@
   - Easy to update when switching tasks
   - All changeable content in one section at top
   - Task-agnostic process preserved below
-  - Reduced from 236 to 229 lines while improving clarity 
+  - Reduced from 236 to 229 lines while improving clarity
+
+### Critical Files Guide Created
+- **New documentation**: `docs/devops/critical-files-guide.md` (218 lines)
+- **Comprehensive guide covering**:
+  - Purpose and usage of AGENT-HANDOFF.md
+  - Purpose and usage of prompt.md
+  - Purpose and usage of plan-parent.md
+  - Detailed archival workflow for all three files
+  - Best practices and benefits
+  - Quick reference table
+- **Key insight**: These three files represent the institutional memory of the project
+- **Updated**: documentation-organization-guide.md to reference new guide 

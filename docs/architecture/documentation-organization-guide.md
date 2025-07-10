@@ -115,10 +115,12 @@ Place here:
 - Deployment guides
 - Docker documentation
 - Production operation guides
+- Development practice guides
 
 Examples:
 - `git-workflow.md`
 - `docker-setup.md`
+- `critical-files-guide.md` - Guide to AGENT-HANDOFF, prompt.md, and plan-parent.md
 
 ### 6. `/templates/`
 **Purpose:** Legal document templates and examples
