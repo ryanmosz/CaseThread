@@ -308,8 +308,20 @@ const App: React.FC = () => {
           <main className="flex-1 flex overflow-hidden">
             {/* Left Pane - Document Browser */}
             <div className="w-80 bg-card border-r border-divider flex flex-col">
-              <div className="px-4 py-3 border-b border-divider">
-                <h2 className="text-lg font-semibold text-foreground">Documents</h2>
+              <div className="px-6 py-4 border-b border-divider bg-gradient-to-r from-background to-background/50 backdrop-blur-sm">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground tracking-tight">Documents</h2>
+                    <p className="text-xs text-foreground/60 mt-0.5">Browse your legal documents</p>
+                  </div>
+                </div>
               </div>
               <div className="flex-1 overflow-hidden">
                 <DocumentBrowser
@@ -321,24 +333,31 @@ const App: React.FC = () => {
 
             {/* Middle Pane - Document Viewer */}
             <div className="flex-1 bg-card flex flex-col">
-              <div className="px-6 py-3 border-b border-divider">
-                <h2 className="text-lg font-semibold text-foreground">Document Viewer</h2>
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <DocumentViewer
-                  content={state.selectedDocument}
-                  isLoading={state.isLoading}
-                  error={state.error}
-                  documentType={state.selectedTemplate?.name}
-                  generatedAt={new Date().toISOString()}
-                />
-              </div>
+              <DocumentViewer
+                content={state.selectedDocument}
+                isLoading={state.isLoading}
+                error={state.error}
+                documentType={state.selectedTemplate?.name}
+                generatedAt={new Date().toISOString()}
+              />
             </div>
 
             {/* Right Pane - Template Selector */}
             <div className="w-80 bg-card border-l border-divider flex flex-col">
-              <div className="px-4 py-3 border-b border-divider">
-                <h2 className="text-lg font-semibold text-foreground">Templates</h2>
+              <div className="px-6 py-4 border-b border-divider bg-gradient-to-r from-background to-background/50 backdrop-blur-sm">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground tracking-tight">Templates</h2>
+                    <p className="text-xs text-foreground/60 mt-0.5">Generate new documents</p>
+                  </div>
+                </div>
               </div>
               <div className="flex-1 overflow-hidden">
                 <TemplateSelector

@@ -42,6 +42,31 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Inject custom scrollbar styles
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        transition: background 0.2s ease;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   const handleTemplateClick = (template: Template) => {
     console.log('Template clicked:', template.id);
     onTemplateSelect(template);
@@ -302,9 +327,19 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   if (templates.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
-        <p>No templates found</p>
-        <p className="text-xs mt-1">Check your templates directory</p>
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+        <div className="w-16 h-16 mb-6 bg-primary/10 rounded-full flex items-center justify-center">
+          <svg className="w-8 h-8 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-2">No Templates Found</h3>
+        <p className="text-sm text-foreground/60 mb-4 max-w-xs">
+          Templates will appear here once available
+        </p>
+        <div className="text-xs text-foreground/40 bg-foreground/5 px-3 py-1 rounded-md">
+          Check templates directory
+        </div>
       </div>
     );
   }
@@ -316,28 +351,42 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           {templates.map((template) => (
             <div
               key={template.id}
-              className="cursor-pointer"
+              className="cursor-pointer group"
               onClick={() => handleTemplateClick(template)}
             >
               <Card 
-                className={`transition-colors hover:shadow-md ${
+                className={`transition-all duration-200 hover:shadow-lg border ${
                   selectedTemplate?.id === template.id 
-                    ? 'ring-2 ring-primary bg-primary-50' 
-                    : 'hover:bg-gray-50'
+                    ? 'border-primary bg-primary/5 shadow-md' 
+                    : 'border-divider hover:border-primary/30 hover:bg-foreground/5'
                 }`}
               >
                 <CardBody className="p-4">
-                  <h3 className="font-semibold text-sm mb-1">{template.name}</h3>
-                  <p className="text-xs text-gray-600 mb-2">{template.description}</p>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-sm text-foreground mb-1 group-hover:text-primary transition-colors">
+                        {template.name}
+                      </h3>
+                      <p className="text-xs text-foreground/60 leading-relaxed">{template.description}</p>
+                    </div>
+                    <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
                       {template.metadata.category}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-foreground/50 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
                         {template.requiredFields?.length || 0} fields
                       </span>
-                      <span className="text-xs text-orange-600">
+                      <span className="text-xs text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full font-medium">
                         {template.complexity}
                       </span>
                     </div>
@@ -399,20 +448,34 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
               </ModalBody>
               <ModalFooter className="flex justify-end gap-3 py-4 px-6">
                 <Button 
-                  variant="light" 
+                  variant="flat" 
                   onPress={onClose}
                   isDisabled={isGenerating}
                   size="md"
+                  className="bg-foreground/5 hover:bg-foreground/10 transition-colors border border-divider/50 hover:border-divider px-6"
+                  startContent={
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  }
                 >
                   Cancel
                 </Button>
                 <Button 
-                  color="secondary" 
+                  color="primary" 
+                  variant="solid"
                   onPress={handleGenerate}
                   isDisabled={isGenerating || !selectedTemplate}
                   isLoading={isGenerating}
                   size="md"
-                  className="min-w-[140px]"
+                  className="bg-primary hover:bg-primary/90 text-white px-6 font-medium transition-colors min-w-[160px]"
+                  startContent={
+                    !isGenerating ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    ) : undefined
+                  }
                 >
                   {isGenerating ? 'Generating...' : 'Generate Document'}
                 </Button>
