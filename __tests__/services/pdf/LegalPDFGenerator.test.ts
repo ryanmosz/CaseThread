@@ -327,4 +327,176 @@ describe('LegalPDFGenerator', () => {
       expect(stats.size).toBeGreaterThan(1000); // Should have substantial content
     });
   });
+
+  describe('Page Management', () => {
+    it('should track current page number', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      expect(generator.getCurrentPage()).toBe(1);
+      
+      await generator.start();
+      generator.newPage();
+      
+      expect(generator.getCurrentPage()).toBe(2);
+      
+      await generator.finalize();
+    });
+
+    it('should add new pages with newPage()', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      generator
+        .writeText('Page 1 content')
+        .newPage()
+        .writeText('Page 2 content')
+        .newPage()
+        .writeText('Page 3 content');
+      
+      expect(generator.getCurrentPage()).toBe(3);
+      
+      await generator.finalize();
+    });
+
+    it('should track vertical position', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      const initialY = generator.getCurrentY();
+      expect(initialY).toBeGreaterThan(0);
+      
+      generator.writeParagraph('Test paragraph');
+      
+      const afterParagraphY = generator.getCurrentY();
+      expect(afterParagraphY).toBeGreaterThan(initialY);
+      
+      await generator.finalize();
+    });
+
+    it('should calculate remaining space on page', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      const initialSpace = generator.getRemainingSpace();
+      const pageDimensions = generator.getPageDimensions();
+      
+      // Should have most of the page available initially
+      expect(initialSpace).toBeLessThan(pageDimensions.height);
+      expect(initialSpace).toBeGreaterThan(pageDimensions.height * 0.7);
+      
+      // Write content to reduce space
+      generator.writeParagraph('Test content');
+      
+      const remainingSpace = generator.getRemainingSpace();
+      expect(remainingSpace).toBeLessThan(initialSpace);
+      
+      await generator.finalize();
+    });
+
+    it('should check if space is available', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      // Should have space for small content
+      expect(generator.hasSpaceFor(100)).toBe(true);
+      
+      // Should not have space for entire page
+      const pageDimensions = generator.getPageDimensions();
+      expect(generator.hasSpaceFor(pageDimensions.height)).toBe(false);
+      
+      await generator.finalize();
+    });
+
+    it('should ensure space and add page if needed', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      // Fill most of the page
+      const pageHeight = generator.getPageDimensions().height;
+      const margins = generator.getPageConfig().margins;
+      
+      // Move to near bottom of page
+      generator.moveTo(pageHeight - margins.bottom - 50);
+      
+      expect(generator.getCurrentPage()).toBe(1);
+      
+      // Request more space than available
+      generator.ensureSpace(100);
+      
+      // Should have added a new page
+      expect(generator.getCurrentPage()).toBe(2);
+      
+      await generator.finalize();
+    });
+
+    it('should move to specific position', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      const targetY = 200;
+      generator.moveTo(targetY);
+      
+      expect(generator.getCurrentY()).toBe(targetY);
+      
+      await generator.finalize();
+    });
+
+    it('should get page dimensions', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      const dimensions = generator.getPageDimensions();
+      
+      // Letter size: 8.5" x 11" = 612 x 792 points
+      expect(dimensions.width).toBe(612);
+      expect(dimensions.height).toBe(792);
+      
+      await generator.finalize();
+    });
+
+    it('should handle automatic page breaks', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      // Write enough content to trigger automatic page break
+      for (let i = 0; i < 50; i++) {
+        generator.writeParagraph(`This is paragraph ${i + 1}. It contains enough text to eventually fill the page and trigger an automatic page break.`);
+      }
+      
+      // Should have created multiple pages
+      expect(generator.getCurrentPage()).toBeGreaterThan(1);
+      
+      await generator.finalize();
+      
+      // Verify file was created
+      await new Promise(resolve => setTimeout(resolve, 100));
+      expect(fs.existsSync(testFile)).toBe(true);
+    });
+  });
 }); 

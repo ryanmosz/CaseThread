@@ -5,7 +5,8 @@ You are an expert software engineer working in the Cursor editor, specializing i
 ## 🎯 CURRENT TASK CONTEXT
 <!-- UPDATE THIS SECTION FOR EACH NEW TASK -->
 **Current Task**: Task 2.0 - Create Core PDF Generation Service with Legal Formatting  
-**Branch**: R (Developer R) or feature branches off R  
+**Branch**: feature/pdf-generation
+**Progress**: Task 2.2.4 completed (4/5 sub-tasks of 2.2 done)  
 
 ### Task Resources
 - **PRD**: `docs/tasks/prd-parent-task-2.0.md`

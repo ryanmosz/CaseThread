@@ -58,6 +58,12 @@ export class LegalPDFGenerator {
       }
     });
 
+    // Track page changes
+    this.doc.on('pageAdded', () => {
+      this.currentPage++;
+      this.logger.debug('New page added', { pageNumber: this.currentPage });
+    });
+
     this.logger.debug('PDF document initialized', {
       outputPath,
       pageConfig: this.pageConfig,
@@ -281,6 +287,77 @@ export class LegalPDFGenerator {
    */
   public addSpace(lines: number = 1): this {
     this.doc.moveDown(lines);
+    return this;
+  }
+
+  /**
+   * Add a new page to the document
+   * @returns This instance for method chaining
+   */
+  public newPage(): this {
+    this.doc.addPage();
+    return this;
+  }
+
+  /**
+   * Get current vertical position on the page
+   * @returns Current Y position in points
+   */
+  public getCurrentY(): number {
+    return this.doc.y;
+  }
+
+  /**
+   * Get remaining space on current page
+   * @returns Remaining vertical space in points
+   */
+  public getRemainingSpace(): number {
+    const pageHeight = this.doc.page.height;
+    const bottomMargin = this.pageConfig.margins.bottom;
+    const currentY = this.doc.y;
+    
+    return pageHeight - bottomMargin - currentY;
+  }
+
+  /**
+   * Check if there's enough space for content
+   * @param requiredSpace - Space needed in points
+   * @returns True if space is available on current page
+   */
+  public hasSpaceFor(requiredSpace: number): boolean {
+    return this.getRemainingSpace() >= requiredSpace;
+  }
+
+  /**
+   * Add new page if not enough space
+   * @param requiredSpace - Space needed in points
+   * @returns This instance for method chaining
+   */
+  public ensureSpace(requiredSpace: number): this {
+    if (!this.hasSpaceFor(requiredSpace)) {
+      this.newPage();
+    }
+    return this;
+  }
+
+  /**
+   * Get current page dimensions
+   * @returns Object with width and height in points
+   */
+  public getPageDimensions(): { width: number; height: number } {
+    return {
+      width: this.doc.page.width,
+      height: this.doc.page.height
+    };
+  }
+
+  /**
+   * Move to specific vertical position
+   * @param y - Y position in points
+   * @returns This instance for method chaining
+   */
+  public moveTo(y: number): this {
+    this.doc.y = y;
     return this;
   }
 } 

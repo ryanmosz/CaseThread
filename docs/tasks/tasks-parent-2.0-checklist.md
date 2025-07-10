@@ -17,7 +17,7 @@
   - [x] 2.2.1 Create LegalPDFGenerator class structure
   - [x] 2.2.2 Implement basic document creation
   - [x] 2.2.3 Add text writing methods
-  - [ ] 2.2.4 Implement page management
+  - [x] 2.2.4 Implement page management
   - [ ] 2.2.5 Add page numbering
 
 ### Document Formatting
@@ -93,8 +93,8 @@ Before marking complete, verify:
 ## Relevant Files
 
 - `src/types/pdf.ts` - TypeScript interfaces for PDF generation
-- `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (with text writing methods)
-- `__tests__/services/pdf/LegalPDFGenerator.test.ts` - Unit tests for PDF generator (15 tests)
+- `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (with text writing and page management)
+- `__tests__/services/pdf/LegalPDFGenerator.test.ts` - Unit tests for PDF generator (24 tests)
 - `__tests__/services/pdf/pdfkit-setup.test.ts` - PDFKit setup validation tests (3 tests)
 
 ## Notes
