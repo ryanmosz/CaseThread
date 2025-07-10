@@ -183,6 +183,35 @@ All tests passing:
 3. Update checklist after each subtask
 4. Run full test suite after each template update 
 
+## Important Architectural Decisions
+
+### Electronic vs Physical Signatures (2025-01-08)
+
+**Decision**: All templates use traditional signature blocks only. No electronic signature formats.
+
+**Background**: 
+- Discovered that Trademark Application had TEAS electronic format `/name/`
+- Initially added redundant signature blocks alongside existing signature text
+- Realized this created confusion and duplication
+
+**Resolution**:
+1. Removed all electronic signature formats (like `/name/`)
+2. Removed redundant signature text (By:, Name:, etc.)
+3. Use only signature block markers
+4. PDF generator will render traditional signature areas
+
+**Rationale**:
+- Electronic signatures are typed into filing systems, not PDFs
+- PDFs are for review and physical signing
+- Simplifies implementation without losing functionality
+- Users filing electronically will copy content into web forms
+
+**Impact**:
+- Cleaned up Cease & Desist Letter (removed placeholders)
+- Fixed NDA IP Specific (removed redundant lines)
+- Revised Trademark Application (removed TEAS format)
+- Future templates will follow this pattern
+
 ## Templates Updated So Far
 1. ✅ Patent Assignment Agreement - Done (complex with witness/notary)
 2. ✅ Trademark Application - Done (single attorney signature)

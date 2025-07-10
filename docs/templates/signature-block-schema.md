@@ -553,3 +553,45 @@ When adding signature blocks to a new document type:
 - PDF generation reads markers and renders signature areas
 - Backward compatibility is maintained - templates without signature blocks continue to work
 - The schema is extensible for future requirements (e.g., digital signatures)
+
+## Electronic vs Physical Signatures Decision
+
+### Background
+During implementation, we discovered that some document types (particularly the Trademark Application) have different signature requirements based on their filing method:
+- **Electronic filing (TEAS)**: Uses `/Name/` format typed directly into web forms
+- **Physical filing**: Requires traditional handwritten signatures
+
+### Decision
+For the CaseThread MVP, we will:
+1. **Use traditional signature blocks only** in all templates
+2. **Generate PDFs optimized for printing and physical signatures**
+3. **Not attempt to generate electronic signature formats**
+
+### Rationale
+1. **Electronic signatures are system-specific**: The `/Name/` format is only valid when typed directly into the USPTO TEAS system, not in PDFs
+2. **Users need reviewable documents**: Even when filing electronically, attorneys need PDFs to review and get client approval
+3. **Simplicity**: One format per document type reduces complexity without limiting functionality
+4. **Real-world workflow**: When filing electronically, users will:
+   - Generate PDF from CaseThread
+   - Review and approve content
+   - Copy relevant information into electronic filing systems
+   - Type electronic signatures directly in those systems
+
+### Implementation Notes
+- All signature blocks use traditional format with signature lines
+- The PDF generator should render these as professional signature areas
+- No special handling needed for different filing methods
+- Future versions could add electronic filing integration if needed
+
+### Example Impact
+The Trademark Application template originally included:
+```
+SIGNATURE: /{{attorney_name}}/
+```
+
+This has been replaced with:
+```
+[SIGNATURE_BLOCK:attorney-signature]
+```
+
+Which will render as a traditional signature block in the PDF.

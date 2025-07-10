@@ -103,70 +103,37 @@ The generated trademark application follows this structure:
    - Electronic filing through TEAS has specific formatting requirements
    - Current template already has attorney fields which can serve dual purpose
 
-### 6.3.2 Implement blocks and test
+### 6.3.2 Implementation Results
 
-**Implementation Steps:**
+**Completed 2025-01-08**
 
-1. **Update trademark-application.json:**
-   ```json
-   {
-     "id": "trademark-application",
-     "name": "Trademark Application",
-     "description": "...",
-     "sections": [...],
-     "signatureBlocks": [
-       {
-         "id": "applicant-signature",
-         "type": "single",
-         "placement": {
-           "location": "after-declaration",
-           "marker": "[SIGNATURE_BLOCK:applicant-signature]"
-         },
-         "party": {
-           "role": "applicant",
-           "label": "APPLICANT/AUTHORIZED SIGNATORY",
-           "fields": {
-             "name": { "required": true, "label": "Name" },
-             "title": { 
-               "required": false, 
-               "label": "Title (if signing for entity)" 
-             },
-             "date": { "required": true, "label": "Date" }
-           }
-         }
-       }
-     ]
-   }
-   ```
+Initially implemented with TEAS electronic signature format `/{{attorney_name}}/` but later revised based on architectural decision.
 
-2. **Verify no initial blocks needed:**
-   - Trademark applications typically don't require initials
-   - Keep template focused on essential requirements
+**Key Decision: Electronic vs Physical Signatures**
 
-3. **Test template loading:**
-   ```bash
-   docker exec casethread-dev npm test -- __tests__/services/template.test.ts
-   ```
+After implementation review, we made a critical architectural decision:
+- **Remove electronic signature formats** from all templates
+- **Use traditional signature blocks only**
+- **Generate PDFs for physical signing**
 
-4. **Test document generation with marker:**
-   ```bash
-   docker exec casethread-dev npm run cli -- generate trademark-application docs/testing/scenario-inputs/rtp-02-trademark-application.yaml
-   ```
+**Rationale:**
+1. Electronic signatures like `/name/` are only valid when typed into filing systems
+2. PDFs need traditional signature blocks for printing and signing
+3. Users filing electronically will copy content into web forms anyway
+4. Simplifies implementation without losing functionality
 
-5. **Verify marker placement:**
-   - Check that `[SIGNATURE_BLOCK:applicant-signature]` appears after declaration
-   - Ensure marker doesn't interrupt declaration text
-   - Verify document flow remains logical
+**Final Implementation:**
+- Removed TEAS `/name/` format and redundant fields
+- Single signature block for attorney
+- Marker: `[SIGNATURE_BLOCK:attorney-signature]`
+- Fields: name, email, date (all required)
+- Label: "ATTORNEY OF RECORD"
 
-6. **Test with different applicant types:**
-   - Individual applicant (no title needed)
-   - Corporate applicant (title required)
-   - Verify appropriate fields are handled
+This decision impacts only the Trademark Application template. All other templates already use or will use traditional signature formats.
 
-7. **Run full test suite:**
-   ```bash
-   docker exec casethread-dev npm test
-   ```
+## Summary
+
+The Trademark Application template now uses a clean, traditional signature block approach consistent with all other document types. The generated PDFs will have proper signature areas for physical signing, and users filing electronically will copy the relevant content into the TEAS system where they'll type the `/name/` format directly.
 
 ## Testing Approach
 

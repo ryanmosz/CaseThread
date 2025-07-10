@@ -166,7 +166,7 @@
       "title": "Signatures",
       "order": 9,
       "required": true,
-      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\n{{#if mutual}}FIRST PARTY:{{else}}DISCLOSING PARTY:{{/if}}\n\n{{disclosing_party}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\n[SIGNATURE_BLOCK:first-party-signature]\n\n{{#if mutual}}SECOND PARTY:{{else}}RECEIVING PARTY:{{/if}}\n\n{{receiving_party}}\n\nBy: _____________________________\nName:\nTitle:\nDate:\n\n[SIGNATURE_BLOCK:second-party-signature]",
+      "content": "IN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\n{{#if mutual}}FIRST PARTY:{{else}}DISCLOSING PARTY:{{/if}}\n\n{{disclosing_party}}\n\n[SIGNATURE_BLOCK:first-party-signature]\n\n{{#if mutual}}SECOND PARTY:{{else}}RECEIVING PARTY:{{/if}}\n\n{{receiving_party}}\n\n[SIGNATURE_BLOCK:second-party-signature]",
       "firmCustomizable": false
     }
   ],
