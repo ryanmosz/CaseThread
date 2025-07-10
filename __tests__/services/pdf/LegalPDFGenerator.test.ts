@@ -499,4 +499,187 @@ describe('LegalPDFGenerator', () => {
       expect(fs.existsSync(testFile)).toBe(true);
     });
   });
+
+  describe('Page Numbering', () => {
+    it('should add page number to current page', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      generator.writeText('Page content');
+      generator.addPageNumberToCurrentPage();
+      
+      await generator.finalize();
+      
+      // Verify PDF was created
+      await new Promise(resolve => setTimeout(resolve, 100));
+      expect(fs.existsSync(testFile)).toBe(true);
+    });
+
+    it('should format page numbers as numeric by default', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      // Access private method through type assertion for testing
+      const formatPageNumber = (generator as any).formatPageNumber.bind(generator);
+      
+      const format = { format: 'numeric' as const, prefix: 'Page ' };
+      expect(formatPageNumber(1, format)).toBe('Page 1');
+      expect(formatPageNumber(10, format)).toBe('Page 10');
+      expect(formatPageNumber(999, format)).toBe('Page 999');
+    });
+
+    it('should format page numbers as roman numerals', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      const formatPageNumber = (generator as any).formatPageNumber.bind(generator);
+      
+      const format = { format: 'roman' as const };
+      expect(formatPageNumber(1, format)).toBe('i');
+      expect(formatPageNumber(4, format)).toBe('iv');
+      expect(formatPageNumber(9, format)).toBe('ix');
+      expect(formatPageNumber(40, format)).toBe('xl');
+      expect(formatPageNumber(90, format)).toBe('xc');
+      expect(formatPageNumber(400, format)).toBe('cd');
+      expect(formatPageNumber(900, format)).toBe('cm');
+    });
+
+    it('should format page numbers as alphabetic', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      const formatPageNumber = (generator as any).formatPageNumber.bind(generator);
+      
+      const format = { format: 'alpha' as const };
+      expect(formatPageNumber(1, format)).toBe('a');
+      expect(formatPageNumber(26, format)).toBe('z');
+      expect(formatPageNumber(27, format)).toBe('aa');
+      expect(formatPageNumber(28, format)).toBe('ab');
+      expect(formatPageNumber(52, format)).toBe('az');
+      expect(formatPageNumber(53, format)).toBe('ba');
+    });
+
+    it('should apply prefix and suffix to page numbers', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      const formatPageNumber = (generator as any).formatPageNumber.bind(generator);
+      
+      const format = { 
+        format: 'numeric' as const, 
+        prefix: 'Page ', 
+        suffix: ' of 100' 
+      };
+      expect(formatPageNumber(5, format)).toBe('Page 5 of 100');
+    });
+
+    it('should respect page number position configuration', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      }, {
+        pageNumbers: true,
+        pageNumberPosition: 'bottom-right'
+      });
+
+      await generator.start();
+      
+      const doc = generator.getDocument();
+      const textSpy = jest.spyOn(doc, 'text');
+      
+      generator.addPageNumberToCurrentPage();
+      
+      // Check that text was called with appropriate x position
+      expect(textSpy).toHaveBeenCalled();
+      const lastCall = textSpy.mock.calls[textSpy.mock.calls.length - 1];
+      const xPosition = lastCall[1] as number;
+      
+      // For bottom-right, x should be near the right margin
+      expect(xPosition).toBeGreaterThan(400); // Should be on right side of page
+      
+      await generator.finalize();
+    });
+
+    it('should skip page numbering when disabled', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      }, {
+        pageNumbers: false
+      });
+
+      await generator.start();
+      
+      const doc = generator.getDocument();
+      const textSpy = jest.spyOn(doc, 'text');
+      
+      generator.addPageNumberToCurrentPage();
+      
+      // Should not have added any text
+      expect(textSpy).not.toHaveBeenCalled();
+      
+      await generator.finalize();
+    });
+
+    it('should warn about page numbering limitation', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      }, {
+        pageNumbers: true
+      });
+
+      await generator.start();
+      
+      // Spy on logger
+      const warnSpy = jest.spyOn((generator as any).logger, 'warn');
+      
+      await generator.finalize();
+      
+      // Should have warned about limitation
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Page numbering is limited')
+      );
+    });
+
+    it('should create multi-page document with page numbering config', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      }, {
+        pageNumbers: true,
+        pageNumberPosition: 'bottom-center',
+        pageNumberFormat: {
+          format: 'roman',
+          prefix: '',
+          suffix: '',
+          fontSize: 12
+        }
+      });
+
+      await generator.start();
+      
+      // Create multiple pages
+      generator
+        .writeTitle('MULTI-PAGE DOCUMENT')
+        .writeParagraph('This document will have multiple pages.')
+        .newPage()
+        .writeParagraph('Page 2 content')
+        .newPage()
+        .writeParagraph('Page 3 content');
+      
+      // Check page count before finalize
+      const pageCount = generator.getCurrentPage();
+      expect(pageCount).toBe(3);
+      
+      await generator.finalize();
+      
+      // Verify file exists
+      await new Promise(resolve => setTimeout(resolve, 100));
+      expect(fs.existsSync(testFile)).toBe(true);
+    });
+  });
 }); 

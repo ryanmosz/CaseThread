@@ -3,7 +3,8 @@ import * as fs from 'fs';
 import { 
   PDFGenerationOptions, 
   PageConfig,
-  TextOptions
+  TextOptions,
+  PageNumberFormat
 } from '../../types/pdf';
 import { createChildLogger, Logger } from '../../utils/logger';
 
@@ -176,12 +177,139 @@ export class LegalPDFGenerator {
   /**
    * Add page numbers to all pages
    * Note: PDFKit doesn't support editing previous pages, so this is a placeholder
-   * for future implementation with buffering or two-pass generation
+   * for future implementation with buffering or two-pass generation in Task 2.5
    */
   private addPageNumbers(): void {
-    // This is a placeholder - PDFKit doesn't support going back to previous pages
-    // We'll implement page numbering differently in the full implementation
-    this.logger.debug('Page numbering will be implemented with buffering in Task 2.5');
+    // PDFKit limitation: Cannot edit previous pages after they're written
+    // This method currently only adds page number to the last page
+    // Full implementation requires buffering strategy (Task 2.5)
+    
+    if (this.pageConfig.pageNumbers) {
+      this.addPageNumberToCurrentPage();
+      this.logger.warn(
+        'Page numbering is limited - only last page numbered. ' +
+        'Full implementation requires buffering (Task 2.5)'
+      );
+    }
+  }
+
+  /**
+   * Add page number to the current page only
+   * This is what will be called during page creation in the buffered implementation
+   */
+  public addPageNumberToCurrentPage(): void {
+    if (!this.pageConfig.pageNumbers) {
+      return;
+    }
+
+    const format = this.pageConfig.pageNumberFormat || {
+      format: 'numeric',
+      prefix: 'Page ',
+      fontSize: 10,
+      font: 'Times-Roman'
+    };
+
+    // Save current state
+    const currentY = this.doc.y;
+
+    // Format page number
+    const pageNumberText = this.formatPageNumber(this.currentPage, format);
+
+    // Set page number font
+    this.doc.font(format.font || 'Times-Roman');
+    this.doc.fontSize(format.fontSize || 10);
+
+    // Calculate position based on configuration
+    const pageWidth = this.doc.page.width;
+    const pageHeight = this.doc.page.height;
+    const margin = 36; // 0.5 inch from bottom
+    const y = pageHeight - margin;
+
+    let x: number;
+    switch (this.pageConfig.pageNumberPosition) {
+      case 'bottom-left':
+        x = this.pageConfig.margins.left;
+        break;
+      case 'bottom-right':
+        x = pageWidth - this.pageConfig.margins.right - this.doc.widthOfString(pageNumberText);
+        break;
+      case 'bottom-center':
+      default:
+        x = (pageWidth - this.doc.widthOfString(pageNumberText)) / 2;
+        break;
+    }
+
+    // Draw page number
+    this.doc.text(pageNumberText, x, y);
+
+    // Restore state
+    this.doc.font('Times-Roman'); // Restore default font
+    this.doc.fontSize(12); // Restore default size
+    this.doc.y = currentY;
+  }
+
+  /**
+   * Format a page number according to the specified format
+   * @param pageNum - The page number to format
+   * @param format - The formatting options
+   * @returns Formatted page number string
+   */
+  private formatPageNumber(pageNum: number, format: PageNumberFormat): string {
+    let formatted: string;
+
+    switch (format.format) {
+      case 'roman':
+        formatted = this.toRoman(pageNum);
+        break;
+      case 'alpha':
+        formatted = this.toAlpha(pageNum);
+        break;
+      case 'numeric':
+      default:
+        formatted = pageNum.toString();
+        break;
+    }
+
+    // Apply prefix and suffix
+    const prefix = format.prefix || '';
+    const suffix = format.suffix || '';
+    
+    return `${prefix}${formatted}${suffix}`;
+  }
+
+  /**
+   * Convert number to lowercase roman numerals
+   */
+  private toRoman(num: number): string {
+    const romanNumerals: [number, string][] = [
+      [1000, 'm'], [900, 'cm'], [500, 'd'], [400, 'cd'],
+      [100, 'c'], [90, 'xc'], [50, 'l'], [40, 'xl'],
+      [10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i']
+    ];
+    
+    let result = '';
+    for (const [value, numeral] of romanNumerals) {
+      while (num >= value) {
+        result += numeral;
+        num -= value;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Convert number to lowercase letters (a, b, c, ..., z, aa, ab, ...)
+   */
+  private toAlpha(num: number): string {
+    let result = '';
+    num--; // Make it 0-based
+    
+    while (num >= 0) {
+      result = String.fromCharCode(97 + (num % 26)) + result;
+      num = Math.floor(num / 26) - 1;
+    }
+    
+    return result;
   }
 
   /**

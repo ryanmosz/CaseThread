@@ -22,6 +22,18 @@ export interface Margins {
 }
 
 /**
+ * Page numbering format options
+ */
+export interface PageNumberFormat {
+  format: 'numeric' | 'roman' | 'alpha'; // 1, 2, 3 | i, ii, iii | a, b, c
+  prefix?: string; // e.g., "Page "
+  suffix?: string; // e.g., " of 10"
+  startingNumber?: number; // Default: 1
+  fontSize?: number; // Default: 10
+  font?: string; // Default: 'Times-Roman'
+}
+
+/**
  * Page configuration for PDF documents
  */
 export interface PageConfig {
@@ -29,6 +41,7 @@ export interface PageConfig {
   margins: Margins;
   pageNumbers: boolean;
   pageNumberPosition: 'bottom-center' | 'bottom-right' | 'bottom-left';
+  pageNumberFormat?: PageNumberFormat;
 }
 
 /**
