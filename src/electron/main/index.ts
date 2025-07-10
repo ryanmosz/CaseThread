@@ -18,9 +18,10 @@ class WindowManager {
   private setupApp(): void {
     // This method will be called when Electron has finished initialization
     app.whenReady().then(async () => {
+      // Setup IPC handlers FIRST, before creating the window
+      setupIpcHandlers();
       await this.createMainWindow();
       this.setupMenu();
-      setupIpcHandlers();
 
       // On macOS, re-create a window when dock icon is clicked
       app.on('activate', async () => {
@@ -65,8 +66,6 @@ class WindowManager {
         experimentalFeatures: false,
         // Preload script
         preload: path.join(__dirname, '../preload/index.js'),
-        // Add CSP that allows Google Fonts
-        additionalArguments: ['--disable-web-security'], // Temporary for development
       },
     });
 
@@ -83,8 +82,8 @@ class WindowManager {
               "default-src 'self'; " +
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
               "font-src 'self' https://fonts.gstatic.com; " +
-              "img-src 'self' data:; " +
-              "script-src 'self' 'unsafe-eval';"
+              "img-src 'self' data: https:; " +
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline';"
             ]
           }
         });
