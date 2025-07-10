@@ -1,6 +1,6 @@
 # AGENT-HANDOFF.md - CaseThread CLI Project State
 
-## Last Updated: 2025-01-15T16:00:00Z
+## Last Updated: 2025-01-15T21:15:00Z
 
 ### Current Task Status
 - **Previous Task Completed**: ✅ Parent Task 6.0 - Update JSON Templates with Signature Block Definitions
@@ -18,9 +18,9 @@
     - ✅ 2.2.3: Added text writing methods
     - ✅ 2.2.4: Implemented page management
     - ✅ 2.2.5: Added page numbering (with limitations)
-  - ⏳ 2.3: Implement Document Formatting Rules (1 of 5 sub-tasks complete)
+  - ⏳ 2.3: Implement Document Formatting Rules (2 of 5 sub-tasks complete)
     - ✅ 2.3.1: Created DocumentFormatter class
-    - ⏳ 2.3.2: Define formatting rules by document type
+    - ✅ 2.3.2: Defined formatting rules for all 8 document types
     - ⏳ 2.3.3: Implement line spacing logic
     - ⏳ 2.3.4: Handle special margin requirements  
     - ⏳ 2.3.5: Create formatting configuration
@@ -36,6 +36,20 @@
   - Added line spacing configuration (single: 0pt, one-half: 6pt, double: 12pt)
   - Created 4 initial tests
   - Logger integration using child logger pattern
+
+- ✅ **2.3.2**: Defined formatting rules for all 8 document types  
+  - **USPTO Filings**:
+    - Provisional Patent Application: double-spaced, numbered sections
+    - Office Action Response: double-spaced, 1.5" top margin, no indentation
+    - Trademark Application: single-spaced form format
+  - **Legal Agreements**:
+    - Patent Assignment: 1.5 line spacing for recording requirements
+    - NDA/License/Transfer agreements: single-spaced contracts
+  - **Professional Correspondence**:
+    - Cease and Desist: single-spaced business letter format
+  - Created comprehensive tests for each document type (15 tests total)
+  - Generated 8 test PDFs to verify formatting visually
+  - Each rule set includes: line spacing, margins, page number position, indentation, section numbering
 
 #### Task 2.2 Completion (2025-01-15 - COMPLETE)
 - **Successfully completed all 5 sub-tasks for Base PDF Generator Class**
@@ -149,11 +163,11 @@
 5. **Integration Preparation** (Task 6)
 
 ### Testing Summary
-- **Total Tests**: 358 (all passing)
+- **Total Tests**: 369 (all passing, up from 358)
 - **Signature block tests**: 42 across all templates
-- **PDF generation tests**: 40 (3 setup + 33 LegalPDFGenerator + 4 DocumentFormatter)
+- **PDF generation tests**: 51 (3 setup + 33 LegalPDFGenerator + 15 DocumentFormatter)
 - **Test approach**: TDD with test integrity maintained
-- **Next focus**: Defining formatting rules for all 8 document types
+- **Next focus**: Implementing line spacing logic and special margin handling
 
 ### Prompt.md Analysis Completed
 - **Old prompt**: Extracted as prompt-old.md (340 lines, Task 6.0 focused)

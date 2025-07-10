@@ -35,7 +35,7 @@
      - Parse document sections
      - Identify paragraph types
      - Extract document metadata
-p
+
 3. **Implement Signature Block Handling**
    - Parse signature markers from generated text:
      - `[SIGNATURE_BLOCK:*]` markers

@@ -227,6 +227,67 @@ export class DocumentFormatter {
   }
 
   /**
+   * Apply line spacing to text options
+   */
+  public applyLineSpacing(
+    documentType: DocumentType,
+    isSignatureBlock: boolean = false
+  ): number {
+    const rules = this.getFormattingRules(documentType);
+    
+    // Signature blocks always use single spacing
+    if (isSignatureBlock) {
+      return this.getLineSpacing(rules.signatureLineSpacing);
+    }
+    
+    return this.getLineSpacing(rules.lineSpacing);
+  }
+
+  /**
+   * Calculate actual line height including font size
+   */
+  public calculateLineHeight(
+    fontSize: number,
+    lineSpacing: 'single' | 'one-half' | 'double'
+  ): number {
+    const baseHeight = fontSize * 1.2; // Standard line height multiplier
+    const additionalSpacing = this.getLineSpacing(lineSpacing);
+    
+    return baseHeight + additionalSpacing;
+  }
+
+  /**
+   * Get spacing for specific text elements
+   */
+  public getElementSpacing(
+    documentType: DocumentType,
+    element: 'paragraph' | 'section' | 'title' | 'list'
+  ): number {
+    const rules = this.getFormattingRules(documentType);
+    
+    switch (element) {
+      case 'paragraph':
+        return rules.paragraphSpacing;
+      case 'section':
+        return rules.paragraphSpacing * 1.5;
+      case 'title':
+        return rules.paragraphSpacing * 2;
+      case 'list':
+        return rules.paragraphSpacing * 0.5;
+      default:
+        return rules.paragraphSpacing;
+    }
+  }
+
+  /**
+   * Check if document requires double spacing
+   */
+  public requiresDoubleSpacing(documentType: DocumentType): boolean {
+    const rules = this.getFormattingRules(documentType);
+    return rules.lineSpacing === 'double';
+  }
+
+  /**
    * Get default formatting rules
    * @returns Default formatting rules for legal documents
    */

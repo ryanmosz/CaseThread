@@ -24,7 +24,7 @@
 - [ ] 2.3 Implement Document Formatting Rules (Details: tasks-parent-2.3-detailed.md)
   - [x] 2.3.1 Create DocumentFormatter class
   - [x] 2.3.2 Define formatting rules by document type
-  - [ ] 2.3.3 Implement line spacing logic
+  - [x] 2.3.3 Implement line spacing logic
   - [ ] 2.3.4 Handle special margin requirements
   - [ ] 2.3.5 Create formatting configuration
 
