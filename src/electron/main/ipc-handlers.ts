@@ -140,33 +140,112 @@ export function setupIpcHandlers(): void {
   // CLI operation handlers
   ipcMain.handle(IPC_CHANNELS.GENERATE_DOCUMENT, async (_, { templateId, formData }: { templateId: string; formData: any }) => {
     try {
+      console.log('IPC: Generate document called with:', { templateId, formData });
+      
+      // Validate inputs
+      if (!templateId || typeof templateId !== 'string') {
+        throw new Error('Invalid template ID provided');
+      }
+      
+      if (!formData || typeof formData !== 'object') {
+        throw new Error('Invalid form data provided');
+      }
+      
+      // Ensure form data is clean and serializable
+      const cleanFormData = JSON.parse(JSON.stringify(formData));
+      
       // Create temporary YAML file with form data
       const tempYamlPath = path.join(process.cwd(), 'temp', `input-${Date.now()}.yaml`);
-      const yamlContent = createYamlFromFormData(formData);
+      const tempOutputDir = path.join(process.cwd(), 'temp', 'output');
+      const yamlContent = createYamlFromFormData(cleanFormData, templateId);
       
-      // Ensure temp directory exists
+      console.log('IPC: Generated YAML content:', yamlContent);
+      
+      // Ensure temp directories exist
       await fs.mkdir(path.dirname(tempYamlPath), { recursive: true });
+      await fs.mkdir(tempOutputDir, { recursive: true });
       await fs.writeFile(tempYamlPath, yamlContent, 'utf-8');
 
-      // Execute CLI command
-      const command = `npm run cli -- generate ${templateId} "${tempYamlPath}"`;
+      // Execute CLI command with temp output directory
+      const command = `npm run cli -- generate ${templateId} "${tempYamlPath}" --output "${tempOutputDir}"`;
+      console.log('IPC: Executing command:', command);
+      
       const { stdout, stderr } = await execAsync(command, {
         cwd: process.cwd(),
         timeout: 60000, // 60 second timeout
       });
 
-      // Clean up temporary file
-      await fs.unlink(tempYamlPath).catch(() => {}); // Ignore cleanup errors
+      console.log('IPC: Command completed:', { 
+        stdoutLength: stdout.length, 
+        stderrLength: stderr.length,
+        stdoutPreview: stdout.substring(0, 100) + (stdout.length > 100 ? '...' : ''),
+        stderr: stderr 
+      });
+
+      // Find and read the generated document file
+      let documentContent = '';
+      try {
+        const outputFiles = await fs.readdir(tempOutputDir);
+        const documentFile = outputFiles.find(file => file.startsWith(templateId) && file.endsWith('.md'));
+        
+        if (documentFile) {
+          const documentPath = path.join(tempOutputDir, documentFile);
+          documentContent = await fs.readFile(documentPath, 'utf-8');
+          console.log('IPC: Document content loaded, length:', documentContent.length);
+          
+          // Clean up the generated file
+          await fs.unlink(documentPath).catch(err => {
+            console.warn('Failed to cleanup generated file:', err);
+          });
+        } else {
+          console.warn('IPC: No generated document file found in output directory');
+        }
+      } catch (error) {
+        console.error('IPC: Failed to read generated document:', error);
+      }
+
+      // Clean up temporary files
+      await fs.unlink(tempYamlPath).catch((err) => {
+        console.warn('Failed to cleanup temp YAML file:', err);
+      });
+      
+      // Clean up temp output directory if empty
+      try {
+        const remainingFiles = await fs.readdir(tempOutputDir);
+        if (remainingFiles.length === 0) {
+          await fs.rmdir(tempOutputDir);
+        }
+      } catch (err) {
+        console.warn('Failed to cleanup temp output directory:', err);
+      }
 
       return { 
         success: true, 
         data: {
-          output: stdout,
+          output: documentContent || stdout, // Use document content if available, fallback to stdout
+          cliOutput: stdout,
           errors: stderr,
+          documentContent: documentContent
         }
       };
     } catch (error) {
-      return { success: false, error: (error as Error).message };
+      console.error('IPC: Generate document failed:', error);
+      
+      // Return a more user-friendly error message
+      let errorMessage = 'Document generation failed';
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          errorMessage = 'Document generation timed out. Please try again.';
+        } else if (error.message.includes('ENOENT')) {
+          errorMessage = 'CLI command not found. Please check your installation.';
+        } else if (error.message.includes('Permission denied')) {
+          errorMessage = 'Permission denied. Please check file permissions.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      return { success: false, error: errorMessage };
     }
   });
 
@@ -224,8 +303,19 @@ function isPathSafe(filePath: string): boolean {
 }
 
 // Convert form data to YAML format for CLI
-function createYamlFromFormData(formData: any): string {
+function createYamlFromFormData(formData: any, templateId: string): string {
   const yamlLines = ['# Generated from GUI form data', ''];
+  
+  // Add required metadata fields first
+  yamlLines.push('# Metadata');
+  yamlLines.push('client: "GUI Client"');
+  yamlLines.push('attorney: "GUI Attorney"');
+  yamlLines.push(`document_type: "${templateId}"`);
+  yamlLines.push(`template: "${templateId}.json"`);
+  yamlLines.push('');
+  
+  // Add form data fields
+  yamlLines.push('# Document Parameters');
   
   for (const [key, value] of Object.entries(formData)) {
     if (value === null || value === undefined) {

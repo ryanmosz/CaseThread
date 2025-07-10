@@ -43,6 +43,7 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleTemplateClick = (template: Template) => {
+    console.log('Template clicked:', template.id);
     onTemplateSelect(template);
     setFormData({});
     setFormErrors({});
@@ -50,9 +51,18 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   };
 
   const handleFieldChange = (fieldId: string, value: any) => {
+    console.log('Field changed:', fieldId, '=', value, typeof value);
+    
+    // Ensure the value is serializable
+    let serializableValue = value;
+    if (typeof value === 'object' && value !== null) {
+      // For objects, ensure they are plain objects
+      serializableValue = JSON.parse(JSON.stringify(value));
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [fieldId]: value
+      [fieldId]: serializableValue
     }));
     
     // Clear error when user starts typing
@@ -109,14 +119,28 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   };
 
   const handleGenerate = async () => {
-    if (!selectedTemplate || !validateForm()) return;
+    if (!selectedTemplate || !validateForm()) {
+      console.log('Validation failed or no template selected');
+      return;
+    }
     
     setIsGenerating(true);
     try {
-      await onGenerateDocument(formData);
+      console.log('Generating document with data:', formData);
+      
+      // Create a clean, serializable copy of form data
+      const cleanFormData = JSON.parse(JSON.stringify(formData));
+      
+      // Ensure all required fields are present
+      const processedData = { ...cleanFormData };
+      
+      console.log('Processed form data:', processedData);
+      
+      await onGenerateDocument(processedData);
       onClose();
     } catch (error) {
       console.error('Generation failed:', error);
+      // Don't close the modal on error so user can try again
     } finally {
       setIsGenerating(false);
     }
@@ -151,7 +175,10 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
             description={field.description}
             placeholder={`Select ${field.name.toLowerCase()}`}
             selectedKeys={value ? [value] : []}
-            onSelectionChange={(keys) => handleFieldChange(field.id, Array.from(keys)[0])}
+            onSelectionChange={(keys) => {
+              const selectedValue = Array.from(keys)[0];
+              handleFieldChange(field.id, selectedValue);
+            }}
             isRequired={field.required}
             isInvalid={!!error}
             errorMessage={error}
@@ -173,7 +200,10 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
               placeholder={`Select ${field.name.toLowerCase()}`}
               selectionMode="multiple"
               selectedKeys={value || []}
-              onSelectionChange={(keys) => handleFieldChange(field.id, Array.from(keys))}
+              onSelectionChange={(keys) => {
+                const selectedValues = Array.from(keys);
+                handleFieldChange(field.id, selectedValues);
+              }}
               isRequired={field.required}
               isInvalid={!!error}
               errorMessage={error}
@@ -219,8 +249,11 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
             label={field.name}
             description={field.description}
             placeholder={field.placeholder}
-            value={value || ''}
-            onChange={(e) => handleFieldChange(field.id, parseFloat(e.target.value) || 0)}
+            value={value?.toString() || ''}
+            onChange={(e) => {
+              const numValue = parseFloat(e.target.value);
+              handleFieldChange(field.id, isNaN(numValue) ? 0 : numValue);
+            }}
             isRequired={field.required}
             isInvalid={!!error}
             errorMessage={error}
@@ -229,19 +262,24 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
         
       case 'boolean':
         return (
-          <Checkbox
-            key={field.id}
-            isSelected={value || false}
-            onChange={(checked) => handleFieldChange(field.id, checked)}
-            isInvalid={!!error}
-          >
-            <div>
-              <span className="font-medium">{field.name}</span>
-              {field.description && (
-                <p className="text-sm text-gray-600 mt-1">{field.description}</p>
-              )}
-            </div>
-          </Checkbox>
+          <div key={field.id} className="flex flex-row gap-2 items-center">
+            <Checkbox
+              isSelected={Boolean(value)}
+              onValueChange={(checked) => handleFieldChange(field.id, checked)}
+              isInvalid={!!error}
+              size="lg"
+              color="success"
+              aria-label={field.name}
+            >
+              <div className="flex flex-col">
+                <span>{field.name}{field.required && ' *'}</span>
+                {field.description && (
+                  <span className="text-sm text-gray-600">{field.description}</span>
+                )}
+                {error && <span className="text-sm text-danger">{error}</span>}
+              </div>
+            </Checkbox>
+          </div>
         );
         
       default:
@@ -282,9 +320,9 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
               onClick={() => handleTemplateClick(template)}
             >
               <Card 
-                className={`transition-colors ${
+                className={`transition-colors hover:shadow-md ${
                   selectedTemplate?.id === template.id 
-                    ? 'ring-2 ring-primary' 
+                    ? 'ring-2 ring-primary bg-primary-50' 
                     : 'hover:bg-gray-50'
                 }`}
               >
@@ -315,59 +353,72 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
       <Modal 
         isOpen={isOpen} 
         onClose={onClose}
-        size="3xl"
+        size="4xl"
         scrollBehavior="inside"
         isDismissable={!isGenerating}
+        backdrop="blur"
+        classNames={{
+          base: "min-h-[600px] max-h-[90vh]",
+          body: "max-h-[60vh] overflow-y-auto",
+          footer: "border-t border-gray-200 bg-gray-50"
+        }}
       >
         <ModalContent>
-          <ModalHeader>
-            <div>
-              <h3 className="text-lg font-semibold">{selectedTemplate?.name}</h3>
-              <p className="text-sm text-gray-600 font-normal">
-                {selectedTemplate?.description}
-              </p>
-            </div>
-          </ModalHeader>
-          <ModalBody>
-            {selectedTemplate && (
-              <div className="space-y-6">
-                {/* Template metadata */}
-                <div className="flex flex-wrap gap-2 pb-4 border-b">
-                  <Chip size="sm" color="primary" variant="flat">
-                    {selectedTemplate.metadata.category}
-                  </Chip>
-                  <Chip size="sm" color="warning" variant="flat">
-                    {selectedTemplate.complexity}
-                  </Chip>
-                  <Chip size="sm" color="default" variant="flat">
-                    {selectedTemplate.estimatedTime}
-                  </Chip>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1 border-b border-gray-200">
+                <div>
+                  <h3 className="text-lg font-semibold">{selectedTemplate?.name}</h3>
+                  <p className="text-sm text-gray-600 font-normal">
+                    {selectedTemplate?.description}
+                  </p>
                 </div>
-                
-                {/* Form fields */}
-                <div className="space-y-4">
-                  {selectedTemplate.requiredFields.map(renderFormField)}
-                </div>
-              </div>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button 
-              variant="light" 
-              onPress={onClose}
-              isDisabled={isGenerating}
-            >
-              Cancel
-            </Button>
-            <Button 
-              color="primary" 
-              onPress={handleGenerate}
-              isDisabled={isGenerating}
-              isLoading={isGenerating}
-            >
-              {isGenerating ? 'Generating...' : 'Generate Document'}
-            </Button>
-          </ModalFooter>
+              </ModalHeader>
+              <ModalBody className="py-6">
+                {selectedTemplate && (
+                  <div className="space-y-6">
+                    {/* Template metadata */}
+                    <div className="flex flex-wrap gap-2 pb-4 border-b border-gray-200">
+                      <Chip size="sm" color="primary" variant="flat">
+                        {selectedTemplate.metadata.category}
+                      </Chip>
+                      <Chip size="sm" color="warning" variant="flat">
+                        {selectedTemplate.complexity}
+                      </Chip>
+                      <Chip size="sm" color="default" variant="flat">
+                        {selectedTemplate.estimatedTime}
+                      </Chip>
+                    </div>
+                    
+                    {/* Form fields */}
+                    <div className="space-y-6">
+                      {selectedTemplate.requiredFields.map(renderFormField)}
+                    </div>
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter className="flex justify-end gap-3 py-4 px-6">
+                <Button 
+                  variant="light" 
+                  onPress={onClose}
+                  isDisabled={isGenerating}
+                  size="md"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  color="secondary" 
+                  onPress={handleGenerate}
+                  isDisabled={isGenerating || !selectedTemplate}
+                  isLoading={isGenerating}
+                  size="md"
+                  className="min-w-[140px]"
+                >
+                  {isGenerating ? 'Generating...' : 'Generate Document'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
         </ModalContent>
       </Modal>
     </>

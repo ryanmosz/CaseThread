@@ -75,7 +75,16 @@ export interface ElectronAPI {
   loadTemplateSchema: (templateId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
   
   // CLI operations
-  generateDocument: (templateId: string, formData: any) => Promise<{ success: boolean; data?: { output: string; errors: string }; error?: string }>;
+  generateDocument: (templateId: string, formData: any) => Promise<{ 
+    success: boolean; 
+    data?: { 
+      output: string; 
+      cliOutput: string;
+      errors: string; 
+      documentContent: string;
+    }; 
+    error?: string 
+  }>;
   learnFromPath: (dirPath: string) => Promise<{ success: boolean; data?: { output: string; errors: string }; error?: string }>;
   
   // Dialog operations

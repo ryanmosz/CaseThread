@@ -165,17 +165,45 @@ const App: React.FC = () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
+      console.log('App: Starting document generation with template:', state.selectedTemplate.id);
+      console.log('App: Form data:', formData);
+      
+      // Ensure template ID is serializable
+      const templateId = state.selectedTemplate.id;
+      if (!templateId || typeof templateId !== 'string') {
+        throw new Error('Invalid template selected');
+      }
+      
+      // Ensure form data is clean and serializable
+      const cleanFormData = JSON.parse(JSON.stringify(formData));
+      
+      console.log('App: Calling generateDocument with:', { templateId, cleanFormData });
+      
       const result = await window.electronAPI.generateDocument(
-        state.selectedTemplate.id,
-        formData
+        templateId,
+        cleanFormData
       );
 
+      console.log('App: Generation result:', result);
+
       if (result.success && result.data) {
-        setState(prev => ({
-          ...prev,
-          selectedDocument: result.data?.output || null,
-          isLoading: false,
-        }));
+        // Use the actual document content that was read from the generated file
+        const documentContent = result.data.documentContent || result.data.output || '';
+        
+        console.log('App: Document content length:', documentContent.length);
+        console.log('App: Document preview:', documentContent.substring(0, 200));
+        
+        if (documentContent.trim()) {
+          setState(prev => ({
+            ...prev,
+            selectedDocument: documentContent,
+            isLoading: false,
+          }));
+          
+          console.log('App: Document generation successful');
+        } else {
+          throw new Error('Generated document is empty');
+        }
       } else {
         // More specific error handling
         let errorMessage = 'Document generation failed';
@@ -189,15 +217,18 @@ const App: React.FC = () => {
             errorMessage = 'Template error. Please check the template configuration.';
           } else if (result.error.includes('YAML')) {
             errorMessage = 'Form data error. Please check your form inputs.';
+          } else if (result.error.includes('CLI command not found')) {
+            errorMessage = 'System error. Please restart the application.';
           } else {
             errorMessage = `Generation error: ${result.error}`;
           }
         }
         
+        console.error('App: Generation failed:', errorMessage);
         throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('Document generation error:', error);
+      console.error('App: Document generation error:', error);
       
       let userFriendlyError = 'Document generation failed';
       
@@ -206,6 +237,8 @@ const App: React.FC = () => {
           userFriendlyError = 'Network error. Please check your internet connection and try again.';
         } else if (error.message.includes('timeout')) {
           userFriendlyError = 'Generation is taking too long. Please try again or use a simpler template.';
+        } else if (error.message.includes('cloned')) {
+          userFriendlyError = 'Form data processing error. Please refresh the page and try again.';
         } else {
           userFriendlyError = error.message;
         }
