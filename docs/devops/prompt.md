@@ -57,17 +57,45 @@ Node.js 20 + TypeScript + Commander.js + OpenAI SDK + ChromaDB + PDFKit
 - Mark complete: `[ ]` → `[x]` in checklist file
 
 ### 3. Testing Requirements (TDD)
-**Tests prove functionality works. When tests fail, fix the code, not the test.**
-- Write tests before/during implementation
-- Test modifications require explicit justification
-- Include Testing Report before marking complete:
-  ```
-  ## Testing Report
-  - Tests Created: X new tests
-  - Test Results: Y passed, Z failed  
-  - Coverage: [what was tested]
-  - Test Modifications: [justify any changes]
-  ```
+**Tests define the product. When tests fail, fix the implementation, not the test.**
+
+1. **Before implementation (when feasible):**
+   - Write tests for the new functionality
+   - Tests should fail initially (red phase)
+   - Document what the tests are checking
+
+2. **During implementation:**
+   - Make tests pass (green phase) by fixing the FUNCTIONALITY, not the test
+   - CRITICAL: When a test fails, your PRIMARY action is to fix the code being tested
+   - ONLY modify a test if you can prove the test itself is flawed
+   - If you need to change a test, you MUST:
+     * Document WHY the test was wrong
+     * Explain what the test SHOULD be checking
+     * Ensure the corrected test still validates the intended functionality
+   - Refactor if needed while keeping tests green
+   - Add edge case tests as you discover them
+
+3. **Testing Report - REQUIRED before marking task complete:**
+   ```
+   ## Testing Report
+   - Tests Created: X new tests
+   - Test Results: Y passed, Z failed  
+   - Coverage: [what was tested]
+   - Test Modifications: [if any tests were changed, explain why]
+   - Issues: [any failing tests or gaps]
+   ```
+
+4. **Task Completion Gate:**
+   - Do NOT mark a task complete if tests are failing
+   - Do NOT proceed to next sub-task if current tests fail
+   - Fix failing tests or document why they're acceptable to skip
+
+5. **Test Integrity Principle:**
+   - Tests are the specification - they define what the code SHOULD do
+   - NEVER change a test just to make it pass
+   - If a test fails, assume the implementation is wrong, not the test
+   - Changing a test requires explicit justification
+   - Report any test modifications in your Testing Report
 
 ## 🏗️ TECHNICAL GUIDELINES
 
