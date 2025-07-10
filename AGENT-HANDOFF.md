@@ -11,6 +11,7 @@ Current Branch: R
 - Focus: Adding signature blocks, initial blocks, and placement markers to all 8 document templates
 - Progress: Tasks 6.1, 6.2, 6.3, 6.4, and 6.5 complete
 - **Current**: Task 6.5 complete, ready for Task 6.6 (Office Action Response)
+- **Tests Added**: Comprehensive test suite for signature blocks (27 new tests)
 
 ### Recent Completions
 
@@ -211,6 +212,18 @@ All tests passing:
 - Fixed NDA IP Specific (removed redundant lines)
 - Revised Trademark Application (removed TEAS format)
 - Future templates will follow this pattern
+
+### Testing Strategy (2025-01-08)
+
+**Added Comprehensive Tests**: Created `__tests__/templates/signature-blocks.test.ts` with:
+- Tests for all 4 templates with signature blocks
+- Verification that markers appear in generated documents
+- Checks that no redundant signature text remains
+- Tests for initial blocks and notary blocks
+- Verification that remaining 4 templates don't have blocks yet
+- 27 new tests added (total now 296 tests)
+
+These tests will catch any regressions as we implement signature blocks for the remaining document types.
 
 ## Templates Updated So Far
 1. ✅ Patent Assignment Agreement - Done (complex with witness/notary)
