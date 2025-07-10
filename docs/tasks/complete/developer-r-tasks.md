@@ -1,22 +1,29 @@
 # Developer R - Task Priority List
 
 ## 📢 IMPORTANT UPDATE: Task Structure Clarification
-**Section 2 and 3 below have significant overlap with Parent Task 2.0!**
-- Section 2 = Tasks 2.1, 2.2, and 2.3 from the detailed checklist (mostly complete)
-- Section 3 = Tasks 2.4, 2.5, and parts of 2.7 from the detailed checklist
-- Following the structured task list in `docs/tasks/tasks-parent-2.0-checklist.md` for clarity
+**Sections have been refactored to match Task 2.0 structure exactly**
+- Section 2 now contains ALL of Parent Task 2.0 (Tasks 2.1-2.7)
+- Section 3 (duplicate signature blocks) has been removed
+- Following the structured task list in `docs/tasks/tasks-parent-2.0-checklist.md`
 
 ### Task Mapping:
-- **Section 2** (PDF Generation Service) = Parent Task 2.0
-  - PDFKit setup ✅ = Task 2.1 (Complete)
-  - PDF architecture ✅ = Task 2.2 (Complete)
-  - Formatting rules ⏳ = Task 2.3 (60% complete)
-- **Section 3** (Signature Blocks) = Tasks 2.4 & 2.5
-  - Parse markers = Task 2.4 (Not started)
-  - Position blocks = Task 2.5 (Not started)
-- **Section 4** (CLI command) = Task 2.6 (Not started)
-- **Section 5** (Testing) = Task 2.7 (Not started)
-- **Section 6** (Integration) = Post-Task 2.0 work
+- **Section 2** = Entire Parent Task 2.0 (35 sub-tasks)
+  - ✅ PDFKit setup = Task 2.1 (Complete - 4/4 sub-tasks)
+  - ✅ PDF architecture = Task 2.2 (Complete - 5/5 sub-tasks)
+  - ⏳ Formatting rules = Task 2.3 (60% complete - 3/5 sub-tasks)
+  - 📋 Signature parser = Task 2.4 (Not started - 0/5 sub-tasks)
+  - 📋 Layout engine = Task 2.5 (Not started - 0/5 sub-tasks)
+  - 📋 CLI command = Task 2.6 (Not started - 0/5 sub-tasks)
+  - 📋 Testing = Task 2.7 (Not started - 0/5 sub-tasks)
+- **Section 3** = Task 2.6 (CLI command) - redundant but kept for clarity
+- **Section 4** = Task 2.7 (Testing) - redundant but kept for clarity
+- **Section 5** = Post-Task 2.0 integration work
+
+### Task 2.0 Progress Summary:
+- **Complete**: 12 of 35 sub-tasks (34%)
+- **In Progress**: Task 2.3 (Document Formatting)
+- **Next Up**: Task 2.3.4 (Special margins for office actions)
+- **Tests**: 377 passing (59 PDF-related tests)
 
 ## Current Focus: PDF Generation for Friday Demo
 
@@ -37,55 +44,54 @@
    - 6.12 ✅ Created comprehensive documentation
 
 ### 🟠 High Priority (Tuesday-Wednesday)
-2. **Create Core PDF Generation Service with Legal Formatting** (IN PROGRESS - Task 2.0)
-   - Set up PDFKit with legal document standards: ✅ DONE (Task 2.1)
-     - Letter size (8.5 x 11) ✅
-     - 1" margins all sides ✅
-     - Times New Roman 12pt ✅
-     - Double-spacing for body text (check legal requirements) ✅
-     - Single-spacing for signature blocks and block quotes ✅
-     - Page numbering (bottom center/right) ✅
-   - Create modular PDF generation architecture: ✅ DONE (Task 2.2)
-     - Base LegalPDFGenerator class ✅
-     - Methods for title, paragraphs, sections, lists ✅
-     - Professional document structure ✅
-   - Implement document formatting rules: ⏳ IN PROGRESS (Task 2.3)
-     - DocumentFormatter class ✅
-     - All 8 document types configured ✅
-     - Line spacing logic ✅
-     - Special margins (office actions) ⏳
-     - Configuration system ⏳
-   - [NOTE: "Text parsing" listed here is unclear - may be covered by later tasks]
-
-3. **Implement Signature Block Handling** 
-   ⚠️ **OVERLAP ALERT**: This entire section is already part of Task 2.0!
-   - Parse signature markers from generated text: = Task 2.4 (Signature Block Parser)
-     - `[SIGNATURE_BLOCK:*]` markers
-     - `[INITIALS_BLOCK:*]` markers
-     - `[NOTARY_BLOCK:*]` markers
-   - Implement signature block positioning: = Task 2.5 (PDF Layout Engine)
-     - Page-break prevention logic
-     - Single signature layout
-     - Side-by-side signature layout
-     - Grouped signature layout
-   - Test with all 8 document types: = Task 2.7 (Comprehensive Tests)
-     - Verify each template's unique requirements
-     - Check positioning and spacing
-     - Ensure no page splits
+2. **Create Core PDF Generation Service with Legal Formatting** (Task 2.0 - 35 sub-tasks)
+   
+   **✅ COMPLETE (Tasks 2.1-2.2):**
+   - PDFKit setup with legal document standards (Task 2.1) ✅
+     - Letter size (8.5 x 11), 1" margins, Times Roman 12pt
+     - Works in Docker Alpine Linux environment
+   - Base PDF Generator Class (Task 2.2) ✅
+     - LegalPDFGenerator with document creation/finalization
+     - Text methods: writeText(), writeParagraph(), writeTitle(), writeHeading()
+     - Page management: tracking, breaks, space calculations
+     - Page numbering (with PDFKit limitations noted)
+   
+   **⏳ IN PROGRESS (Task 2.3 - Document Formatting):**
+   - DocumentFormatter class ✅
+   - Formatting rules for all 8 document types ✅
+   - Line spacing logic (applyLineSpacing, calculateLineHeight, etc.) ✅
+   - Special margin requirements (office actions 1.5" top) ⏳ (Next: 2.3.4)
+   - Formatting configuration system ⏳ (Task 2.3.5)
+   
+   **📋 NOT STARTED (Tasks 2.4-2.7):**
+   - Signature Block Parser (Task 2.4)
+     - Parse `[SIGNATURE_BLOCK:*]`, `[INITIALS_BLOCK:*]`, `[NOTARY_BLOCK:*]` markers
+     - Extract block content and layout information
+   - PDF Layout Engine (Task 2.5)
+     - Position signature blocks without page breaks
+     - Handle single, side-by-side, and grouped layouts
+     - Implement orphan control
+   - CLI Export Command (Task 2.6)
+     - `casethread export <input> <output> [options]`
+     - Progress indicators and error handling
+   - Comprehensive Testing (Task 2.7)
+     - Unit tests for all components
+     - Integration tests
+     - Test all 8 document types
 
 ### 🟡 Medium Priority (Wednesday)
-4. **Create CLI export command**
+3. **Create CLI export command** (Task 2.6)
    - `casethread export input.txt output.pdf`
    - Ensure functions are callable from code
    - Basic error handling
 
 ### 🟢 Final Priority (Thursday)
-5. **Test all 8 document types thoroughly**
+4. **Test all 8 document types thoroughly** (Task 2.7)
    - Verify each template generates correctly
    - Check signature block placement
    - Validate legal formatting compliance
 
-6. **Integration preparation**
+5. **Integration preparation**
    - Ensure PDF service is modular
    - Document function signatures
    - Support Developer G's API integration
@@ -93,15 +99,19 @@
 ### 📋 Definition of Done (Friday AM)
 - [ ] All document types export to PDF via CLI (Task 2.6)
 - [ ] Signature blocks properly positioned (Tasks 2.4 & 2.5)
-- [x] Legal formatting standards met (Tasks 2.1-2.3, 60% complete)
+- [~] Legal formatting standards met (Tasks 2.1-2.3, 60% complete)
+  - ✅ PDFKit setup and base generator
+  - ✅ Document-specific formatting rules
+  - ⏳ Special margins and configuration
 - [ ] Functions ready for GUI integration (Throughout)
 - [ ] Basic testing complete (Task 2.7)
 
 ### ⚠️ Key Reminders
-- Currently on Task 2.3.3 (Document Formatting Rules) - 3 of 5 sub-tasks complete
-- Section 3 "Signature Block Handling" = Tasks 2.4 & 2.5 in our detailed checklist
-- No duplication needed - follow tasks-parent-2.0-checklist.md structure
-- Signature blocks are next after completing Task 2.3 (formatting)
+- Section 2 now contains ALL of Task 2.0 (refactored for clarity)
+- Currently on Task 2.3.3 (Document Formatting) - 3 of 5 sub-tasks complete
+- Next: Task 2.3.4 (special margins), then 2.3.5 (configuration)
+- Signature blocks come after formatting (Tasks 2.4 & 2.5)
+- Total progress: 12 of 35 sub-tasks complete (34%)
 - Keep functions modular for easy GUI integration
 - Test each document type as you go
 - Coordinate with Developer G on Thursday for integration
