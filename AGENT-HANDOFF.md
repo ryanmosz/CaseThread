@@ -82,4 +82,32 @@
 - **Critical Update**: Restored detailed testing requirements to 152 lines total
   - Changed to "Tests define the product" per user preference
   - Restored all proven testing language that was oversimplified
-  - Kept streamlined structure while preserving battle-tested guidance 
+  - Kept streamlined structure while preserving battle-tested guidance
+
+### Archival Workflow Implemented
+- **Created archive/ directory structure**:
+  - `archive/devops/` - Old versions of DevOps files (prompts, workflows)
+  - `archive/handoff/` - Historical AGENT-HANDOFF.md files  
+  - `archive/prompts/` - Previous versions of plan prompts
+  - `archive/README.md` - Documentation of archival procedures
+- **Moved existing files**: prompt-old.md and prompt-comparison-report.md to archive/devops/
+- **Updated prompt.md**: Added File Archival Workflow section
+- **Created cursor rule**: `.cursor/rules/file-archival.mdc` to enforce archival practices
+- **Key principle**: NEVER delete AGENT-HANDOFF.md or critical files - always archive with timestamp
+
+### Plan-Parent.md Restructured to Task-Agnostic Format
+- **Archived current version**: `archive/devops/plan-parent-2025-07-10-pdf-generation.md`
+- **Restructured with clear sections**:
+  - 🎯 CURRENT TASK CONTEXT - All task-specific info in one updatable section
+  - 🔧 CORE PROCESS - Task-agnostic PRD generation process
+  - 📚 INTERNAL DOCUMENTATION - Documentation guidance
+  - 📋 DEVELOPMENT PLAN STRUCTURE - Standard plan sections
+  - 🧪 TESTING PROCEDURE - Mandatory testing requirements
+  - 📁 FILE MANAGEMENT - Output structure and archival
+  - 🎯 TARGET AUDIENCE - Junior developer focus
+  - 📝 FORMATTING STANDARDS - Markdown requirements
+- **Benefits**: 
+  - Easy to update when switching tasks
+  - All changeable content in one section at top
+  - Task-agnostic process preserved below
+  - Reduced from 236 to 229 lines while improving clarity 
