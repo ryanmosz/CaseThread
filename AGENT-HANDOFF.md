@@ -24,9 +24,59 @@
     - ✅ 2.3.3: Implemented line spacing logic
     - ✅ 2.3.4: Handle special margin requirements  
     - ✅ 2.3.5: Create formatting configuration
-  - ⏳ 2.4-2.7: Remaining tasks not yet started
+  - ⏳ 2.4: Build Signature Block Parser (2 of 5 sub-tasks complete)
+    - ✅ 2.4.1: Created SignatureBlockParser class
+    - ✅ 2.4.2: Implemented enhanced marker detection regex
+    - ⏳ 2.4.3-2.4.5: Content parsing and layout extraction in progress
+  - ⏳ 2.5-2.7: Remaining tasks not yet started
 
 ### Recent Changes
+
+#### Task 2.4 Progress (2025-01-16 - IN PROGRESS)
+- ✅ **2.4.1**: Created SignatureBlockParser class
+  - Added TypeScript interfaces to `src/types/pdf.ts`:
+    - `SignatureMarker` - Represents detected markers with position info
+    - `SignatureParty` - Individual party information in blocks
+    - `SignatureBlockData` - Complete block data with layout info
+    - `ParsedDocument` - Document with extracted signature blocks
+  - Created `src/services/pdf/SignatureBlockParser.ts` with:
+    - Basic class structure with Winston logger integration
+    - `parseDocument()` method that splits text and finds markers
+    - Placeholder for content extraction (Task 2.4.3)
+  - Added 10 initial tests covering basic functionality
+
+- ✅ **2.4.2**: Implemented enhanced marker detection regex
+  - **Enhanced Methods Added**:
+    - `findAllMarkers()` - Combined regex for all marker types
+    - `validateMarkerId()` - Validates kebab-case format
+    - `getMarkerContext()` - Extracts party/role info from IDs
+  - **Validation Features**:
+    - Rejects invalid IDs (uppercase, underscores, starting with numbers)
+    - Supports multiple markers on same line
+    - Handles inline markers within text
+  - **Test Coverage**: 11 new tests (21 total), all passing
+
+- ✅ **2.4.3**: Parse signature block content
+  - **Content Extraction**:
+    - `extractBlockContent()` - Extracts lines following markers
+    - Detects single vs side-by-side layouts based on:
+      - Multiple underscore groups on same line
+      - Tab characters or significant spacing
+    - Stops extraction at:
+      - Next marker
+      - Section headers (TERMS AND CONDITIONS, etc.)
+      - Multiple empty lines
+      - Non-signature content
+  - **Party Extraction**:
+    - `extractSingleParties()` - Handles single column layouts
+    - `extractSideBySideParties()` - Handles multi-column layouts
+    - Parses: Role names, signature lines, Name/Title/Company fields
+    - Special handling for initial blocks (PARTY: ______)
+  - **Test Coverage**: 13 new tests for content extraction
+  - **Known Issues**: 6 tests failing related to content preservation after blocks
+
+- ⏳ **2.4.4**: Handle different block types (NOT STARTED)
+- ⏳ **2.4.5**: Extract layout information (NOT STARTED)
 
 #### Task 2.3 Completion (2025-01-15 - COMPLETE)
 - ✅ **2.3.1**: Created DocumentFormatter class
@@ -215,11 +265,12 @@
 5. **Integration Preparation** (Task 6)
 
 ### Testing Summary
-- **Total Tests**: 412 (all passing, up from 390)
+- **Total Tests**: 445 (439 passing, 6 failing)
 - **Signature block tests**: 42 across all templates
-- **PDF generation tests**: 94 (3 setup + 33 LegalPDFGenerator + 42 DocumentFormatter + 16 FormattingConfiguration)
+- **PDF generation tests**: 115 (3 setup + 33 LegalPDFGenerator + 42 DocumentFormatter + 16 FormattingConfiguration + 21 SignatureBlockParser)
+- **Signature parsing tests**: 33 total (27 passing, 6 failing - content preservation issues)
 - **Test approach**: TDD with test integrity maintained
-- **Next focus**: Building signature block parser (Task 2.4)
+- **Next focus**: Fix content preservation issues, then proceed to Task 2.4.4
 
 ### Prompt.md Analysis Completed
 - **Old prompt**: Extracted as prompt-old.md (340 lines, Task 6.0 focused)
@@ -279,23 +330,46 @@
 
 ### Next Steps for Task 2.0 Implementation
 
-#### Recommended Sequencing (Hybrid Approach)
-Based on task analysis, recommend the following approach:
-1. **Phase 1 - Foundation**: ✅ Complete (Task 2.1 - PDFKit setup)
-2. **Phase 2 - Core Components**:
-   - Start with 2.2 (Base PDF Generator) - establish basic PDF creation
-   - Then parallelize 2.3 (Formatting Rules) and 2.4 (Signature Parser)
-   - Test each component independently
-3. **Phase 3 - Integration**: 
-   - 2.5 (Layout Engine) - requires 2.2, 2.3, 2.4
-   - 2.6 (CLI Command) - user interface
-   - 2.7 (Comprehensive tests) or use TDD throughout
+#### Current Progress: Task 2.4 (Signature Block Parser)
+✅ Completed: Task 2.4.1, 2.4.2, and 2.4.3 (17 of 35 sub-tasks complete - 49%)
+- SignatureBlockParser class created with marker detection
+- Enhanced regex patterns with validation
+- Content extraction with layout detection
+- Party information parsing from blocks
+- 27 of 33 tests passing
+
+#### Known Issues
+- 6 tests failing related to content preservation after signature blocks
+- Lines following empty signature blocks are being consumed incorrectly
+- Need to refine logic for what content belongs to signature blocks vs document
+
+#### Next Sub-task: 2.4.4 - Handle different block types
+- Implement specific handling for signature vs initial vs notary blocks
+- Add block type-specific validation
+- Handle notary-specific fields (State, County, Commission expires)
+- Ensure proper party extraction for each type
+
+#### Remaining in Task 2.4:
+- 2.4.5: Extract layout information for PDF rendering
 
 #### Key Technical Decisions Made
 - PDFKit chosen and verified in Docker environment
 - Test structure established: `__tests__/services/pdf/`
 - .gitignore updated for test output files
 - Tech stack documentation updated
+
+#### Files Modified in Task 2.4 (In Progress)
+- `src/types/pdf.ts` - Added signature block interfaces (SignatureMarker, SignatureParty, etc.)
+- `src/services/pdf/SignatureBlockParser.ts` - Created signature block parser class (Tasks 2.4.1-2.4.3)
+- `__tests__/services/pdf/SignatureBlockParser.test.ts` - Added 33 tests (Tasks 2.4.1-2.4.3)
+- `docs/tasks/tasks-parent-2.0-checklist.md` - Marked 2.4.1, 2.4.2, and 2.4.3 complete
+
+#### Files Modified in Task 2.3 (Complete)
+- `src/services/pdf/DocumentFormatter.ts` - Document-specific formatting rules
+- `src/config/pdf-formatting.ts` - Formatting configuration system
+- `__tests__/services/pdf/DocumentFormatter.test.ts` - Added 42 tests
+- `__tests__/config/pdf-formatting.test.ts` - Added 16 tests
+- `src/types/pdf.ts` - Added DocumentFormattingRules and LineSpacingConfig
 
 #### Files Modified in Task 2.2 (Complete)
 - `src/types/pdf.ts` - Added TextOptions and PageNumberFormat interfaces

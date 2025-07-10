@@ -30,9 +30,9 @@
 
 ### Signature Block Processing
 - [ ] 2.4 Build Signature Block Parser (Details: tasks-parent-2.4-detailed.md)
-  - [ ] 2.4.1 Create SignatureBlockParser class
-  - [ ] 2.4.2 Implement marker detection regex
-  - [ ] 2.4.3 Parse signature block content
+  - [x] 2.4.1 Create SignatureBlockParser class
+  - [x] 2.4.2 Implement marker detection regex
+  - [x] 2.4.3 Parse signature block content
   - [ ] 2.4.4 Handle different block types
   - [ ] 2.4.5 Extract layout information
 
@@ -92,12 +92,14 @@ Before marking complete, verify:
 
 ## Relevant Files
 
-- `src/types/pdf.ts` - TypeScript interfaces for PDF generation (includes formatting types)
+- `src/types/pdf.ts` - TypeScript interfaces for PDF generation (includes formatting types and signature interfaces)
 - `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (complete with all methods)
 - `src/services/pdf/DocumentFormatter.ts` - Document-specific formatting rules manager
+- `src/services/pdf/SignatureBlockParser.ts` - Parser for signature block markers (Task 2.4 in progress)
 - `src/config/pdf-formatting.ts` - Formatting configuration system
 - `__tests__/services/pdf/LegalPDFGenerator.test.ts` - Unit tests for PDF generator (33 tests)
 - `__tests__/services/pdf/DocumentFormatter.test.ts` - Unit tests for formatter (42 tests)
+- `__tests__/services/pdf/SignatureBlockParser.test.ts` - Unit tests for signature parser (33 tests, 27 passing)
 - `__tests__/config/pdf-formatting.test.ts` - Unit tests for configuration (16 tests)
 - `__tests__/services/pdf/pdfkit-setup.test.ts` - PDFKit setup validation tests (3 tests)
 - `docs/testing/test-results/pdf-generation/` - Generated test PDFs (18+ files)

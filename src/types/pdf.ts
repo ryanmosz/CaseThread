@@ -100,4 +100,45 @@ export interface LineSpacingConfig {
   single: number;
   oneHalf: number;
   double: number;
+}
+
+/**
+ * Represents a detected signature marker in the document
+ */
+export interface SignatureMarker {
+  type: 'signature' | 'initial' | 'notary';
+  id: string;
+  fullMarker: string;
+  startIndex: number;
+  endIndex: number;
+}
+
+/**
+ * Information about a party in a signature block
+ */
+export interface SignatureParty {
+  role: string;
+  name?: string;
+  title?: string;
+  company?: string;
+  lineType: 'signature' | 'initial';
+}
+
+/**
+ * Complete signature block data extracted from document
+ */
+export interface SignatureBlockData {
+  marker: SignatureMarker;
+  layout: 'single' | 'side-by-side';
+  parties: SignatureParty[];
+  notaryRequired: boolean;
+}
+
+/**
+ * Document with extracted signature blocks
+ */
+export interface ParsedDocument {
+  content: string[];
+  signatureBlocks: SignatureBlockData[];
+  hasSignatures: boolean;
 } 
