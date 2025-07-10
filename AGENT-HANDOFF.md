@@ -130,4 +130,7 @@
 - **plan-parent.md**: Task-agnostic format ready for PRD generation
 - **Archival System**: In place for maintaining development history
 - **Branch**: feature/pdf-generation with all updates committed
-- **Next Steps**: New agent can start fresh with prompt.md and begin Task 2.0 
+- **Next Steps**: New agent can start fresh with prompt.md and begin Task 2.0
+- **Critical Fix**: Added missing task implementation section to end of prompt.md
+  - Now properly ends with "Current task to implement: **TASK ID:**"
+  - Allows standard workflow: paste prompt + add task number (e.g., "2.1") 
