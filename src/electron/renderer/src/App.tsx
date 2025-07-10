@@ -58,7 +58,11 @@ class ErrorBoundary extends React.Component<
 interface AppState {
   templates: Template[];
   selectedTemplate: Template | null;
-  selectedDocument: string | null;
+  selectedDocument: {
+    content: string;
+    path: string;
+    name: string;
+  } | null;
   documentTree: DirectoryEntry[];
   isLoading: boolean;
   error: string | null;
@@ -177,7 +181,11 @@ const App: React.FC = () => {
       if (result.success && result.data) {
         setState(prev => ({ 
           ...prev, 
-          selectedDocument: result.data || null 
+          selectedDocument: {
+            content: result.data || '',
+            path: filePath,
+            name: filePath.split('/').pop() || 'Untitled Document',
+          }
         }));
       }
     } catch (error) {
@@ -220,14 +228,18 @@ const App: React.FC = () => {
         console.log('App: Document preview:', documentContent.substring(0, 200));
         
         if (documentContent.trim()) {
-          setState(prev => ({
-            ...prev,
-            selectedDocument: documentContent,
-            isLoading: false,
-          }));
+                      setState(prev => ({
+              ...prev,
+              selectedDocument: {
+                content: documentContent,
+                path: `output/${result.data?.folderName || 'document-folder'}`,
+                name: `${state.selectedTemplate?.name || 'Document'} - Generated`,
+              },
+              isLoading: false,
+            }));
           
           // Show success toast with folder path
-          const folderName = result.data.folderName || 'document-folder';
+          const folderName = result.data?.folderName || 'document-folder';
           toast.success(
             `${state.selectedTemplate?.name || 'Document'} generated successfully!\nSaved to folder: output/${folderName}`, 
             {
@@ -468,10 +480,11 @@ const App: React.FC = () => {
             {/* Middle Pane - Document Viewer */}
             <div className="flex-1 bg-card flex flex-col">
               <EnhancedDocumentViewer
-                content={state.selectedDocument}
+                content={state.selectedDocument?.content || ''}
                 isLoading={state.isLoading}
                 error={state.error}
-                documentType={state.selectedTemplate?.name}
+                documentName={state.selectedDocument?.name || ''}
+                documentPath={state.selectedDocument?.path || ''}
                 generatedAt={new Date().toISOString()}
               />
             </div>
@@ -509,7 +522,10 @@ const App: React.FC = () => {
             <div className="flex items-center justify-between text-sm text-foreground/60">
               <div>Ready</div>
               <div>
-                {state.selectedTemplate && `Selected: ${state.selectedTemplate.name}`}
+                {state.selectedDocument 
+                  ? state.selectedDocument.path 
+                  : 'No document selected'
+                }
               </div>
             </div>
           </footer>
