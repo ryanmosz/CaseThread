@@ -1,0 +1,67 @@
+description: Never delete important development files - archive them instead
+globs: 
+  - AGENT-HANDOFF.md
+  - docs/devops/prompt.md
+  - docs/devops/plan-parent.md
+alwaysApply: false
+---
+# File Archival Rule
+
+## Critical Files That Must Be Archived (Never Deleted)
+
+1. **AGENT-HANDOFF.md** - Project state documentation
+2. **docs/devops/prompt.md** - Development assistant prompts
+3. **docs/devops/plan-parent.md** - Planning documents
+4. **Task files** when transitioning between major tasks
+
+## Archival Process
+
+### When to Archive
+- Starting a new parent task
+- Major restructuring of a critical file
+- Before significant content changes
+- When requested by user
+
+### How to Archive
+1. **Create timestamped copy**:
+   ```bash
+   cp AGENT-HANDOFF.md archive/handoff/AGENT-HANDOFF-$(date +%Y-%m-%d)-task6-complete.md
+   ```
+
+2. **Add summary to current file**:
+   ```markdown
+   ## Previous Content Summary
+   Archived to: archive/handoff/AGENT-HANDOFF-2025-01-14-task6-complete.md
+   Summary: Completed Task 6.0 (signature blocks), 318 tests passing
+   ```
+
+3. **Continue with updates**
+
+### Archive Structure
+```
+archive/
+├── devops/       # DevOps files (prompts, workflows)
+├── handoff/      # AGENT-HANDOFF.md versions
+├── prompts/      # Plan prompts and task prompts
+└── README.md     # Archive documentation
+```
+
+### Naming Convention
+Format: `[original-filename]-[YYYY-MM-DD]-[brief-description].md`
+
+Examples:
+- `AGENT-HANDOFF-2025-01-14-task6-complete.md`
+- `prompt-2025-01-14-pdf-generation-start.md`
+- `plan-parent-2025-01-14-pre-task7.md`
+
+## Benefits
+- Preserves development history
+- Enables rollback if needed
+- Documents project evolution
+- Maintains audit trail
+
+## Never Do
+- ❌ Delete AGENT-HANDOFF.md
+- ❌ Overwrite critical files without archiving
+- ❌ Clear content without preserving history
+- ❌ Use generic archive names (always include date and context)

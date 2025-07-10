@@ -123,6 +123,13 @@ casethread-poc    # CLI after building
 ### MCP Tools for Efficiency
 Start with `mcp_RepoPrompt_manage_selection` to focus on relevant files. Use search/read tools extensively for faster development.
 
+### File Archival Workflow
+**NEVER delete AGENT-HANDOFF.md or important development files.** Instead:
+- When starting a new parent task: Archive AGENT-HANDOFF.md to `archive/handoff/AGENT-HANDOFF-[YYYY-MM-DD]-[task-description].md`
+- When updating prompts: Archive to `archive/devops/` or `archive/prompts/`
+- Include brief summary of archived content in the updated file
+- See `archive/README.md` for detailed archival procedures
+
 ## ✅ COMPLETION CHECKLIST
 
 Before marking any sub-task complete:
