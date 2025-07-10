@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardBody, Button, Spinner } from '@heroui/react';
+import { ThemeProvider } from './components/ThemeProvider';
+import ThemeSwitcher from './components/ThemeSwitcher';
 import DocumentBrowser from './components/DocumentBrowser';
 import DocumentViewer from './components/DocumentViewer';
 import TemplateSelector from './components/TemplateSelector';
@@ -282,82 +284,85 @@ const App: React.FC = () => {
   }
 
   return (
-    <ErrorBoundary>
-      <div className="h-screen flex flex-col bg-gray-50">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">CaseThread</h1>
-              <p className="text-sm text-gray-600">Legal Document Generator</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              {state.isLoading && <Spinner size="sm" />}
-              <div className="text-sm text-gray-500">
-                {state.templates.length} templates loaded
+    <ThemeProvider defaultTheme="light">
+      <ErrorBoundary>
+        <div className="h-screen flex flex-col bg-background">
+          {/* Header */}
+          <header className="bg-card border-b border-divider px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">CaseThread</h1>
+                <p className="text-sm text-foreground/70">Legal Document Generator</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                {state.isLoading && <Spinner size="sm" />}
+                <div className="text-sm text-foreground/60">
+                  {state.templates.length} templates loaded
+                </div>
+                <ThemeSwitcher />
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Main Content - Three Pane Layout */}
-        <main className="flex-1 flex overflow-hidden">
-          {/* Left Pane - Document Browser */}
-          <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Documents</h2>
+          {/* Main Content - Three Pane Layout */}
+          <main className="flex-1 flex overflow-hidden">
+            {/* Left Pane - Document Browser */}
+            <div className="w-80 bg-card border-r border-divider flex flex-col">
+              <div className="px-4 py-3 border-b border-divider">
+                <h2 className="text-lg font-semibold text-foreground">Documents</h2>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <DocumentBrowser
+                  documentTree={state.documentTree}
+                  onDocumentSelect={handleDocumentSelect}
+                />
+              </div>
             </div>
-            <div className="flex-1 overflow-hidden">
-              <DocumentBrowser
-                documentTree={state.documentTree}
-                onDocumentSelect={handleDocumentSelect}
-              />
-            </div>
-          </div>
 
-          {/* Middle Pane - Document Viewer */}
-          <div className="flex-1 bg-white flex flex-col">
-            <div className="px-6 py-3 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Document Viewer</h2>
+            {/* Middle Pane - Document Viewer */}
+            <div className="flex-1 bg-card flex flex-col">
+              <div className="px-6 py-3 border-b border-divider">
+                <h2 className="text-lg font-semibold text-foreground">Document Viewer</h2>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <DocumentViewer
+                  content={state.selectedDocument}
+                  isLoading={state.isLoading}
+                  error={state.error}
+                  documentType={state.selectedTemplate?.name}
+                  generatedAt={new Date().toISOString()}
+                />
+              </div>
             </div>
-            <div className="flex-1 overflow-hidden">
-                          <DocumentViewer
-              content={state.selectedDocument}
-              isLoading={state.isLoading}
-              error={state.error}
-              documentType={state.selectedTemplate?.name}
-              generatedAt={new Date().toISOString()}
-            />
-            </div>
-          </div>
 
-          {/* Right Pane - Template Selector */}
-          <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Templates</h2>
+            {/* Right Pane - Template Selector */}
+            <div className="w-80 bg-card border-l border-divider flex flex-col">
+              <div className="px-4 py-3 border-b border-divider">
+                <h2 className="text-lg font-semibold text-foreground">Templates</h2>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <TemplateSelector
+                  templates={state.templates}
+                  selectedTemplate={state.selectedTemplate}
+                  onTemplateSelect={handleTemplateSelect}
+                  onGenerateDocument={handleGenerateDocument}
+                />
+              </div>
             </div>
-            <div className="flex-1 overflow-hidden">
-              <TemplateSelector
-                templates={state.templates}
-                selectedTemplate={state.selectedTemplate}
-                onTemplateSelect={handleTemplateSelect}
-                onGenerateDocument={handleGenerateDocument}
-              />
-            </div>
-          </div>
-        </main>
+          </main>
 
-        {/* Status Bar */}
-        <footer className="bg-gray-100 border-t border-gray-200 px-6 py-2">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <div>Ready</div>
-            <div>
-              {state.selectedTemplate && `Selected: ${state.selectedTemplate.name}`}
+          {/* Status Bar */}
+          <footer className="bg-card border-t border-divider px-6 py-2">
+            <div className="flex items-center justify-between text-sm text-foreground/60">
+              <div>Ready</div>
+              <div>
+                {state.selectedTemplate && `Selected: ${state.selectedTemplate.name}`}
+              </div>
             </div>
-          </div>
-        </footer>
-      </div>
-    </ErrorBoundary>
+          </footer>
+        </div>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 };
 

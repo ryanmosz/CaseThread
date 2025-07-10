@@ -1,31 +1,21 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { HeroUIProvider } from '@heroui/react';
 import App from './App';
 import './styles/globals.css';
-
-// Legal software theme configuration
-const theme = {
-  colors: {
-    primary: {
-      DEFAULT: '#0ea5e9',
-      foreground: '#ffffff'
-    },
-    focus: '#0ea5e9'
-  }
-};
 
 const container = document.getElementById('root');
 if (!container) {
   throw new Error('Root element not found');
 }
 
+// Add theme classes to the root element
 const root = createRoot(container);
+
+// Add initial theme classes to the document element
+document.documentElement.classList.add('light', 'text-foreground', 'bg-background');
 
 root.render(
   <React.StrictMode>
-    <HeroUIProvider theme={theme}>
-      <App />
-    </HeroUIProvider>
+    <App />
   </React.StrictMode>
 ); 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,13 +11,16 @@
       margin: 0;
       padding: 0;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background-color: #f8fafc;
+      background-color: hsl(var(--heroui-background));
+      color: hsl(var(--heroui-foreground));
       overflow: hidden;
     }
     
     #root {
       width: 100vw;
       height: 100vh;
+      background-color: hsl(var(--heroui-background));
+      color: hsl(var(--heroui-foreground));
     }
     
     /* Custom scrollbar for webkit browsers */
@@ -27,21 +30,33 @@
     }
     
     ::-webkit-scrollbar-track {
-      background: #f1f5f9;
+      background: hsl(var(--heroui-default-100));
     }
     
     ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
+      background: hsl(var(--heroui-default-300));
       border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+      background: hsl(var(--heroui-default-400));
+    }
+    
+    /* Loading state */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-size: 16px;
+      color: hsl(var(--heroui-foreground));
     }
   </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div class="loading">Loading CaseThread...</div>
+  </div>
   <script type="module" src="./src/main.tsx"></script>
 </body>
 </html> 
