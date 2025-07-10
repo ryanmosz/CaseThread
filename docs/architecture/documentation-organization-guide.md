@@ -4,13 +4,22 @@
 
 This guide helps agents and developers understand where to place different types of documentation to maintain consistency across the CaseThread codebase.
 
-## Directory Structure
+## Project Structure
 
 ```
-G2W4-CaseThread/
-├── docs/
-│   ├── planning/          # Project planning and strategy
-│   ├── architecture/      # Technical decisions and system design
+CaseThread/
+├── .cursor/              # Cursor-specific configurations
+│   └── rules/           # AI behavior rules
+├── __tests__/           # Test files mirroring src structure
+├── archive/             # Historical versions of important files
+│   ├── devops/         # Archived DevOps files (prompts, workflows)
+│   ├── handoff/        # Historical AGENT-HANDOFF.md versions
+│   ├── prompts/        # Previous plan prompts and task prompts
+│   └── README.md       # Archive documentation
+├── docs/                # Project documentation
+│   ├── architecture/    # System design and technical decisions
+│   ├── devops/         # Development operations procedures
+│   ├── planning/       # Project planning and strategy
 │   ├── testing/          # Test plans, results, and scripts
 │   ├── tasks/            # Development task tracking
 │   └── devops/           # Deployment and operations guides
