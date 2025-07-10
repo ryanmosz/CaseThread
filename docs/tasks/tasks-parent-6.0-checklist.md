@@ -55,7 +55,7 @@
   - [x] 6.9 Technology Transfer Agreement signature/initial blocks
     - [x] 6.9.1 Investigate signature/initial requirements and positions
     - [x] 6.9.2 Implement blocks and test
-    - [ ] 6.9.3 Create GUI field requirements documentation
+    - [x] 6.9.3 Create GUI field requirements documentation
     (Details: tasks-parent-6.9-detailed.md)
   - [ ] 6.10 Update TypeScript interfaces and types (Details: tasks-parent-6.10-detailed.md)
   - [ ] 6.11 Run and verify all existing tests pass (Details: tasks-parent-6.11-detailed.md)
