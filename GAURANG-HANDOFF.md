@@ -42,6 +42,15 @@ This is your primary reference containing:
 - Validation rules for each field
 - Quick reference tables showing all dynamic behaviors
 
+### 1.5. **NEW: Visual Conditional Logic Diagrams** 🎯
+**Path:** `docs/gaurang-handoff/conditional-logic-diagrams/`
+
+Visual flowcharts for each template showing:
+- Decision points and field dependencies
+- Which fields appear/disappear based on selections
+- Document sections that are conditionally included
+- Implementation complexity order (start with cease-and-desist.md)
+
 ### 2. **Template JSON Files**
 **Path:** `templates/core/*.json`
 
@@ -99,14 +108,16 @@ Frontend validation needed for:
 ## Quick Start Checklist
 
 1. [ ] Read `docs/templates/gui-field-requirements.md` thoroughly
-2. [ ] Review the quick reference tables for conditional logic
-3. [ ] Check each template's JSON file for the complete field list
-4. [ ] Note which fields trigger show/hide of other fields
-5. [ ] Implement progressive disclosure for complex forms
-6. [ ] Add "(Optional)" labels to all optional fields
-7. [ ] Only validate visible fields (hidden fields should be ignored)
-8. [ ] Test minimum viable forms (only required fields)
-9. [ ] Test maximum complexity forms (all options enabled)
+2. [ ] Review the visual diagrams in `docs/gaurang-handoff/conditional-logic-diagrams/`
+3. [ ] Start with simplest template (cease-and-desist) as shown in diagrams
+4. [ ] Review the quick reference tables for conditional logic
+5. [ ] Check each template's JSON file for the complete field list
+6. [ ] Note which fields trigger show/hide of other fields
+7. [ ] Implement progressive disclosure for complex forms
+8. [ ] Add "(Optional)" labels to all optional fields
+9. [ ] Only validate visible fields (hidden fields should be ignored)
+10. [ ] Test minimum viable forms (only required fields)
+11. [ ] Test maximum complexity forms (all options enabled)
 
 ## Common Pitfalls to Avoid
 
