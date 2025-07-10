@@ -184,3 +184,9 @@ Templates use semantic versioning:
 - Patch version: Bug fixes
 
 When updating templates, consider backward compatibility with existing generated documents. 
+
+## Related Documentation
+
+- **[Signature Block Schema](./signature-block-schema.md)**: Detailed signature block implementation guide
+- **[Formatting Requirements](./formatting-requirements-by-document.md)**: Specific formatting standards for each document type
+- **[PDF Implementation Guide](./pdf-formatting-implementation-guide.md)**: Simplified implementation guide for PDF generation 

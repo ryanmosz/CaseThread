@@ -19,21 +19,39 @@
    - 6.12 ✅ Created comprehensive documentation
 
 ### 🟠 High Priority (Tuesday-Wednesday)
-2. **Implement PDF generation with PDFKit including signature blocks**
-   - Set up Letter size, 1" margins, Times New Roman 12pt
-   - Create modular PDF generation service
-   - Parse signature markers from text
-   - Implement signature block positioning with page-break prevention
-   - Handle single and side-by-side layouts
-   - Test with all document types
-6.11
-### 🟡 Medium Priority (Wednesday)
-3. **Complete legal formatting requirements**
-   - Page numbering (bottom center/right)
-   - Double-spacing for body text
-   - Single-spacing for signature blocks
-   - Professional document structure
+2. **Create Core PDF Generation Service with Legal Formatting**
+   - Set up PDFKit with legal document standards:
+     - Letter size (8.5 x 11)
+     - 1" margins all sides
+     - Times New Roman 12pt
+     - Double-spacing for body text (check legal requirements)
+     - Single-spacing for signature blocks and block quotes
+     - Page numbering (bottom center/right)
+   - Create modular PDF generation architecture:
+     - Base LegalPDFGenerator class
+     - Methods for title, paragraphs, sections, lists
+     - Professional document structure
+   - Implement text parsing:
+     - Parse document sections
+     - Identify paragraph types
+     - Extract document metadata
 
+3. **Implement Signature Block Handling**
+   - Parse signature markers from generated text:
+     - `[SIGNATURE_BLOCK:*]` markers
+     - `[INITIALS_BLOCK:*]` markers
+     - `[NOTARY_BLOCK:*]` markers
+   - Implement signature block positioning:
+     - Page-break prevention logic
+     - Single signature layout
+     - Side-by-side signature layout
+     - Grouped signature layout
+   - Test with all 8 document types:
+     - Verify each template's unique requirements
+     - Check positioning and spacing
+     - Ensure no page splits
+
+### 🟡 Medium Priority (Wednesday)
 4. **Create CLI export command**
    - `casethread export input.txt output.pdf`
    - Ensure functions are callable from code
