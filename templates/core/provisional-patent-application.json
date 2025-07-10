@@ -263,6 +263,60 @@
         "temperature": 0.3,
         "maxTokens": 200
       }
+    },
+    {
+      "id": "signatures",
+      "title": "Signatures",
+      "order": 11,
+      "required": true,
+      "content": "\n\nSignature(s):\n\n[SIGNATURE_BLOCK:inventor-signature]\n\n[SIGNATURE_BLOCK:witness-signature]",
+      "firmCustomizable": false
+    }
+  ],
+  "signatureBlocks": [
+    {
+      "id": "inventor-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-section-11",
+        "marker": "[SIGNATURE_BLOCK:inventor-signature]"
+      },
+      "party": {
+        "role": "inventor",
+        "label": "Inventor",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      }
+    },
+    {
+      "id": "witness-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-section-11",
+        "marker": "[SIGNATURE_BLOCK:witness-signature]"
+      },
+      "party": {
+        "role": "witness",
+        "label": "Witness (Optional)",
+        "fields": {
+          "name": {
+            "required": false,
+            "label": "Name"
+          },
+          "date": {
+            "required": false,
+            "label": "Date"
+          }
+        }
+      }
     }
   ],
   "variables": {

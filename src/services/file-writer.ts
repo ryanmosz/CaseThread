@@ -18,21 +18,41 @@ export async function saveDocument(
   logger.debug(`Attempting to save document to: ${outputPath}`);
   
   try {
+    // Determine if we're in a test context
+    const isTestContext = 
+      process.env.NODE_ENV === 'test' ||
+      process.env.TEST_MODE === 'true' ||
+      (process.argv[1] && process.argv[1].includes('jest'));
+
+    // Adjust path for test context
+    let finalPath = outputPath;
+    if (isTestContext && !outputPath.includes('test-results')) {
+      // Extract just the filename
+      const filename = path.basename(outputPath);
+      const testSubDir = process.env.TEST_NAME || 'general-tests';
+      finalPath = path.join('docs', 'testing', 'test-results', testSubDir, filename);
+      logger.debug(`Test context detected, redirecting output to: ${finalPath}`);
+    }
+    
     // Ensure the directory exists
-    const dir = path.dirname(outputPath);
+    const dir = path.dirname(finalPath);
     await fs.mkdir(dir, { recursive: true });
     logger.debug(`Ensured directory exists: ${dir}`);
     
     // Write the file
-    await fs.writeFile(outputPath, content, 'utf-8');
+    await fs.writeFile(finalPath, content, 'utf-8');
     logger.debug(`File written successfully`);
     
     // Get file stats
-    const stats = await fs.stat(outputPath);
+    const stats = await fs.stat(finalPath);
     logger.debug(`File size: ${stats.size} bytes`);
     
+    if (isTestContext) {
+      logger.info(`Test document saved to: ${finalPath}`);
+    }
+    
     return {
-      path: outputPath,
+      path: finalPath,
       size: stats.size,
       timestamp: new Date()
     };

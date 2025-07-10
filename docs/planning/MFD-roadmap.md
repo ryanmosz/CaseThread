@@ -66,6 +66,7 @@
 - Page numbers and margins
 - Signature blocks (attorney info, date lines, signature lines with proper placement)
     - WARNING:this requires updates to the json templates for all doc types
+    - PUSH TO MAIN AS SOON AS COMPLETED AND TESTED
     - HIGHEST PRIORITY FOR DEVELOPER-R 
 - Working CLI command: `casethread export input.txt output.pdf`
 - Ensure PDF generation functions are modular and callable

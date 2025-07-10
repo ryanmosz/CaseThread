@@ -235,6 +235,11 @@ IMPORTANT:
 - Ensure all variable placeholders are replaced with actual data
 - Maintain professional formatting throughout
 - Use proper markdown syntax for headers, lists, and emphasis
+- PRESERVE these special markers exactly as they appear in the template:
+  - [SIGNATURE_BLOCK:*] - placement markers for signature areas
+  - [INITIALS_BLOCK:*] - placement markers for initial areas
+  - [NOTARY_BLOCK:*] - placement markers for notary sections
+  These markers must appear literally in your output - do NOT replace or remove them
 
 Generate the complete legal document now:`;
 

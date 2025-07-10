@@ -217,8 +217,54 @@
       "title": "Signature",
       "order": 9,
       "required": true,
-      "content": "Respectfully submitted,\n\n/[ATTORNEY NAME]/\n[ATTORNEY NAME]\nRegistration No. [######]\n[FIRM NAME]\n[ADDRESS]\n[PHONE]\n[EMAIL]\n\nDate: {{date current_date \"MMMM DD, YYYY\"}}",
+      "content": "Respectfully submitted,\n\n[SIGNATURE_BLOCK:attorney-signature]\n\nDate: {{date current_date \"MMMM DD, YYYY\"}}",
       "firmCustomizable": true
+    }
+  ],
+  "signatureBlocks": [
+    {
+      "id": "attorney-signature",
+      "type": "single",
+      "label": "Attorney/Agent Signature",
+      "position": "signature",
+      "fields": [
+        {
+          "id": "name",
+          "type": "text",
+          "label": "Attorney/Agent Name",
+          "required": true
+        },
+        {
+          "id": "registration_number",
+          "type": "text",
+          "label": "USPTO Registration No.",
+          "required": true
+        },
+        {
+          "id": "firm_name",
+          "type": "text",
+          "label": "Firm Name",
+          "required": false
+        },
+        {
+          "id": "address",
+          "type": "textarea",
+          "label": "Firm Address",
+          "required": false
+        },
+        {
+          "id": "phone",
+          "type": "text",
+          "label": "Phone Number",
+          "required": true
+        },
+        {
+          "id": "email",
+          "type": "text",
+          "label": "Email Address",
+          "required": true
+        }
+      ]
     }
   ]
 } 

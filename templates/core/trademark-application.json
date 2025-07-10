@@ -242,8 +242,30 @@
       "title": "Signature",
       "order": 8,
       "required": true,
-      "content": "SIGNATURE: /{{attorney_name}}/\n\nNAME: {{attorney_name}}\n\nDATE: {{date current_date \"MM/DD/YYYY\"}}\n\nATTORNEY OF RECORD\n\nEMAIL: {{attorney_email}}",
+      "content": "[SIGNATURE_BLOCK:attorney-signature]\n\nATTORNEY OF RECORD",
       "firmCustomizable": false
+    }
+  ],
+  "signatureBlocks": [
+    {
+      "id": "attorney-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-declaration",
+        "marker": "[SIGNATURE_BLOCK:attorney-signature]"
+      },
+      "party": {
+        "role": "attorney",
+        "label": "ATTORNEY OF RECORD",
+        "fields": {
+          "name": { "required": true, "label": "Name" },
+          "email": { 
+            "required": true, 
+            "label": "Email" 
+          },
+          "date": { "required": true, "label": "Date" }
+        }
+      }
     }
   ]
 } 

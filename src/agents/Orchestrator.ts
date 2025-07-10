@@ -41,6 +41,14 @@ export class Orchestrator {
       outputPath: config.outputPath
     });
 
+    // Track stage timings
+    const stageTiming = {
+      startup: 0,
+      context: 0,
+      drafting: 0,
+      saving: 0
+    };
+
     try {
       // Validate job configuration
       this.validateJobConfig(config);
@@ -67,8 +75,14 @@ export class Orchestrator {
         normalizedData: yamlData
       };
 
+      // Record startup time
+      stageTiming.startup = Date.now() - startTime;
+      logger.info(`⏱️  Stage: Startup & Validation - ${stageTiming.startup}ms`);
+
       // Stage 1: Context Builder Agent
+      const contextStartTime = Date.now();
       logger.debug('Running Context Builder Agent');
+      logger.info('🔍 Stage: Context Search (ChromaDB) - Starting...');
       executionOrder.push('ContextBuilderAgent');
       
       const contextResult = await this.contextBuilderAgent.process({
@@ -92,6 +106,10 @@ export class Orchestrator {
         };
       }
 
+      // Record context time
+      stageTiming.context = Date.now() - contextStartTime;
+      logger.info(`⏱️  Stage: Context Search - ${stageTiming.context}ms`);
+
       // Collect metadata from context building
       agentLogs.push(...(contextResult.metadata?.agentLogs || []));
       checkpointResults.push(...(contextResult.metadata?.checkpoints || []));
@@ -99,7 +117,9 @@ export class Orchestrator {
       const { contextBundle } = contextResult.data;
 
       // Stage 2: Drafting Agent
+      const draftStartTime = Date.now();
       logger.debug('Running Drafting Agent');
+      logger.info('🤖 Stage: Document Generation (AI) - Starting...');
       executionOrder.push('DraftingAgent');
       
       const draftingResult = await this.draftingAgent.process({
@@ -112,6 +132,10 @@ export class Orchestrator {
         throw new Error(`Drafting Agent failed: ${draftingResult.error?.message}`);
       }
 
+      // Record drafting time
+      stageTiming.drafting = Date.now() - draftStartTime;
+      logger.info(`⏱️  Stage: Document Generation - ${stageTiming.drafting}ms`);
+
       // Collect metadata from drafting
       agentLogs.push(...(draftingResult.metadata?.agentLogs || []));
       checkpointResults.push(...(draftingResult.metadata?.checkpoints || []));
@@ -119,6 +143,8 @@ export class Orchestrator {
       const { draftMarkdown } = draftingResult.data;
 
       // Save the document
+      const saveStartTime = Date.now();
+      logger.info('💾 Stage: Saving Document - Starting...');
       const outputPath = createOutputPath(config.outputPath, config.documentType);
       
       const generationTime = Math.round((Date.now() - startTime) / 1000);
@@ -131,11 +157,26 @@ export class Orchestrator {
 
       const saveResult = await saveDocument(documentWithMetadata, outputPath);
       
+      // Record saving time
+      stageTiming.saving = Date.now() - saveStartTime;
+      logger.info(`⏱️  Stage: Saving Document - ${stageTiming.saving}ms`);
+      
+      const totalTime = Date.now() - startTime;
       logger.info('Job completed successfully', {
         outputPath: saveResult.path,
         fileSize: saveResult.size,
-        processingTime: generationTime
+        processingTime: generationTime,
+        stageTiming: {
+          startup: `${stageTiming.startup}ms`,
+          context: `${stageTiming.context}ms`,
+          drafting: `${stageTiming.drafting}ms`,
+          saving: `${stageTiming.saving}ms`,
+          total: `${totalTime}ms`
+        }
       });
+
+      // Log summary timing
+      logger.info(`📊 Timing Summary: Startup(${stageTiming.startup}ms) → Context(${stageTiming.context}ms) → AI(${stageTiming.drafting}ms) → Save(${stageTiming.saving}ms) = Total(${totalTime}ms)`);
 
       // Create a simple review packet for now
       const reviewPacket = {
@@ -169,7 +210,7 @@ export class Orchestrator {
         success: true,
         reviewPacket,
         metadata: {
-          totalProcessingTime: Date.now() - startTime,
+          totalProcessingTime: totalTime,
           agentExecutionOrder: executionOrder,
           checkpointResults,
           agentLogs

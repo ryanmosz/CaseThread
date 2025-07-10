@@ -1,0 +1,88 @@
+{
+  "comment": "Example: Side-by-side signatures for patent assignment with notary and initials",
+  "signatureBlocks": [
+    {
+      "id": "assignor-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-section-general",
+        "marker": "[SIGNATURE_BLOCK:assignor-signature]"
+      },
+      "party": {
+        "role": "assignor",
+        "label": "ASSIGNOR",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      },
+      "notaryRequired": true
+    },
+    {
+      "id": "assignee-signature",
+      "type": "single",
+      "placement": {
+        "location": "after-section-general",
+        "marker": "[SIGNATURE_BLOCK:assignee-signature]"
+      },
+      "layout": {
+        "position": "side-by-side",
+        "groupWith": "assignor-signature",
+        "preventPageBreak": true
+      },
+      "party": {
+        "role": "assignee",
+        "label": "ASSIGNEE",
+        "fields": {
+          "name": {
+            "required": true,
+            "label": "Name"
+          },
+          "title": {
+            "required": false,
+            "label": "Title"
+          },
+          "company": {
+            "required": true,
+            "label": "By"
+          },
+          "date": {
+            "required": true,
+            "label": "Date"
+          }
+        }
+      }
+    }
+  ],
+  "initialBlocks": [
+    {
+      "id": "assignment-acknowledgment",
+      "placement": {
+        "locations": ["after-section-assignment"],
+        "marker": "[INITIALS_BLOCK:assignment-acknowledgment]"
+      },
+      "party": {
+        "role": "all-parties",
+        "label": "Initial to acknowledge assignment of all rights"
+      },
+      "customText": "By initialing here, parties acknowledge the complete transfer of patent rights"
+    }
+  ],
+  "notaryBlocks": [
+    {
+      "id": "assignor-notary",
+      "forSignatureId": "assignor-signature",
+      "placement": {
+        "location": "after-assignor-signature",
+        "marker": "[NOTARY_BLOCK:assignor-notary]"
+      },
+      "state": "Delaware"
+    }
+  ]
+}
