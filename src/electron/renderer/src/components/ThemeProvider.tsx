@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { HeroUIProvider } from '@heroui/react';
+import { HeroUIProvider, ToastProvider } from '@heroui/react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -100,6 +100,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   return (
     <ThemeProviderContext.Provider value={value}>
       <HeroUIProvider>
+        <ToastProvider placement="bottom-left" />
         {children}
       </HeroUIProvider>
     </ThemeProviderContext.Provider>

@@ -16,9 +16,8 @@ import {
   Checkbox,
   Chip,
   Progress,
-
+  addToast
 } from '@heroui/react';
-import toast from 'react-hot-toast';
 import { Template, TemplateField } from '../../../../shared/types';
 
 interface EnhancedTemplateFormProps {
@@ -218,7 +217,7 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
   };
 
   // Validate only visible fields
-  const validateForm = (): boolean => {
+  const validateForm = (): { isValid: boolean; errors: FormErrors } => {
     const errors: FormErrors = {};
     
     template.requiredFields.forEach(field => {
@@ -268,15 +267,19 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
     });
     
     setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    return { isValid: Object.keys(errors).length === 0, errors };
   };
 
   const handleSubmit = () => {
-    if (!validateForm()) {
+    const validation = validateForm();
+    if (!validation.isValid) {
       // Show error toast for validation failures
-      const errorCount = Object.keys(formErrors).length;
-      toast.error(`Please fix ${errorCount} error${errorCount > 1 ? 's' : ''} in the form before generating the document`, {
-        duration: 4000,
+      const errorCount = Object.keys(validation.errors).length;
+      addToast({
+        title: "Form Validation Error",
+        description: `Please fix ${errorCount} error${errorCount > 1 ? 's' : ''} in the form before generating the document`,
+        color: "danger",
+        timeout: 2000,
       });
       return;
     }

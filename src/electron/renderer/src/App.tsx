@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardBody, Button, Spinner } from '@heroui/react';
-import { Toaster } from 'react-hot-toast';
-import toast from 'react-hot-toast';
+import { Card, CardBody, Button, Spinner, addToast } from '@heroui/react';
 import { ThemeProvider } from './components/ThemeProvider';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import DocumentBrowser from './components/DocumentBrowser';
@@ -240,13 +238,12 @@ const App: React.FC = () => {
           
           // Show success toast with folder path
           const folderName = result.data?.folderName || 'document-folder';
-          toast.success(
-            `${state.selectedTemplate?.name || 'Document'} generated successfully!\nSaved to folder: output/${folderName}`, 
-            {
-              duration: 7000,
-              icon: '📄',
-            }
-          );
+          addToast({
+            title: `${state.selectedTemplate?.name || 'Document'} generated successfully!`,
+            description: `Saved to folder: output/${folderName}`,
+            color: "success",
+            timeout: 7000,
+          });
           
           // Refresh document tree to show the new file
           await refreshDocumentTree();
@@ -296,9 +293,11 @@ const App: React.FC = () => {
       }
       
       // Show error toast
-      toast.error(userFriendlyError, {
-        duration: 6000,
-        icon: '❌',
+      addToast({
+        title: "Document Generation Failed",
+        description: userFriendlyError,
+        color: "danger",
+        timeout: 6000,
       });
       
       setState(prev => ({
@@ -341,52 +340,6 @@ const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light">
       <ErrorBoundary>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'hsl(var(--heroui-background))',
-              color: 'hsl(var(--heroui-foreground))',
-              border: '1px solid hsl(var(--heroui-default-200))',
-              borderRadius: '0.5rem',
-              boxShadow: '0 4px 12px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            },
-            success: {
-              iconTheme: {
-                primary: 'hsl(var(--heroui-success))',
-                secondary: 'hsl(var(--heroui-success-foreground))',
-              },
-              style: {
-                background: 'hsl(var(--heroui-success) / 0.6)',
-                color: 'hsl(var(--heroui-foreground))',
-                border: '1px solid hsl(var(--heroui-success) / 0.2)',
-              },
-            },
-            error: {
-              iconTheme: {
-                primary: 'hsl(var(--heroui-danger))',
-                secondary: 'hsl(var(--heroui-danger-foreground))',
-              },
-              style: {
-                background: 'hsl(var(--heroui-danger) / 0.6)',
-                color: 'hsl(var(--heroui-foreground))',
-                border: '1px solid hsl(var(--heroui-danger) / 0.2)',
-              },
-            },
-            loading: {
-              iconTheme: {
-                primary: 'hsl(var(--heroui-primary))',
-                secondary: 'hsl(var(--heroui-primary-foreground))',
-              },
-              style: {
-                background: 'hsl(var(--heroui-primary) / 0.6)',
-                color: 'hsl(var(--heroui-foreground))',
-                border: '1px solid hsl(var(--heroui-primary) / 0.2)',
-              },
-            },
-          }}
-        />
         <div className="h-screen flex flex-col bg-background">
           {/* Header */}
           <header className="bg-card border-b border-dashed border-divider/60 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
