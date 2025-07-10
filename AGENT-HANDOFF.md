@@ -1,6 +1,6 @@
 # AGENT-HANDOFF.md - CaseThread CLI Project State
 
-## Last Updated: 2025-01-15T21:15:00Z
+## Last Updated: 2025-01-15T23:00:00Z
 
 ### Current Task Status
 - **Previous Task Completed**: ✅ Parent Task 6.0 - Update JSON Templates with Signature Block Definitions
@@ -18,17 +18,17 @@
     - ✅ 2.2.3: Added text writing methods
     - ✅ 2.2.4: Implemented page management
     - ✅ 2.2.5: Added page numbering (with limitations)
-  - ⏳ 2.3: Implement Document Formatting Rules (2 of 5 sub-tasks complete)
+  - ✅ 2.3: Implement Document Formatting Rules (all 5 sub-tasks complete)
     - ✅ 2.3.1: Created DocumentFormatter class
     - ✅ 2.3.2: Defined formatting rules for all 8 document types
-    - ⏳ 2.3.3: Implement line spacing logic
-    - ⏳ 2.3.4: Handle special margin requirements  
-    - ⏳ 2.3.5: Create formatting configuration
+    - ✅ 2.3.3: Implemented line spacing logic
+    - ✅ 2.3.4: Handle special margin requirements  
+    - ✅ 2.3.5: Create formatting configuration
   - ⏳ 2.4-2.7: Remaining tasks not yet started
 
 ### Recent Changes
 
-#### Task 2.3 Progress (2025-01-15 - In Progress)
+#### Task 2.3 Completion (2025-01-15 - COMPLETE)
 - ✅ **2.3.1**: Created DocumentFormatter class
   - Added document type definitions to `src/types/pdf.ts`
   - Created `src/services/pdf/DocumentFormatter.ts` with base structure
@@ -50,6 +50,58 @@
   - Created comprehensive tests for each document type (15 tests total)
   - Generated 8 test PDFs to verify formatting visually
   - Each rule set includes: line spacing, margins, page number position, indentation, section numbering
+
+- ✅ **2.3.3**: Implemented line spacing logic
+  - **Line Spacing Methods**:
+    - `applyLineSpacing()`: Returns correct line gap for document type, always single for signatures
+    - `calculateLineHeight()`: Calculates total height (font size * 1.2 + line gap)
+    - `getElementSpacing()`: Returns spacing for paragraphs, sections (1.5x), titles (2x), lists (0.5x)
+    - `requiresDoubleSpacing()`: Helper to identify USPTO filings requiring double-spacing
+  - **Key Implementation Details**:
+    - Signature blocks always use single spacing regardless of document type
+    - Line height calculation uses standard 1.2x multiplier for font size
+    - Element spacing is relative to base paragraph spacing (12pt)
+  - Created comprehensive tests for all methods (8 new tests)
+  - Generated 3 test PDFs demonstrating single, 1.5, and double spacing
+  - Fixed floating point precision issues in tests using `toBeCloseTo()`
+
+- ✅ **2.3.4**: Handle special margin requirements
+  - **Implemented Methods**:
+    - `getMarginsForPage()`: Returns page-specific margins (1.5" top for office action page 1, 1" for all others)
+    - `getUsablePageArea()`: Calculates available space after accounting for margins
+    - `needsHeaderSpace()`: Identifies when special header space is needed
+    - `getHeaderContent()`: Generates header content for office action responses
+  - **Key Features**:
+    - Office action responses get 1.5" (108pt) top margin on first page only
+    - Subsequent pages return to standard 1" (72pt) margin
+    - Usable height reduced by 36pt (0.5") on first page of office actions
+    - Header content includes application number and response date if provided
+  - Created 13 new tests covering all margin scenarios
+  - Generated 2 demonstration PDFs showing margin differences
+  - All 390 tests passing
+
+- ✅ **2.3.5**: Create formatting configuration system
+  - **Created FormattingConfiguration class** (`src/config/pdf-formatting.ts`):
+    - `applyOverrides()`: Merges document-specific overrides with base rules
+    - `applyDefaults()`: Applies global default overrides
+    - `updateConfig()`: Dynamically updates configuration
+    - `clearOverrides()`: Removes overrides for specific document types
+    - `hasOverrides()`: Checks if overrides exist
+  - **Updated DocumentFormatter**:
+    - Constructor now accepts optional FormattingConfig
+    - `getFormattingRules()` applies configuration overrides
+    - `getConfiguration()`: Access configuration object
+    - `updateConfiguration()`: Dynamic configuration updates
+  - **Configuration Features**:
+    - Override any formatting property per document type
+    - Partial overrides supported (e.g., just margins or just line spacing)
+    - Dynamic updates without recreating formatter
+    - Defaults can be applied across all document types
+  - Created 22 new tests (6 for DocumentFormatter, 16 for FormattingConfiguration)
+  - Generated 5 demonstration PDFs showing configuration capabilities
+  - All 412 tests passing
+
+**Task 2.3 is now COMPLETE**: All document formatting functionality implemented and tested
 
 #### Task 2.2 Completion (2025-01-15 - COMPLETE)
 - **Successfully completed all 5 sub-tasks for Base PDF Generator Class**
@@ -163,11 +215,11 @@
 5. **Integration Preparation** (Task 6)
 
 ### Testing Summary
-- **Total Tests**: 369 (all passing, up from 358)
+- **Total Tests**: 412 (all passing, up from 390)
 - **Signature block tests**: 42 across all templates
-- **PDF generation tests**: 51 (3 setup + 33 LegalPDFGenerator + 15 DocumentFormatter)
+- **PDF generation tests**: 94 (3 setup + 33 LegalPDFGenerator + 42 DocumentFormatter + 16 FormattingConfiguration)
 - **Test approach**: TDD with test integrity maintained
-- **Next focus**: Implementing line spacing logic and special margin handling
+- **Next focus**: Building signature block parser (Task 2.4)
 
 ### Prompt.md Analysis Completed
 - **Old prompt**: Extracted as prompt-old.md (340 lines, Task 6.0 focused)

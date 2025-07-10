@@ -316,4 +316,245 @@ describe('DocumentFormatter', () => {
       });
     });
   });
+
+  describe('Special Margin Handling', () => {
+    describe('getMarginsForPage', () => {
+      it('should return standard margins for most documents', () => {
+        const margins = formatter.getMarginsForPage('nda-ip-specific', 1);
+        expect(margins).toEqual({
+          top: 72,
+          bottom: 72,
+          left: 72,
+          right: 72
+        });
+      });
+
+      it('should return special top margin for office action response first page', () => {
+        const firstPageMargins = formatter.getMarginsForPage('office-action-response', 1);
+        expect(firstPageMargins).toEqual({
+          top: 108, // 1.5 inches
+          bottom: 72,
+          left: 72,
+          right: 72
+        });
+      });
+
+      it('should return standard margins for office action response subsequent pages', () => {
+        const secondPageMargins = formatter.getMarginsForPage('office-action-response', 2);
+        expect(secondPageMargins).toEqual({
+          top: 72, // Back to 1 inch
+          bottom: 72,
+          left: 72,
+          right: 72
+        });
+      });
+    });
+
+    describe('getUsablePageArea', () => {
+      it('should calculate usable area for standard margins', () => {
+        const area = formatter.getUsablePageArea('provisional-patent-application', 1);
+        expect(area).toEqual({
+          width: 468, // 612 - 72 - 72
+          height: 648 // 792 - 72 - 72
+        });
+      });
+
+      it('should calculate reduced area for office action first page', () => {
+        const area = formatter.getUsablePageArea('office-action-response', 1);
+        expect(area).toEqual({
+          width: 468, // 612 - 72 - 72
+          height: 612 // 792 - 108 - 72 (reduced by extra top margin)
+        });
+      });
+
+      it('should calculate normal area for office action second page', () => {
+        const area = formatter.getUsablePageArea('office-action-response', 2);
+        expect(area).toEqual({
+          width: 468,
+          height: 648 // Back to normal
+        });
+      });
+    });
+
+    describe('needsHeaderSpace', () => {
+      it('should return true for office action response first page', () => {
+        expect(formatter.needsHeaderSpace('office-action-response', 1)).toBe(true);
+      });
+
+      it('should return false for office action response subsequent pages', () => {
+        expect(formatter.needsHeaderSpace('office-action-response', 2)).toBe(false);
+        expect(formatter.needsHeaderSpace('office-action-response', 3)).toBe(false);
+      });
+
+      it('should return false for all other document types', () => {
+        const otherDocTypes: DocumentType[] = [
+          'provisional-patent-application',
+          'trademark-application',
+          'patent-assignment-agreement',
+          'nda-ip-specific',
+          'patent-license-agreement',
+          'technology-transfer-agreement',
+          'cease-and-desist-letter'
+        ];
+
+        otherDocTypes.forEach(docType => {
+          expect(formatter.needsHeaderSpace(docType, 1)).toBe(false);
+        });
+      });
+    });
+
+    describe('getHeaderContent', () => {
+      it('should return header content for office action response with metadata', () => {
+        const header = formatter.getHeaderContent('office-action-response', {
+          applicationNumber: '16/123,456',
+          responseDate: 'December 15, 2024'
+        });
+        
+        expect(header).toEqual([
+          'Application No.: 16/123,456',
+          'Response Date: December 15, 2024'
+        ]);
+      });
+
+      it('should return partial header with only application number', () => {
+        const header = formatter.getHeaderContent('office-action-response', {
+          applicationNumber: '16/123,456'
+        });
+        
+        expect(header).toEqual([
+          'Application No.: 16/123,456'
+        ]);
+      });
+
+      it('should return null for office action with no metadata', () => {
+        const header = formatter.getHeaderContent('office-action-response');
+        expect(header).toBeNull();
+      });
+
+      it('should return null for all other document types', () => {
+        const header = formatter.getHeaderContent('nda-ip-specific', {
+          applicationNumber: '16/123,456',
+          responseDate: 'December 15, 2024'
+        });
+        
+        expect(header).toBeNull();
+      });
+    });
+  });
+
+  describe('Configuration Support', () => {
+    it('should accept configuration in constructor', () => {
+      const customFormatter = new DocumentFormatter({
+        overrides: {
+          'nda-ip-specific': {
+            lineSpacing: 'double'
+          }
+        }
+      });
+
+      const rules = customFormatter.getFormattingRules('nda-ip-specific');
+      expect(rules.lineSpacing).toBe('double');
+      // Other properties should remain unchanged
+      expect(rules.fontSize).toBe(12);
+      expect(rules.margins.top).toBe(72);
+    });
+
+    it('should apply partial margin overrides', () => {
+      const customFormatter = new DocumentFormatter({
+        overrides: {
+          'provisional-patent-application': {
+            margins: {
+              top: 90, // Override just top margin
+              bottom: 72,
+              left: 72,
+              right: 72
+            }
+          }
+        }
+      });
+
+      const rules = customFormatter.getFormattingRules('provisional-patent-application');
+      expect(rules.margins.top).toBe(90);
+      expect(rules.margins.bottom).toBe(72);
+      expect(rules.lineSpacing).toBe('double'); // Should keep original
+    });
+
+    it('should update configuration dynamically', () => {
+      const formatter = new DocumentFormatter();
+      
+      // Initial state
+      let rules = formatter.getFormattingRules('trademark-application');
+      expect(rules.lineSpacing).toBe('single');
+      
+      // Update configuration
+      formatter.updateConfiguration({
+        overrides: {
+          'trademark-application': {
+            lineSpacing: 'double',
+            fontSize: 14
+          }
+        }
+      });
+      
+      // Check updated rules
+      rules = formatter.getFormattingRules('trademark-application');
+      expect(rules.lineSpacing).toBe('double');
+      expect(rules.fontSize).toBe(14);
+    });
+
+    it('should handle multiple document type overrides', () => {
+      const customFormatter = new DocumentFormatter({
+        overrides: {
+          'nda-ip-specific': {
+            lineSpacing: 'double'
+          },
+          'patent-license-agreement': {
+            fontSize: 14,
+            pageNumberPosition: 'bottom-left'
+          }
+        }
+      });
+
+      const ndaRules = customFormatter.getFormattingRules('nda-ip-specific');
+      expect(ndaRules.lineSpacing).toBe('double');
+      expect(ndaRules.fontSize).toBe(12); // Original
+
+      const licenseRules = customFormatter.getFormattingRules('patent-license-agreement');
+      expect(licenseRules.fontSize).toBe(14);
+      expect(licenseRules.pageNumberPosition).toBe('bottom-left');
+      expect(licenseRules.lineSpacing).toBe('single'); // Original
+    });
+
+    it('should not affect non-overridden document types', () => {
+      const customFormatter = new DocumentFormatter({
+        overrides: {
+          'cease-and-desist-letter': {
+            lineSpacing: 'double'
+          }
+        }
+      });
+
+      // Should use original rules for non-overridden types
+      const provisionalRules = customFormatter.getFormattingRules('provisional-patent-application');
+      expect(provisionalRules.lineSpacing).toBe('double'); // Original value
+      expect(provisionalRules.margins.top).toBe(72);
+    });
+
+    it('should access configuration object', () => {
+      const config = {
+        overrides: {
+          'office-action-response': {
+            fontSize: 11
+          }
+        }
+      };
+      
+      const formatter = new DocumentFormatter(config);
+      const configuration = formatter.getConfiguration();
+      
+      expect(configuration.getConfig()).toEqual(config);
+      expect(configuration.hasOverrides('office-action-response')).toBe(true);
+      expect(configuration.hasOverrides('nda-ip-specific')).toBe(false);
+    });
+  });
 }); 

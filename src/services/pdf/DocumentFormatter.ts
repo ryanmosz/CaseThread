@@ -1,9 +1,11 @@
 import { 
   DocumentType, 
   DocumentFormattingRules,
-  LineSpacingConfig
+  LineSpacingConfig,
+  Margins
 } from '../../types/pdf';
 import { createChildLogger, Logger } from '../../utils/logger';
+import { FormattingConfig, FormattingConfiguration } from '../../config/pdf-formatting';
 
 /**
  * Manages document-specific formatting rules for PDF generation
@@ -12,13 +14,12 @@ export class DocumentFormatter {
   private logger: Logger;
   private formattingRules: Map<DocumentType, DocumentFormattingRules>;
   private lineSpacingConfig: LineSpacingConfig;
+  private configuration: FormattingConfiguration;
 
-  /**
-   * Initialize DocumentFormatter with formatting rules
-   */
-  constructor() {
+  constructor(config?: FormattingConfig) {
     this.logger = createChildLogger({ service: 'DocumentFormatter' });
     this.formattingRules = new Map();
+    this.configuration = new FormattingConfiguration(config);
     
     // Define line spacing in points (12pt font base)
     this.lineSpacingConfig = {
@@ -28,27 +29,44 @@ export class DocumentFormatter {
     };
     
     this.initializeFormattingRules();
+    this.logger.debug('DocumentFormatter initialized', {
+      documentTypes: Array.from(this.formattingRules.keys()),
+      hasConfig: !!config
+    });
   }
 
   /**
    * Get formatting rules for a specific document type
    * @param documentType - The type of legal document
-   * @returns Formatting rules for the document type
+   * @returns Document formatting rules with any configuration overrides applied
    */
   public getFormattingRules(documentType: DocumentType): DocumentFormattingRules {
-    const rules = this.formattingRules.get(documentType);
+    const baseRules = this.formattingRules.get(documentType) || this.getDefaultRules();
     
-    if (!rules) {
-      this.logger.warn(`No formatting rules found for ${documentType}, using defaults`);
-      return this.getDefaultRules();
-    }
-    
-    return rules;
+    // Apply configuration overrides if present
+    return this.configuration.applyOverrides(documentType, baseRules);
+  }
+
+  /**
+   * Get the configuration object
+   * @returns Current formatting configuration
+   */
+  public getConfiguration(): FormattingConfiguration {
+    return this.configuration;
+  }
+
+  /**
+   * Update formatting configuration
+   * @param newConfig - New configuration to apply
+   */
+  public updateConfiguration(newConfig: Partial<FormattingConfig>): void {
+    this.configuration.updateConfig(newConfig);
+    this.logger.debug('Configuration updated', { newConfig });
   }
 
   /**
    * Get line spacing value in points
-   * @param spacing - The line spacing type
+   * @param spacing - Line spacing configuration
    * @returns Line spacing in points
    */
   public getLineSpacing(spacing: 'single' | 'one-half' | 'double'): number {
@@ -285,6 +303,84 @@ export class DocumentFormatter {
   public requiresDoubleSpacing(documentType: DocumentType): boolean {
     const rules = this.getFormattingRules(documentType);
     return rules.lineSpacing === 'double';
+  }
+
+  /**
+   * Get margins for specific page number
+   */
+  public getMarginsForPage(
+    documentType: DocumentType,
+    pageNumber: number
+  ): Margins {
+    const rules = this.getFormattingRules(documentType);
+    
+    // Office action responses have larger top margin on first page only
+    if (documentType === 'office-action-response') {
+      if (pageNumber === 1) {
+        return {
+          ...rules.margins,
+          top: 108 // 1.5 inches for application header
+        };
+      } else {
+        // Subsequent pages use standard 1" margin
+        return {
+          ...rules.margins,
+          top: 72 // Standard 1 inch for pages 2+
+        };
+      }
+    }
+    
+    return rules.margins;
+  }
+
+  /**
+   * Calculate usable page area
+   */
+  public getUsablePageArea(
+    documentType: DocumentType,
+    pageNumber: number = 1
+  ): { width: number; height: number } {
+    const margins = this.getMarginsForPage(documentType, pageNumber);
+    const pageWidth = 612; // Letter width in points
+    const pageHeight = 792; // Letter height in points
+    
+    return {
+      width: pageWidth - margins.left - margins.right,
+      height: pageHeight - margins.top - margins.bottom
+    };
+  }
+
+  /**
+   * Check if document needs special header space
+   */
+  public needsHeaderSpace(
+    documentType: DocumentType,
+    pageNumber: number
+  ): boolean {
+    return documentType === 'office-action-response' && pageNumber === 1;
+  }
+
+  /**
+   * Get header content for special documents
+   */
+  public getHeaderContent(
+    documentType: DocumentType,
+    metadata?: { applicationNumber?: string; responseDate?: string }
+  ): string[] | null {
+    if (documentType !== 'office-action-response') {
+      return null;
+    }
+    
+    const lines: string[] = [];
+    
+    if (metadata?.applicationNumber) {
+      lines.push(`Application No.: ${metadata.applicationNumber}`);
+    }
+    if (metadata?.responseDate) {
+      lines.push(`Response Date: ${metadata.responseDate}`);
+    }
+    
+    return lines.length > 0 ? lines : null;
   }
 
   /**
