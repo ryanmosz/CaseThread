@@ -33,6 +33,7 @@ export interface PDFExportOptions {
     subject?: string;
     keywords?: string[];
   };
+  onProgress?: (step: string, detail?: string) => void;
 }
 
 /**
@@ -60,8 +61,16 @@ export class PDFExportService {
       optionsProvided: Object.keys(options).length > 0 
     });
 
+    const reportProgress = (step: string, detail?: string) => {
+      if (options.onProgress) {
+        options.onProgress(step, detail);
+      }
+      this.logger.debug(`Progress: ${step}`, { detail });
+    };
+
     try {
       // Step 1: Initialize components
+      reportProgress('Initializing PDF components');
       const generatorOptions: PDFGenerationOptions = {
         documentType,
         title: options.metadata?.title || `${documentType} Document`,
@@ -77,6 +86,7 @@ export class PDFExportService {
 
       // Step 2: Apply formatting overrides if provided
       if (options.lineSpacing || options.fontSize || options.margins) {
+        reportProgress('Applying custom formatting');
         const overrides: Partial<DocumentFormattingRules> = {};
         if (options.lineSpacing) overrides.lineSpacing = options.lineSpacing;
         if (options.fontSize) overrides.fontSize = options.fontSize;
@@ -92,22 +102,29 @@ export class PDFExportService {
       }
 
       // Step 3: Get document-specific formatting rules
+      reportProgress('Loading document formatting rules', documentType);
       const rules = formatter.getFormattingRules(documentType as DocumentType);
       this.logger.debug('Using formatting rules', { documentType, rules });
 
       // Step 4: Parse document for signature blocks
+      reportProgress('Parsing signature blocks');
       const parsedDoc = parser.parseDocument(text);
       this.logger.info('Document parsed', {
         lineCount: parsedDoc.content.length,
         signatureBlockCount: parsedDoc.signatureBlocks.length,
         hasSignatures: parsedDoc.hasSignatures
       });
+      if (parsedDoc.hasSignatures) {
+        reportProgress('Found signature blocks', `${parsedDoc.signatureBlocks.length} blocks`);
+      }
 
       // Step 5: Prepare layout blocks
+      reportProgress('Preparing document layout');
       const layoutBlocks = this.prepareLayoutBlocks(parsedDoc, rules);
       this.logger.debug('Layout blocks prepared', { blockCount: layoutBlocks.length });
 
       // Step 6: Calculate layout with page breaks
+      reportProgress('Calculating page breaks');
       const layoutResult = layoutEngine.layoutDocument(
         layoutBlocks, 
         documentType as DocumentType
@@ -116,8 +133,10 @@ export class PDFExportService {
         totalPages: layoutResult.totalPages,
         hasOverflow: layoutResult.hasOverflow
       });
+      reportProgress('Layout complete', `${layoutResult.totalPages} pages`);
 
       // Step 7: Start PDF generation
+      reportProgress('Starting PDF generation');
       await generator.start();
 
       // Step 8: Set document-wide formatting (already handled in constructor)
@@ -125,6 +144,7 @@ export class PDFExportService {
       // Step 9: Render each page
       for (let i = 0; i < layoutResult.pages.length; i++) {
         const page = layoutResult.pages[i];
+        reportProgress('Rendering page', `${i + 1} of ${layoutResult.totalPages}`);
         
         // Add new page if not first page
         if (i > 0) {
@@ -148,8 +168,10 @@ export class PDFExportService {
       }
 
       // Step 10: Finalize PDF
+      reportProgress('Finalizing PDF document');
       await generator.finalize();
       
+      reportProgress('PDF export completed');
       this.logger.info('PDF export completed successfully', { 
         outputPath,
         pageCount: layoutResult.totalPages,

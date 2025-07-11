@@ -36,7 +36,7 @@
     - ✅ 2.5.3: Add page break prevention logic
     - ✅ 2.5.4: Handle side-by-side layouts
     - ✅ 2.5.5: Implement orphan control
-  - ⏳ 2.6: Create CLI Export Command (3 of 5 sub-tasks)
+  - ⏳ 2.6: Create CLI Export Command (4 of 5 sub-tasks)
   - ⏳ 2.7: Add Comprehensive Tests (0 of 5 sub-tasks)
   - ⏳ 2.8: Add Markdown Parsing to PDF Export (0 of 5 sub-tasks) - NEW
   - ⏳ 2.9: Fix Blank Page Issues (0 of 4 sub-tasks) - NEW
@@ -434,10 +434,45 @@
   - Tested basic error handling (file not found, invalid extension)
   - Placeholder message indicates implementation coming in Task 2.6.3
 
+### 4. Recent Work Completed ✅
+
+**Task 2.0 Progress (Core PDF Generation Service)**
+- ✅ Task 2.1: PDFKit setup and configuration (4/4 sub-tasks complete)
+- ✅ Task 2.2: Base PDF Generator Class (5/5 sub-tasks complete)
+- ✅ Task 2.3: Document Formatting Rules (5/5 sub-tasks complete)
+- ✅ Task 2.4: Signature Block Parser (5/5 sub-tasks complete)
+- ✅ Task 2.5: PDF Layout Engine (5/5 sub-tasks complete)
+- ✅ Fixed 9 failing PDFLayoutEngine tests (all 535 tests now passing)
+- ✅ Created PDFExportService to integrate all components
+- 🔄 Task 2.6: CLI Export Command (4/5 sub-tasks complete)
+  - ✅ 2.6.1: Created export command structure
+  - ✅ 2.6.2: Added command line arguments
+  - ✅ 2.6.3: Implemented file reading logic
+  - ✅ 2.6.4: Added progress indicators - NEW!
+  - 📋 2.6.5: Handle errors gracefully (next)
+
+**Task 2.6.4 Implementation Details:**
+- Added `onProgress` callback to PDFExportOptions interface
+- Updated PDFExportService to report progress at 11 major steps:
+  1. Initializing PDF components
+  2. Applying custom formatting (when applicable)
+  3. Loading document formatting rules
+  4. Parsing signature blocks
+  5. Found signature blocks (with count)
+  6. Preparing document layout
+  7. Calculating page breaks
+  8. Layout complete (with page count)
+  9. Starting PDF generation
+  10. Rendering page X of Y (for each page)
+  11. Finalizing PDF document
+- Updated export command to display detailed progress via spinner
+- Added 4 new tests for progress functionality
+- All 539 tests passing (up from 535)
+
 ### Next Steps for Task 2.0 Implementation
 
 #### Current Progress Summary
-✅ Completed: Tasks 2.1, 2.2, 2.3, 2.4, 2.5, and 2.6.1-2.6.3 (27 of 44 sub-tasks complete - 61%)
+✅ Completed: Tasks 2.1, 2.2, 2.3, 2.4, 2.5, and 2.6.1-2.6.4 (28 of 44 sub-tasks complete - 64%)
 ✅ Pre-requisite: PDFExportService created and tested
 ✅ Bug fixes: All PDFLayoutEngine tests passing
 - PDFKit setup and configuration complete
@@ -446,16 +481,11 @@
 - Signature block parser with full content extraction
 - PDF layout engine with orphan/widow control (fully debugged)
 - PDF export service integrating all components
-- CLI export command structure with all arguments and file reading
+- CLI export command structure with all arguments, file reading, and progress indicators
 
 **Note: Added 9 new sub-tasks (2.8 and 2.9) to address Markdown parsing and blank page issues**
 
-#### Next Sub-task: 2.6.4 - Add progress indicators (next)
-- ✅ 2.6.1: Created export command structure
-- ✅ 2.6.2: Added command line arguments
-- ✅ 2.6.3: Implemented file reading logic
-- 📋 2.6.4: Add progress indicators (next)
-- 📋 2.6.5: Handle errors gracefully 
+#### Next Sub-task: 2.6.5 - Handle errors gracefully (next)
 
 ## 5. Current Challenges & Blockers 🚨
 

@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import { createSpinner } from '../utils/spinner';
 import { logger } from '../utils/logger';
 import { handleError, createError } from '../utils/error-handler';
-import { PDFExportService } from '../services/pdf-export';
+import { PDFExportService, PDFExportOptions } from '../services/pdf-export';
 
 interface ExportOptions {
   debug?: boolean;
@@ -28,7 +28,7 @@ const SPINNER_MESSAGES = {
  * @param marginsStr - Comma-separated margin values in points
  * @returns Object with top, right, bottom, left margins
  */
-function parseMargins(marginsStr?: string): { top?: number; right?: number; bottom?: number; left?: number } | undefined {
+function parseMargins(marginsStr?: string): { top: number; right: number; bottom: number; left: number } | undefined {
   if (!marginsStr) return undefined;
   
   const values = marginsStr.split(',').map(v => parseInt(v.trim(), 10));
@@ -147,21 +147,27 @@ export const exportCommand = new Command('export')
       try {
         content = await fs.readFile(resolvedInputPath, 'utf-8');
         logger.debug(`Read ${content.length} characters from input file`);
+        spinner.updateMessage(`Read ${content.length.toLocaleString()} characters`);
       } catch (error) {
         throw createError('PERMISSION_ERROR', resolvedInputPath);
       }
       
       // Extract document type
+      spinner.updateMessage('Detecting document type...');
       const documentType = extractDocumentType(content, resolvedInputPath);
       logger.debug(`Detected document type: ${documentType}`);
+      spinner.updateMessage(`Document type: ${documentType}`);
       
       // Create PDF export service
-      spinner.updateMessage(SPINNER_MESSAGES.GENERATE_PDF);
       const pdfService = new PDFExportService();
       
       // Build export options
-      const exportOptions: any = {
-        pageNumbers: options.pageNumbers !== false
+      const exportOptions: PDFExportOptions = {
+        pageNumbers: options.pageNumbers !== false,
+        onProgress: (step: string, detail?: string) => {
+          const message = detail ? `${step}: ${detail}` : step;
+          spinner.updateMessage(message);
+        }
       };
       
       if (options.lineSpacing && options.lineSpacing !== 'auto') {
@@ -186,7 +192,6 @@ export const exportCommand = new Command('export')
       }
       
       // Generate PDF
-      spinner.updateMessage(SPINNER_MESSAGES.SAVE_PDF);
       await pdfService.export(
         content,
         resolvedOutputPath,

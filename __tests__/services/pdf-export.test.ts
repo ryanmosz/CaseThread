@@ -427,4 +427,113 @@ Regular paragraph text here.`;
       });
     });
   });
+
+  describe('Progress Reporting', () => {
+    const sampleText = `PROVISIONAL PATENT APPLICATION
+For: Test Invention
+
+This is a test document.
+
+[SIGNATURE_BLOCK:inventor]
+_________________________________
+John Doe
+Inventor`;
+
+    it('should report progress at each major step', async () => {
+      const progressSteps: string[] = [];
+      const progressDetails: (string | undefined)[] = [];
+      
+      const options: PDFExportOptions = {
+        onProgress: (step: string, detail?: string) => {
+          progressSteps.push(step);
+          progressDetails.push(detail);
+        }
+      };
+
+      await service.export(sampleText, testPdfPath, 'patent-assignment-agreement', options);
+
+      // Verify all expected progress steps
+      expect(progressSteps).toEqual([
+        'Initializing PDF components',
+        'Loading document formatting rules',
+        'Parsing signature blocks',
+        'Found signature blocks',
+        'Preparing document layout',
+        'Calculating page breaks',
+        'Layout complete',
+        'Starting PDF generation',
+        'Rendering page',
+        'Finalizing PDF document',
+        'PDF export completed'
+      ]);
+
+      // Verify some steps have details
+      expect(progressDetails[1]).toBe('patent-assignment-agreement'); // document type
+      expect(progressDetails[3]).toMatch(/\d+ blocks/); // signature blocks count
+      expect(progressDetails[6]).toMatch(/\d+ pages/); // page count
+    });
+
+    it('should not throw if no progress callback provided', async () => {
+      await expect(
+        service.export(sampleText, testPdfPath, 'patent-assignment-agreement')
+      ).resolves.not.toThrow();
+    });
+
+    it('should report custom formatting progress when overrides applied', async () => {
+      const progressSteps: string[] = [];
+      
+      const options: PDFExportOptions = {
+        lineSpacing: 'single',
+        fontSize: 14,
+        onProgress: (step: string) => progressSteps.push(step)
+      };
+
+      await service.export(sampleText, testPdfPath, 'patent-assignment-agreement', options);
+
+      expect(progressSteps).toContain('Applying custom formatting');
+    });
+
+    it('should report progress for multi-page documents', async () => {
+      // Mock multi-page layout
+      mockLayoutEngine.layoutDocument.mockReturnValueOnce({
+        pages: [
+          {
+            blocks: [
+              { type: 'text', content: 'Page 1 content', height: 15, breakable: true }
+            ],
+            remainingHeight: 100,
+            pageNumber: 1
+          },
+          {
+            blocks: [
+              { type: 'text', content: 'Page 2 content', height: 15, breakable: true }
+            ],
+            remainingHeight: 500,
+            pageNumber: 2
+          }
+        ],
+        totalPages: 2,
+        hasOverflow: false
+      });
+
+      // Create content that will generate multiple pages
+      const longContent = Array(50).fill('This is a long paragraph.').join('\n\n');
+      const progressDetails: string[] = [];
+      
+      const options: PDFExportOptions = {
+        onProgress: (step: string, detail?: string) => {
+          if (step === 'Rendering page' && detail) {
+            progressDetails.push(detail);
+          }
+        }
+      };
+
+      await service.export(longContent, testPdfPath, 'patent-assignment-agreement', options);
+
+      // Should have multiple page rendering progress reports
+      expect(progressDetails.length).toBe(2);
+      expect(progressDetails[0]).toBe('1 of 2');
+      expect(progressDetails[1]).toBe('2 of 2');
+    });
+  });
 }); 

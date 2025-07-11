@@ -49,7 +49,7 @@
   - [x] 2.6.1 Create export command structure
   - [x] 2.6.2 Add command line arguments
   - [x] 2.6.3 Implement file reading logic
-  - [ ] 2.6.4 Add progress indicators
+  - [x] 2.6.4 Add progress indicators
   - [ ] 2.6.5 Handle errors gracefully
 
 ### Markdown Parsing (NEW)
