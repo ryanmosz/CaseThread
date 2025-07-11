@@ -187,4 +187,23 @@ export interface LayoutPage {
   blocks: LayoutBlock[];
   remainingHeight: number;
   pageNumber: number;
+}
+
+/**
+ * Measurement of a block's actual height for two-pass rendering
+ */
+export interface BlockMeasurement {
+  type: string;
+  estimatedHeight: number;
+  actualHeight: number;
+  canSplit: boolean;
+}
+
+/**
+ * Page measurements for accurate rendering
+ */
+export interface PageMeasurements {
+  blocks: BlockMeasurement[];
+  totalHeight: number;
+  hasSignatureBlock: boolean;
 } 

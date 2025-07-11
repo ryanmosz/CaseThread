@@ -15,7 +15,10 @@ import {
   LayoutBlock,
   LayoutPage,
   PDFGenerationOptions,
-  ListItemData
+  ListItemData,
+  LayoutResult,
+  BlockMeasurement,
+  PageMeasurements
 } from '../types/pdf';
 
 /**
@@ -149,7 +152,19 @@ export class PDFExportService {
 
       // Step 8: Set document-wide formatting (already handled in constructor)
 
-      // Step 9: Render each page
+      // Step 9: Two-pass rendering
+      // First pass: Measure all content to get accurate page breaks
+      reportProgress('Measuring content for accurate pagination');
+      const pageBreaks = await this.measureContentForPageBreaks(
+        generator,
+        formatter,
+        layoutResult,
+        documentType as DocumentType,
+        rules,
+        options.parseMarkdown !== false
+      );
+      
+      // Step 10: Render with known page breaks
       for (let i = 0; i < layoutResult.pages.length; i++) {
         const page = layoutResult.pages[i];
         reportProgress('Rendering page', `${i + 1} of ${layoutResult.totalPages}`);
@@ -166,8 +181,16 @@ export class PDFExportService {
           this.logger.debug('Page has special margins', { pageNumber: i + 1, margins: pageMargins });
         }
 
-        // Render blocks on this page
-        await this.renderPage(generator, formatter, page, documentType as DocumentType, rules, options.parseMarkdown !== false);
+        // Render blocks on this page with known breaks
+        await this.renderPageWithMeasurements(
+          generator, 
+          formatter, 
+          page, 
+          documentType as DocumentType, 
+          rules, 
+          options.parseMarkdown !== false,
+          pageBreaks[i]
+        );
 
         // Add page number if enabled
         if (options.pageNumbers !== false) {
@@ -175,7 +198,7 @@ export class PDFExportService {
         }
       }
 
-      // Step 10: Finalize PDF
+      // Step 11: Finalize PDF
       reportProgress('Finalizing PDF document');
       await generator.finalize();
       
@@ -369,73 +392,7 @@ export class PDFExportService {
     return blocks;
   }
 
-  /**
-   * Render a page of content
-   */
-  private async renderPage(
-    generator: LegalPDFGenerator,
-    formatter: DocumentFormatter,
-    page: LayoutPage,
-    documentType: DocumentType,
-    rules: DocumentFormattingRules,
-    parseMarkdown: boolean = true
-  ): Promise<void> {
-    for (const block of page.blocks) {
-      switch (block.type) {
-        case 'heading':
-          const level = (block.headingLevel || 1) as 1 | 2 | 3 | 4 | 5 | 6;
-          generator.writeHeading(block.content as string, level);
-          break;
-          
-        case 'text':
-          const lineGap = formatter.applyLineSpacing(documentType, false);
-          const textContent = block.content as string;
-          
-          // Parse for inline formatting (only if markdown parsing enabled)
-          const segments = parseMarkdown 
-            ? this.markdownParser.parseInlineFormatting(textContent)
-            : [{ text: textContent }];
-          
-          // Check if there's any formatting
-          const hasFormatting = segments.some(s => s.bold || s.italic);
-          
-          if (hasFormatting) {
-            // Use formatted text method
-            generator.writeFormattedText(segments, { lineGap });
-            generator.addSpace(1); // Add paragraph spacing
-          } else {
-            // Use regular paragraph method
-            generator.writeParagraph(textContent, { lineGap });
-          }
-          break;
-          
-        case 'signature':
-          await this.renderSignatureBlock(
-            generator, 
-            block.content as SignatureBlockData,
-            rules
-          );
-          break;
-          
-        case 'horizontal-rule':
-          generator.drawHorizontalLine();
-          break;
-          
-        case 'list-item':
-          const listData = block.content as ListItemData;
-          this.renderListItem(generator, listData, rules);
-          break;
-          
-        case 'blockquote':
-          const quoteText = block.content as string;
-          this.renderBlockQuote(generator, quoteText, rules);
-          break;
-          
-        default:
-          this.logger.warn('Unknown block type', { type: block.type });
-      }
-    }
-  }
+
 
   /**
    * Render a signature block
@@ -536,10 +493,29 @@ export class PDFExportService {
     fontSize: number, 
     lineSpacing: 'single' | 'one-half' | 'double' = 'single'
   ): number {
-    const lines = text.split('\n').length;
+    // Use a more accurate calculation that accounts for word wrapping
+    const lines = text.split('\n');
+    let totalLines = 0;
+    
+    // Estimate wrapped lines based on typical page width
+    // Letter size (8.5") with 1" margins = 6.5" = 468pt
+    const textWidth = 468;
+    const avgCharsPerLine = textWidth / (fontSize * 0.5); // Rough estimate
+    
+    for (const line of lines) {
+      if (line.length === 0) {
+        totalLines += 1; // Empty line
+      } else {
+        // Add extra lines for wrapping
+        totalLines += Math.ceil(line.length / avgCharsPerLine);
+      }
+    }
+    
     const lineHeight = fontSize * 1.2; // Standard line height multiplier
     const lineGap = lineSpacing === 'double' ? 12 : lineSpacing === 'one-half' ? 6 : 0;
-    return lines * (lineHeight + lineGap);
+    
+    // Add 20% buffer for safety
+    return totalLines * (lineHeight + lineGap) * 1.2;
   }
 
   /**
@@ -633,6 +609,226 @@ export class PDFExportService {
     // Restore position and add spacing
     generator.moveTo(rules.margins.left, generator.getCurrentY());
     generator.addSpace(1);
+  }
+
+  /**
+   * Measure content for accurate page breaks (first pass)
+   */
+  private async measureContentForPageBreaks(
+    generator: LegalPDFGenerator,
+    formatter: DocumentFormatter,
+    layoutResult: LayoutResult,
+    documentType: DocumentType,
+    rules: DocumentFormattingRules,
+    parseMarkdown: boolean = true
+  ): Promise<PageMeasurements[]> {
+    const measurements: PageMeasurements[] = [];
+    
+    for (const page of layoutResult.pages) {
+      const pageMeasurements: PageMeasurements = {
+        blocks: [],
+        totalHeight: 0,
+        hasSignatureBlock: false
+      };
+      
+      for (const block of page.blocks) {
+        // Measure each block accurately
+        const blockMeasurement = await this.measureBlock(
+          generator,
+          formatter,
+          block,
+          documentType,
+          rules,
+          parseMarkdown
+        );
+        
+        pageMeasurements.blocks.push(blockMeasurement);
+        pageMeasurements.totalHeight += blockMeasurement.actualHeight;
+        
+        if (block.type === 'signature') {
+          pageMeasurements.hasSignatureBlock = true;
+        }
+      }
+      
+      measurements.push(pageMeasurements);
+    }
+    
+    return measurements;
+  }
+
+  /**
+   * Measure a single block's actual height
+   */
+  private async measureBlock(
+    generator: LegalPDFGenerator,
+    formatter: DocumentFormatter,
+    block: LayoutBlock,
+    documentType: DocumentType,
+    rules: DocumentFormattingRules,
+    _parseMarkdown: boolean = true
+  ): Promise<BlockMeasurement> {
+    let actualHeight = 0;
+    
+    switch (block.type) {
+      case 'heading':
+        const level = (block.headingLevel || 1) as 1 | 2 | 3 | 4 | 5 | 6;
+        const headingSize = this.markdownParser.getHeadingFontSize(level);
+        actualHeight = generator.measureTextHeight(block.content as string, {
+          fontSize: headingSize,
+          font: level <= 3 ? 'Times-Bold' : 'Times-Roman'
+        });
+        actualHeight += 6; // Spacing after heading
+        break;
+        
+      case 'text':
+        const lineGap = formatter.applyLineSpacing(documentType, false);
+        actualHeight = generator.measureTextHeight(block.content as string, {
+          fontSize: rules.fontSize,
+          lineGap
+        });
+        actualHeight += 12; // Paragraph spacing
+        break;
+        
+      case 'signature':
+        // Use calculated height for signature blocks
+        actualHeight = block.height;
+        break;
+        
+      case 'horizontal-rule':
+        actualHeight = 20;
+        break;
+        
+      case 'list-item':
+        actualHeight = generator.measureTextHeight(
+          (block.content as ListItemData).text,
+          { fontSize: rules.fontSize }
+        );
+        actualHeight += 6; // List item spacing
+        break;
+        
+      case 'blockquote':
+        actualHeight = generator.measureTextHeight(block.content as string, {
+          fontSize: rules.fontSize,
+          font: 'Times-Italic'
+        });
+        actualHeight += 12; // Quote spacing
+        break;
+    }
+    
+    return {
+      type: block.type,
+      estimatedHeight: block.height,
+      actualHeight,
+      canSplit: block.breakable && block.type === 'text' && actualHeight > 100
+    };
+  }
+
+  /**
+   * Render page with pre-measured content
+   */
+  private async renderPageWithMeasurements(
+    generator: LegalPDFGenerator,
+    formatter: DocumentFormatter,
+    page: LayoutPage,
+    documentType: DocumentType,
+    rules: DocumentFormattingRules,
+    parseMarkdown: boolean = true,
+    measurements: PageMeasurements
+  ): Promise<void> {
+    let blockIndex = 0;
+    
+    for (const block of page.blocks) {
+      const measurement = measurements.blocks[blockIndex];
+      const remainingSpace = generator.getRemainingSpace();
+      
+      // Check if we need to handle signature block specially
+      if (block.type === 'signature' && measurement.actualHeight > remainingSpace - 20) {
+        // Not enough space for signature block, force new page
+        this.logger.info('Moving signature block to next page', {
+          required: measurement.actualHeight,
+          available: remainingSpace
+        });
+        generator.newPage();
+      }
+      
+      // Render the block normally
+      await this.renderBlock(
+        generator,
+        formatter,
+        block,
+        documentType,
+        rules,
+        parseMarkdown
+      );
+      
+      blockIndex++;
+    }
+  }
+
+  /**
+   * Render a single block
+   */
+  private async renderBlock(
+    generator: LegalPDFGenerator,
+    formatter: DocumentFormatter,
+    block: LayoutBlock,
+    documentType: DocumentType,
+    rules: DocumentFormattingRules,
+    parseMarkdown: boolean = true
+  ): Promise<void> {
+    switch (block.type) {
+      case 'heading':
+        const level = (block.headingLevel || 1) as 1 | 2 | 3 | 4 | 5 | 6;
+        generator.writeHeading(block.content as string, level);
+        break;
+        
+      case 'text':
+        const lineGap = formatter.applyLineSpacing(documentType, false);
+        const textContent = block.content as string;
+        
+        // Parse for inline formatting (only if markdown parsing enabled)
+        const segments = parseMarkdown 
+          ? this.markdownParser.parseInlineFormatting(textContent)
+          : [{ text: textContent }];
+        
+        // Check if there's any formatting
+        const hasFormatting = segments.some(s => s.bold || s.italic);
+        
+        if (hasFormatting) {
+          // Use formatted text method
+          generator.writeFormattedText(segments, { lineGap });
+          generator.addSpace(1); // Add paragraph spacing
+        } else {
+          // Use regular paragraph method
+          generator.writeParagraph(textContent, { lineGap });
+        }
+        break;
+        
+      case 'signature':
+        await this.renderSignatureBlock(
+          generator, 
+          block.content as SignatureBlockData,
+          rules
+        );
+        break;
+        
+      case 'horizontal-rule':
+        generator.drawHorizontalLine();
+        break;
+        
+      case 'list-item':
+        const listData = block.content as ListItemData;
+        this.renderListItem(generator, listData, rules);
+        break;
+        
+      case 'blockquote':
+        const quoteText = block.content as string;
+        this.renderBlockQuote(generator, quoteText, rules);
+        break;
+        
+      default:
+        this.logger.warn('Unknown block type', { type: block.type });
+    }
   }
 
   /**

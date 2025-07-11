@@ -340,12 +340,59 @@ export class LegalPDFGenerator {
       this.doc.fontSize(finalOptions.fontSize);
     }
     
-    // Write text with options
+    // Check if we need to prevent automatic pagination
+    const preventAutoPagination = !finalOptions.continued;
+    if (preventAutoPagination && text.trim().length > 0) {
+      // Calculate text height to check if it fits
+      const textHeight = this.calculateTextHeight(text, finalOptions);
+      const remainingSpace = this.getRemainingSpace();
+      
+      this.logger.debug('Space check before writing text', {
+        textLength: text.length,
+        textHeight,
+        remainingSpace,
+        willFit: textHeight <= remainingSpace,
+        currentPage: this.currentPage,
+        currentY: this.doc.y
+      });
+      
+      if (textHeight > remainingSpace && remainingSpace > 50) {
+        // Text won't fit on current page, manually add new page
+        // Only if we have more than 50 points remaining (to avoid edge cases)
+        this.logger.info('Manual page break to prevent auto-pagination', {
+          textHeight,
+          remainingSpace,
+          currentPage: this.currentPage
+        });
+        this.newPage();
+      }
+    }
+    
+    // Calculate available height to prevent auto-pagination
+    const availableHeight = this.getRemainingSpace();
+    const pageBeforeWrite = this.currentPage;
+    const yBeforeWrite = this.doc.y;
+    
+    // Write text with options, limiting height to prevent auto-pagination
     this.doc.text(text, {
       align: finalOptions.align,
       lineGap: finalOptions.lineGap,
-      continued: finalOptions.continued
+      continued: finalOptions.continued,
+      height: availableHeight > 0 ? availableHeight : undefined
     });
+    
+    // Check if PDFKit added pages automatically
+    if (this.currentPage !== pageBeforeWrite) {
+      this.logger.warn('PDFKit auto-paginated!', {
+        pagesBefore: pageBeforeWrite,
+        pagesAfter: this.currentPage,
+        pagesAdded: this.currentPage - pageBeforeWrite,
+        textLength: text.length,
+        availableHeight,
+        yBefore: yBeforeWrite,
+        yAfter: this.doc.y
+      });
+    }
     
     return this;
   }
@@ -366,8 +413,20 @@ export class LegalPDFGenerator {
       ...options
     };
     
-    // Save the current X position for potential future use
-    // const startX = this.doc.x;
+    // Check if the entire formatted text will fit on the page
+    const fullText = segments.map(s => s.text).join('');
+    const textHeight = this.calculateTextHeight(fullText, baseOptions);
+    const remainingSpace = this.getRemainingSpace();
+    
+    if (textHeight > remainingSpace && remainingSpace > 0) {
+      // Text won't fit, add new page before writing
+      this.logger.debug('Manual page break for formatted text', {
+        textHeight,
+        remainingSpace,
+        currentPage: this.currentPage
+      });
+      this.newPage();
+    }
     
     segments.forEach((segment, index) => {
       // Determine font based on formatting
@@ -480,6 +539,11 @@ export class LegalPDFGenerator {
    */
   public newPage(): this {
     this.doc.addPage();
+    // Note: currentPage is already incremented by the pageAdded event handler
+    this.logger.debug('Manual new page added', { 
+      currentPage: this.currentPage,
+      calledFrom: new Error().stack?.split('\n')[2] 
+    });
     return this;
   }
 
@@ -563,6 +627,52 @@ export class LegalPDFGenerator {
       this.doc.y = yOrOptions;
     }
     return this;
+  }
+
+  /**
+   * Measure text height using PDFKit's measurement APIs (public for two-pass rendering)
+   * @param text - Text to measure
+   * @param options - Text formatting options
+   * @returns Height in points
+   */
+  public measureTextHeight(text: string, options: TextOptions): number {
+    return this.calculateTextHeight(text, options);
+  }
+
+  /**
+   * Calculate the height that text will occupy
+   * @param text - Text to measure
+   * @param options - Text formatting options
+   * @returns Height in points
+   */
+  private calculateTextHeight(text: string, options: TextOptions): number {
+    // Apply options temporarily for measurement
+    const originalFont = 'Times-Roman'; // Default font
+    const originalSize = 12; // Default size
+    
+    if (options.font) {
+      this.doc.font(options.font);
+    }
+    if (options.fontSize) {
+      this.doc.fontSize(options.fontSize);
+    }
+    
+    // Calculate dimensions
+    const width = this.doc.page.width - this.pageConfig.margins.left - this.pageConfig.margins.right;
+    const lineGap = options.lineGap || 0;
+    
+    // Use PDFKit's heightOfString method to get accurate height
+    const height = this.doc.heightOfString(text, {
+      width: width,
+      lineGap: lineGap,
+      align: options.align || 'left'
+    });
+    
+    // Restore default font state
+    this.doc.font(originalFont);
+    this.doc.fontSize(originalSize);
+    
+    return height;
   }
 
   /**

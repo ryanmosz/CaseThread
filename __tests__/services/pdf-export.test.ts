@@ -51,10 +51,15 @@ describe('PDFExportService', () => {
       writeHeading: jest.fn(),
       writeParagraph: jest.fn(),
       writeText: jest.fn(),
+      writeFormattedText: jest.fn(),
       addSpace: jest.fn(),
       moveTo: jest.fn(),
       getCurrentY: jest.fn().mockReturnValue(100),
+      getCurrentPage: jest.fn().mockReturnValue(1),
       getPageDimensions: jest.fn().mockReturnValue({ width: 612, height: 792 }),
+      getPageConfig: jest.fn().mockReturnValue({ margins: { top: 72, bottom: 72, left: 72, right: 72 } }),
+      getRemainingSpace: jest.fn().mockReturnValue(500),
+      measureTextHeight: jest.fn().mockReturnValue(15),
       addPageNumberToCurrentPage: jest.fn()
     };
     LegalPDFGenerator.mockImplementation(() => mockGenerator);
@@ -266,6 +271,13 @@ Inventor`;
         totalPages: 2,
         hasOverflow: false
       });
+
+      // Mock getCurrentPage to simulate proper page progression
+      mockGenerator.getCurrentPage
+        .mockReturnValueOnce(1) // First check before page 2
+        .mockReturnValueOnce(1) // Still on page 1, so newPage will be called
+        .mockReturnValueOnce(2) // After newPage, now on page 2
+        .mockReturnValue(2);     // Any subsequent calls
 
       await service.export(sampleText, testPdfPath, 'office-action-response');
 
@@ -532,6 +544,7 @@ Inventor`;
         'Calculating page breaks',
         'Layout complete',
         'Starting PDF generation',
+        'Measuring content for accurate pagination',
         'Rendering page',
         'Finalizing PDF document',
         'PDF export completed'

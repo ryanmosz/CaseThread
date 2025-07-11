@@ -146,9 +146,12 @@ export class PDFLayoutEngine {
   private createNewPage(pageNumber: number, documentType: DocumentType): LayoutPage {
     const pageArea = this.formatter.getUsablePageArea(documentType, pageNumber);
     
+    // Use a more conservative height to account for PDFKit's behavior
+    const conservativeHeight = Math.min(pageArea.height, 580);
+    
     return {
       blocks: [],
-      remainingHeight: pageArea.height,
+      remainingHeight: conservativeHeight,
       pageNumber
     };
   }
@@ -159,9 +162,9 @@ export class PDFLayoutEngine {
    * @returns Layout constraints
    */
   private getLayoutConstraints(_documentType: DocumentType): LayoutConstraints {
-    // Default constraints
+    // Default constraints - reduced height to prevent overflow
     return {
-      maxHeight: 648, // 9 inches (11 - 1" top - 1" bottom)
+      maxHeight: 580, // Conservative: ~8 inches to leave buffer for PDFKit
       minOrphanLines: 2,
       minWidowLines: 2,
       preferredBreakPoints: []

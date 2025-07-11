@@ -27,7 +27,7 @@ describe('PDFLayoutEngine', () => {
     mockFormatter = {
       getUsablePageArea: jest.fn().mockReturnValue({
         width: 468,
-        height: 648
+        height: 580
       })
     } as unknown as jest.Mocked<DocumentFormatter>;
 
@@ -75,7 +75,7 @@ describe('PDFLayoutEngine', () => {
 
       expect(result.pages).toHaveLength(1);
       expect(result.pages[0].blocks).toHaveLength(1);
-      expect(result.pages[0].remainingHeight).toBe(548); // 648 - 100
+      expect(result.pages[0].remainingHeight).toBe(480); // 580 - 100
       expect(result.totalPages).toBe(1);
     });
 
@@ -158,7 +158,7 @@ describe('PDFLayoutEngine', () => {
 
       expect(result.pages).toHaveLength(1);
       expect(result.pages[0].blocks).toHaveLength(3);
-      expect(result.pages[0].remainingHeight).toBe(418); // 648 - 30 - 100 - 100
+      expect(result.pages[0].remainingHeight).toBe(350); // 580 - 30 - 100 - 100
     });
 
     it('should respect different document types', () => {
@@ -174,7 +174,7 @@ describe('PDFLayoutEngine', () => {
       // Test with office action response (which has different first page height)
       mockFormatter.getUsablePageArea
         .mockReturnValueOnce({ width: 468, height: 576 }) // First page
-        .mockReturnValueOnce({ width: 468, height: 648 }); // Second page
+        .mockReturnValueOnce({ width: 468, height: 580 }); // Second page
 
       const result = layoutEngine.layoutDocument(blocks, 'office-action-response');
 
@@ -711,7 +711,7 @@ describe('PDFLayoutEngine', () => {
 
       const result = layoutEngine.layoutDocument(blocks, 'patent-assignment-agreement');
 
-      // With first block at 550, remaining is 98 (648 - 550)
+      // With first block at 550, remaining is 30 (580 - 550)
       // Group is 130 height (30 + 50 + 50), which doesn't fit
       // So entire group should move to page 2
       expect(result.pages).toHaveLength(2);
@@ -1087,7 +1087,7 @@ describe('PDFLayoutEngine', () => {
       ];
       
       const constraints: LayoutConstraints = {
-        maxHeight: 648,
+        maxHeight: 580,
         minOrphanLines: 2,
         minWidowLines: 2,
         preferredBreakPoints: []
@@ -1117,7 +1117,7 @@ describe('PDFLayoutEngine', () => {
       ];
       
       const constraints: LayoutConstraints = {
-        maxHeight: 648,
+        maxHeight: 580,
         minOrphanLines: 2,
         minWidowLines: 2,
         preferredBreakPoints: []
@@ -1139,7 +1139,7 @@ describe('PDFLayoutEngine', () => {
       ];
       
       const constraints: LayoutConstraints = {
-        maxHeight: 648,
+        maxHeight: 580,
         minOrphanLines: 2,
         minWidowLines: 2,
         preferredBreakPoints: []
@@ -1160,7 +1160,7 @@ describe('PDFLayoutEngine', () => {
       ];
       
       const constraints: LayoutConstraints = {
-        maxHeight: 648,
+        maxHeight: 580,
         minOrphanLines: 2,
         minWidowLines: 2,
         preferredBreakPoints: []
@@ -1210,7 +1210,7 @@ describe('PDFLayoutEngine', () => {
           blocks: [
             { type: 'text', content: 'Block 4', height: 50, breakable: true }
           ],
-          remainingHeight: 598, // Very empty
+          remainingHeight: 530, // Very empty
           pageNumber: 2
         }
       ];
@@ -1236,7 +1236,7 @@ describe('PDFLayoutEngine', () => {
         },
         {
           blocks: [],
-          remainingHeight: 648,
+          remainingHeight: 580,
           pageNumber: 2
         }
       ];
