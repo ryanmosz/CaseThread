@@ -66,6 +66,7 @@
   - [x] 2.9.2 Fix page break logic (partial - reduced but not eliminated)
   - [x] 2.9.3 Ensure content flows properly (two-pass rendering implemented)
   - [x] 2.9.4 Test with various document lengths
+  - [x] 2.9.5 Fix page numbering to appear only on content pages
 
 ### Testing and Validation
 - [x] 2.7 Add Comprehensive Tests (Details: tasks-parent-2.7-detailed.md)
@@ -149,7 +150,7 @@ Before marking complete, verify:
 - Ensure all work happens in Docker container
 - Test frequently with real document examples
 - Coordinate with Developer G on integration points
-- Progress: 44/44 sub-tasks complete (100%) 🎉
+- Progress: 45/45 sub-tasks complete (100%) 🎉
 - All 597 tests passing (279 PDF-specific tests)
 - Task 2.7 was already complete - tests were written during development:
   - 33 tests for LegalPDFGenerator

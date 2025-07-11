@@ -18,6 +18,7 @@ export class LegalPDFGenerator {
   private pageConfig: PageConfig;
   private currentPage: number;
   private outputPath: string;
+  private pagesWithContent: Set<number> = new Set();
 
   /**
    * Initialize a new PDF generator
@@ -90,6 +91,23 @@ export class LegalPDFGenerator {
   }
 
   /**
+   * Check if a specific page has content
+   * @param pageNumber - Page number to check (1-based)
+   * @returns True if page has content
+   */
+  public hasContentOnPage(pageNumber: number): boolean {
+    return this.pagesWithContent.has(pageNumber);
+  }
+
+  /**
+   * Get all pages with content
+   * @returns Set of page numbers that have content
+   */
+  public getPagesWithContent(): Set<number> {
+    return new Set(this.pagesWithContent);
+  }
+
+  /**
    * Get page configuration
    * @returns Current page configuration
    */
@@ -146,10 +164,8 @@ export class LegalPDFGenerator {
   public async finalize(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        // Add page numbers if enabled
-        if (this.pageConfig.pageNumbers) {
-          this.addPageNumbers();
-        }
+        // Page numbers are now handled per-page in pdf-export.ts
+        // Removed the call to addPageNumbers() here to prevent duplicate numbering
         
         // Wait for stream to finish
         if (this.stream) {
@@ -175,24 +191,7 @@ export class LegalPDFGenerator {
     });
   }
 
-  /**
-   * Add page numbers to all pages
-   * Note: PDFKit doesn't support editing previous pages, so this is a placeholder
-   * for future implementation with buffering or two-pass generation in Task 2.5
-   */
-  private addPageNumbers(): void {
-    // PDFKit limitation: Cannot edit previous pages after they're written
-    // This method currently only adds page number to the last page
-    // Full implementation requires buffering strategy (Task 2.5)
-    
-    if (this.pageConfig.pageNumbers) {
-      this.addPageNumberToCurrentPage();
-      this.logger.warn(
-        'Page numbering is limited - only last page numbered. ' +
-        'Full implementation requires buffering (Task 2.5)'
-      );
-    }
-  }
+
 
   /**
    * Add page number to the current page only
@@ -323,6 +322,11 @@ export class LegalPDFGenerator {
     text: string, 
     options?: TextOptions
   ): this {
+    // Track this page as having content
+    if (text.trim().length > 0) {
+      this.pagesWithContent.add(this.currentPage);
+    }
+    
     const defaultOptions: TextOptions = {
       fontSize: 12,
       font: 'Times-Roman',
@@ -407,6 +411,11 @@ export class LegalPDFGenerator {
     segments: TextSegment[],
     options?: TextOptions
   ): this {
+    // Track this page as having content if any segment has text
+    if (segments.some(s => s.text.trim().length > 0)) {
+      this.pagesWithContent.add(this.currentPage);
+    }
+    
     const baseOptions = {
       fontSize: 12,
       font: 'Times-Roman',
@@ -687,6 +696,9 @@ export class LegalPDFGenerator {
     marginLeft?: number;
     marginRight?: number;
   }): this {
+    // Track this page as having content
+    this.pagesWithContent.add(this.currentPage);
+    
     const pageWidth = this.doc.page.width;
     const leftMargin = options?.marginLeft ?? this.pageConfig.margins.left;
     const rightMargin = options?.marginRight ?? this.pageConfig.margins.right;

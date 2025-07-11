@@ -131,36 +131,42 @@ describe('LegalPDFGenerator', () => {
       expect(fs.existsSync(testFile)).toBe(true);
     });
 
-    it('should call addPageNumbers when page numbers are enabled', async () => {
+    it('should have page numbering configuration when enabled', async () => {
       const generator = new LegalPDFGenerator(testFile, {
         documentType: 'test-document'
       });
 
-      // Spy on the private addPageNumbers method
-      const addPageNumbersSpy = jest.spyOn(generator as any, 'addPageNumbers');
-
       await generator.start();
+      
+      // Verify page numbering is configured (enabled by default)
+      const config = generator.getPageConfig();
+      expect(config.pageNumbers).toBe(true);
+      
       await generator.finalize();
-
-      // Should be called since pageNumbers is true by default
-      expect(addPageNumbersSpy).toHaveBeenCalled();
     });
 
-    it('should not call addPageNumbers when disabled', async () => {
+    it('should have page numbering disabled when configured', async () => {
       const generator = new LegalPDFGenerator(testFile, {
         documentType: 'test-document'
       }, {
         pageNumbers: false
       });
 
-      // Spy on the private addPageNumbers method
-      const addPageNumbersSpy = jest.spyOn(generator as any, 'addPageNumbers');
-
       await generator.start();
+      
+      // Verify page numbering is disabled
+      const config = generator.getPageConfig();
+      expect(config.pageNumbers).toBe(false);
+      
+      // Verify no page number is added when disabled
+      const doc = generator.getDocument();
+      const textSpy = jest.spyOn(doc, 'text');
+      generator.addPageNumberToCurrentPage();
+      
+      // Should not have added any text
+      expect(textSpy).not.toHaveBeenCalled();
+      
       await generator.finalize();
-
-      // Should not be called when pageNumbers is false
-      expect(addPageNumbersSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -635,7 +641,7 @@ describe('LegalPDFGenerator', () => {
       await generator.finalize();
     });
 
-    it('should warn about page numbering limitation', async () => {
+    it('should not add page numbers in finalize (handled per-page in export)', async () => {
       const generator = new LegalPDFGenerator(testFile, {
         documentType: 'test-document'
       }, {
@@ -644,15 +650,14 @@ describe('LegalPDFGenerator', () => {
 
       await generator.start();
       
-      // Spy on logger
-      const warnSpy = jest.spyOn((generator as any).logger, 'warn');
+      // Spy on addPageNumberToCurrentPage
+      const addPageNumberSpy = jest.spyOn(generator, 'addPageNumberToCurrentPage');
       
       await generator.finalize();
       
-      // Should have warned about limitation
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Page numbering is limited')
-      );
+      // Should NOT have added page numbers during finalize
+      // Page numbering is now handled per-page in pdf-export.ts
+      expect(addPageNumberSpy).not.toHaveBeenCalled();
     });
 
     it('should create multi-page document with page numbering config', async () => {

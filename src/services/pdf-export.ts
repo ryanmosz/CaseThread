@@ -192,9 +192,23 @@ export class PDFExportService {
           pageBreaks[i]
         );
 
-        // Add page number if enabled
+        // Add page number only if this page has content
         if (options.pageNumbers !== false) {
-          generator.addPageNumberToCurrentPage();
+          // Check if we've written any content to this page
+          const currentPageNum = generator.getCurrentPage();
+          const pagesWithContent = generator.getPagesWithContent();
+          this.logger.debug('Page content tracking', { 
+            currentPageNum, 
+            pagesWithContent: Array.from(pagesWithContent),
+            hasContent: generator.hasContentOnPage(currentPageNum)
+          });
+          
+          if (generator.hasContentOnPage(currentPageNum)) {
+            generator.addPageNumberToCurrentPage();
+            this.logger.debug('Added page number to content page', { pageNumber: currentPageNum });
+          } else {
+            this.logger.debug('Skipping page number on blank page', { pageNumber: currentPageNum });
+          }
         }
       }
 
@@ -202,10 +216,20 @@ export class PDFExportService {
       reportProgress('Finalizing PDF document');
       await generator.finalize();
       
+      // Log final page statistics
+      const finalPageCount = generator.getCurrentPage();
+      const contentPages = Array.from(generator.getPagesWithContent());
+      this.logger.info('Final page statistics', {
+        layoutEnginePages: layoutResult.totalPages,
+        actualPagesCreated: finalPageCount,
+        pagesWithContent: contentPages,
+        blankPages: finalPageCount - contentPages.length
+      });
+      
       reportProgress('PDF export completed');
       this.logger.info('PDF export completed successfully', { 
         outputPath,
-        pageCount: layoutResult.totalPages,
+        pageCount: finalPageCount,
         fileSize: await this.getFileSize(outputPath)
       });
 
