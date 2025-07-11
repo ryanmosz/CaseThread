@@ -24,6 +24,23 @@ jest.mock('../src/commands/learn', () => {
   };
 });
 
+jest.mock('../src/commands/export', () => {
+  const { Command } = require('commander');
+  const mockExportCommand = new Command('export');
+  mockExportCommand.description('Export a text document to PDF with legal formatting');
+  mockExportCommand.argument('<input>', 'Path to input text file');
+  mockExportCommand.argument('<output>', 'Path for output PDF file');
+  mockExportCommand.option('-d, --debug', 'Enable debug logging');
+  mockExportCommand.option('--no-page-numbers', 'Disable page numbers');
+  mockExportCommand.option('-m, --margins <margins>', 'Custom margins in points');
+  mockExportCommand.option('-l, --line-spacing <spacing>', 'Line spacing');
+  mockExportCommand.option('-f, --font-size <size>', 'Font size in points');
+  mockExportCommand.action = jest.fn();
+  return {
+    exportCommand: mockExportCommand
+  };
+});
+
 describe('CLI Entry Point', () => {
   let originalArgv: string[];
   let originalExit: typeof process.exit;

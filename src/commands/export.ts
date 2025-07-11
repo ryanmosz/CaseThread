@@ -3,8 +3,9 @@ import * as path from 'path';
 import { promises as fs } from 'fs';
 import { createSpinner } from '../utils/spinner';
 import { logger } from '../utils/logger';
-import { handleError, createError } from '../utils/error-handler';
+import { handleError, createError, CLIError } from '../utils/error-handler';
 import { PDFExportService, PDFExportOptions } from '../services/pdf-export';
+import { ErrorCode } from '../types/errors';
 
 interface ExportOptions {
   debug?: boolean;
@@ -122,15 +123,28 @@ export const exportCommand = new Command('export')
       // Validate input file exists
       spinner.updateMessage(SPINNER_MESSAGES.READ_FILE);
       try {
-        await fs.access(resolvedInputPath);
-        logger.debug(`Input file exists: ${resolvedInputPath}`);
-      } catch {
-        throw createError('FILE_NOT_FOUND', resolvedInputPath);
+        const stats = await fs.stat(resolvedInputPath);
+        if (!stats.isFile()) {
+          throw new CLIError(`Input path is not a file: ${resolvedInputPath}`, ErrorCode.INVALID_INPUT);
+        }
+        if (stats.size === 0) {
+          throw new CLIError(`Input file is empty: ${resolvedInputPath}`, ErrorCode.EMPTY_FILE);
+        }
+        if (stats.size > 50 * 1024 * 1024) { // 50MB limit
+          throw new CLIError(`Input file is too large (${(stats.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 50MB.`, ErrorCode.FILE_TOO_LARGE);
+        }
+        logger.debug(`Input file exists: ${resolvedInputPath} (${stats.size} bytes)`);
+      } catch (error) {
+        if (error instanceof CLIError) throw error;
+        if ((error as any).code === 'ENOENT') {
+          throw createError('FILE_NOT_FOUND', resolvedInputPath);
+        }
+        throw new CLIError(`Cannot access input file: ${(error as Error).message}`, ErrorCode.FILE_ACCESS_ERROR);
       }
       
       // Ensure output has .pdf extension
       if (!resolvedOutputPath.endsWith('.pdf')) {
-        throw new Error('Output file must have .pdf extension');
+        throw new CLIError('Output file must have .pdf extension', ErrorCode.INVALID_OUTPUT);
       }
       
       // Ensure output directory exists
@@ -139,7 +153,15 @@ export const exportCommand = new Command('export')
         await fs.mkdir(outputDir, { recursive: true });
         logger.debug(`Output directory ensured: ${outputDir}`);
       } catch (error) {
-        throw createError('PERMISSION_ERROR', outputDir);
+        logger.error('Failed to create output directory', error);
+        throw new CLIError(`Cannot create output directory: ${outputDir}`, ErrorCode.PERMISSION_ERROR);
+      }
+      
+      // Check write permissions to output directory
+      try {
+        await fs.access(outputDir, fs.constants.W_OK);
+      } catch {
+        throw new CLIError(`No write permission for directory: ${outputDir}`, ErrorCode.PERMISSION_ERROR);
       }
       
       // Read input file
@@ -148,8 +170,15 @@ export const exportCommand = new Command('export')
         content = await fs.readFile(resolvedInputPath, 'utf-8');
         logger.debug(`Read ${content.length} characters from input file`);
         spinner.updateMessage(`Read ${content.length.toLocaleString()} characters`);
+        
+        // Validate content
+        if (content.trim().length === 0) {
+          throw new CLIError('Input file contains only whitespace', ErrorCode.EMPTY_FILE);
+        }
       } catch (error) {
-        throw createError('PERMISSION_ERROR', resolvedInputPath);
+        if (error instanceof CLIError) throw error;
+        logger.error('Failed to read input file', error);
+        throw new CLIError(`Cannot read input file: ${(error as Error).message}`, ErrorCode.FILE_READ_ERROR);
       }
       
       // Extract document type
@@ -170,42 +199,107 @@ export const exportCommand = new Command('export')
         }
       };
       
+      // Validate and set line spacing
       if (options.lineSpacing && options.lineSpacing !== 'auto') {
         const validSpacings = ['single', 'one-half', 'double'];
         if (validSpacings.includes(options.lineSpacing)) {
           exportOptions.lineSpacing = options.lineSpacing as 'single' | 'one-half' | 'double';
         } else {
-          throw new Error('Line spacing must be one of: single, one-half, double');
+          throw new CLIError(
+            `Invalid line spacing '${options.lineSpacing}'. Must be one of: single, one-half, double, or auto`,
+            ErrorCode.INVALID_OPTION
+          );
         }
       }
       
+      // Validate and set font size
       if (options.fontSize) {
         const fontSize = parseInt(options.fontSize, 10);
         if (isNaN(fontSize) || fontSize < 8 || fontSize > 24) {
-          throw new Error('Font size must be between 8 and 24 points');
+          throw new CLIError(
+            `Invalid font size '${options.fontSize}'. Must be between 8 and 24 points`,
+            ErrorCode.INVALID_OPTION
+          );
         }
         exportOptions.fontSize = fontSize;
       }
       
+      // Parse and validate margins
       if (options.margins) {
-        exportOptions.margins = parseMargins(options.margins);
+        try {
+          exportOptions.margins = parseMargins(options.margins);
+        } catch (error) {
+          throw new CLIError(
+            `Invalid margins format: ${(error as Error).message}`,
+            ErrorCode.INVALID_OPTION
+          );
+        }
       }
       
       // Generate PDF
-      await pdfService.export(
-        content,
-        resolvedOutputPath,
-        documentType,
-        exportOptions
-      );
+      try {
+        spinner.updateMessage(SPINNER_MESSAGES.GENERATE_PDF);
+        await pdfService.export(
+          content,
+          resolvedOutputPath,
+          documentType,
+          exportOptions
+        );
+      } catch (error) {
+        logger.error('PDF generation failed', error);
+        if (error instanceof Error) {
+          if (error.message.includes('ENOSPC')) {
+            throw new CLIError('Insufficient disk space to save PDF', ErrorCode.DISK_FULL);
+          } else if (error.message.includes('EMFILE')) {
+            throw new CLIError('Too many open files. Please close some applications and try again', ErrorCode.SYSTEM_LIMIT);
+          } else if (error.message.includes('signature') || error.message.includes('marker')) {
+            throw new CLIError(
+              `Document parsing error: ${error.message}`,
+              ErrorCode.PARSING_ERROR
+            );
+          }
+        }
+        throw new CLIError(
+          `PDF generation failed: ${(error as Error).message}`,
+          ErrorCode.PDF_GENERATION_ERROR
+        );
+      }
+      
+      // Verify output file was created
+      try {
+        const outputStats = await fs.stat(resolvedOutputPath);
+        if (outputStats.size === 0) {
+          throw new CLIError('Generated PDF is empty', ErrorCode.GENERATION_ERROR);
+        }
+        logger.debug(`PDF created successfully: ${outputStats.size} bytes`);
+      } catch (error) {
+        if (error instanceof CLIError) throw error;
+        throw new CLIError('Failed to verify PDF output', ErrorCode.VERIFICATION_ERROR);
+      }
       
       spinner.success(SPINNER_MESSAGES.SUCCESS);
       console.log(`\n✅ PDF exported successfully to: ${resolvedOutputPath}\n`);
+      console.log(`   📄 Document type: ${documentType}`);
+      console.log(`   📏 Size: ${(await fs.stat(resolvedOutputPath)).size.toLocaleString()} bytes`);
       
       process.exit(0);
       
     } catch (error) {
       logger.debug('Error occurred during export:', error);
+      
+      // Add specific help for common errors
+      if (error instanceof CLIError) {
+        if (error.code === ErrorCode.FILE_NOT_FOUND) {
+          console.error('\n💡 Tip: Make sure the input file path is correct and the file exists.');
+        } else if (error.code === ErrorCode.PERMISSION_ERROR) {
+          console.error('\n💡 Tip: Check that you have write permissions to the output directory.');
+        } else if (error.code === ErrorCode.EMPTY_FILE) {
+          console.error('\n💡 Tip: The input file must contain text content to convert to PDF.');
+        } else if (error.code === ErrorCode.INVALID_OPTION) {
+          console.error('\n💡 Tip: Use --help to see valid option values.');
+        }
+      }
+      
       handleError(error as Error, spinner);
     }
   }); 

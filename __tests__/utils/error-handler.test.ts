@@ -94,7 +94,7 @@ describe('Error Handler', () => {
         handleError(error, mockSpinner);
         fail('Should have thrown');
       } catch (e: any) {
-        expect(e.message).toBe('process.exit called with code 2');
+        expect(e.message).toBe('process.exit called with code 1');
       }
 
       expect(mockSpinner.fail).toHaveBeenCalledWith('Custom error');

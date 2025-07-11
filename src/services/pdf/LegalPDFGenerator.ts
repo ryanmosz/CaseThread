@@ -388,18 +388,25 @@ export class LegalPDFGenerator {
   /**
    * Write a section heading
    * @param heading - Heading text
-   * @param level - Heading level (1-3)
+   * @param level - Heading level (1-6)
    * @param options - Additional formatting options
    * @returns This instance for method chaining
    */
   public writeHeading(
     heading: string,
-    level: 1 | 2 | 3 = 1,
+    level: 1 | 2 | 3 | 4 | 5 | 6 = 1,
     options?: TextOptions
   ): this {
-    const sizes = { 1: 14, 2: 13, 3: 12 };
+    // Markdown heading sizes: H1=16pt, H2=14pt, H3=12pt, H4-6=12pt
+    const sizes = { 1: 16, 2: 14, 3: 12, 4: 12, 5: 12, 6: 12 };
+    
+    // Bold for H1, H2, H3; regular for H4-6
+    const isBold = level <= 3;
+    const font = isBold ? 'Times-Bold' : 'Times-Roman';
+    
     const headingOptions: TextOptions = {
       fontSize: sizes[level],
+      font: font,
       ...options
     };
     

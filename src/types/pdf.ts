@@ -151,11 +151,12 @@ export interface ParsedDocument {
  * Layout types for PDFLayoutEngine
  */
 export interface LayoutBlock {
-  type: 'text' | 'signature' | 'heading' | 'list' | 'table';
+  type: 'text' | 'signature' | 'heading' | 'list' | 'table' | 'horizontal-rule';
   content: string | SignatureBlockData;
   height: number;
   breakable: boolean;
   keepWithNext?: boolean;
+  headingLevel?: number; // For heading blocks (1-6)
 }
 
 export interface LayoutConstraints {

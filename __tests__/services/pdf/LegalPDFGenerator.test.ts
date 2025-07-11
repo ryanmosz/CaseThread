@@ -233,17 +233,26 @@ describe('LegalPDFGenerator', () => {
       
       generator.writeHeading('Level 1', 1);
       expect(writeTextSpy).toHaveBeenCalledWith('Level 1', expect.objectContaining({
-        fontSize: 14
+        fontSize: 16,
+        font: 'Times-Bold'
       }));
       
       generator.writeHeading('Level 2', 2);
       expect(writeTextSpy).toHaveBeenCalledWith('Level 2', expect.objectContaining({
-        fontSize: 13
+        fontSize: 14,
+        font: 'Times-Bold'
       }));
       
       generator.writeHeading('Level 3', 3);
       expect(writeTextSpy).toHaveBeenCalledWith('Level 3', expect.objectContaining({
-        fontSize: 12
+        fontSize: 12,
+        font: 'Times-Bold'
+      }));
+      
+      generator.writeHeading('Level 4', 4);
+      expect(writeTextSpy).toHaveBeenCalledWith('Level 4', expect.objectContaining({
+        fontSize: 12,
+        font: 'Times-Roman'
       }));
       
       await generator.finalize();

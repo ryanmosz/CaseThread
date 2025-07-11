@@ -4,6 +4,7 @@ import { LegalPDFGenerator } from './pdf/LegalPDFGenerator';
 import { DocumentFormatter } from './pdf/DocumentFormatter';
 import { SignatureBlockParser } from './pdf/SignatureBlockParser';
 import { PDFLayoutEngine } from './pdf/PDFLayoutEngine';
+import { MarkdownParser } from './pdf/MarkdownParser';
 import { FormattingConfiguration } from '../config/pdf-formatting';
 import { 
   DocumentType, 
@@ -41,9 +42,11 @@ export interface PDFExportOptions {
  */
 export class PDFExportService {
   private logger: Logger;
+  private markdownParser: MarkdownParser;
   
   constructor() {
     this.logger = createChildLogger({ service: 'PDFExportService' });
+    this.markdownParser = new MarkdownParser();
   }
 
   /**
@@ -225,13 +228,31 @@ export class PDFExportService {
 
       // Detect heading
       if (this.isHeading(line)) {
-        blocks.push({
-          type: 'heading',
-          content: line,
-          height: this.calculateTextHeight(line, rules.fontSize * 1.2),
-          breakable: false,
-          keepWithNext: true
-        });
+        // Check if it's a Markdown heading
+        const parsedHeading = this.markdownParser.parseHeading(line);
+        
+        if (parsedHeading) {
+          // Markdown heading - use parsed text and level
+          const fontSize = this.markdownParser.getHeadingFontSize(parsedHeading.level);
+          blocks.push({
+            type: 'heading',
+            content: parsedHeading.text, // Stripped of # symbols
+            height: this.calculateTextHeight(parsedHeading.text, fontSize),
+            breakable: false,
+            keepWithNext: true,
+            headingLevel: parsedHeading.level
+          });
+        } else {
+          // Traditional heading (all caps, numbered, etc.)
+          blocks.push({
+            type: 'heading',
+            content: line,
+            height: this.calculateTextHeight(line, rules.fontSize * 1.2),
+            breakable: false,
+            keepWithNext: true,
+            headingLevel: 1 // Default to H1 for traditional headings
+          });
+        }
         i++;
         continue;
       }
@@ -282,7 +303,8 @@ export class PDFExportService {
     for (const block of page.blocks) {
       switch (block.type) {
         case 'heading':
-          generator.writeHeading(block.content as string, 1);
+          const level = (block.headingLevel || 1) as 1 | 2 | 3 | 4 | 5 | 6;
+          generator.writeHeading(block.content as string, level);
           break;
           
         case 'text':
@@ -413,6 +435,11 @@ export class PDFExportService {
    * Check if a line is a heading
    */
   private isHeading(line: string): boolean {
+    // Check for Markdown headings first
+    if (this.markdownParser.isMarkdownHeading(line)) {
+      return true;
+    }
+    
     // Simple heuristic: all caps, or numbered sections, or short lines
     const trimmed = line.trim();
     return (
