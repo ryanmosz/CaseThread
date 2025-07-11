@@ -60,10 +60,14 @@ Options:
 
 ## Test Results
 
-All PDFs generated successfully in final verification:
-- test-output/final-pdf-test/ contains all 8 working PDFs
-- test-output/length-tests/ contains various length tests
-- docs/testing/test-results/pdf-generation/ contains earlier tests
+All PDFs generated successfully and organized in:
+`docs/testing/test-results/task-2.0-pdf-generation/`
+- `final-tests/` - All 8 document type PDFs
+- `length-tests/` - Various document length tests
+- `markdown-tests/` - Markdown parsing tests
+- `blank-page-tests/` - Blank page investigation PDFs
+- `scripts/` - Test automation scripts
+- `test-documents/` - Source markdown test files
 
 ## Known Limitation
 
