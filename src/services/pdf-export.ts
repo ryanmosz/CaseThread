@@ -191,25 +191,6 @@ export class PDFExportService {
           options.parseMarkdown !== false,
           pageBreaks[i]
         );
-
-        // Add page number only if this page has content
-        if (options.pageNumbers !== false) {
-          // Check if we've written any content to this page
-          const currentPageNum = generator.getCurrentPage();
-          const pagesWithContent = generator.getPagesWithContent();
-          this.logger.debug('Page content tracking', { 
-            currentPageNum, 
-            pagesWithContent: Array.from(pagesWithContent),
-            hasContent: generator.hasContentOnPage(currentPageNum)
-          });
-          
-          if (generator.hasContentOnPage(currentPageNum)) {
-            generator.addPageNumberToCurrentPage();
-            this.logger.debug('Added page number to content page', { pageNumber: currentPageNum });
-          } else {
-            this.logger.debug('Skipping page number on blank page', { pageNumber: currentPageNum });
-          }
-        }
       }
 
       // Step 11: Finalize PDF

@@ -19,6 +19,7 @@ export class LegalPDFGenerator {
   private currentPage: number;
   private outputPath: string;
   private pagesWithContent: Set<number> = new Set();
+  private pagesWithPageNumbers: Set<number> = new Set();
 
   /**
    * Initialize a new PDF generator
@@ -105,6 +106,38 @@ export class LegalPDFGenerator {
    */
   public getPagesWithContent(): Set<number> {
     return new Set(this.pagesWithContent);
+  }
+
+  /**
+   * Check if a page needs a page number and add it
+   * Called when content is first written to a page
+   */
+  private addPageNumberIfNeeded(): void {
+    if (!this.pageConfig.pageNumbers) {
+      return;
+    }
+    
+    // Check if this page already has a page number
+    if (this.pagesWithPageNumbers.has(this.currentPage)) {
+      return;
+    }
+    
+    // Check if this page has content
+    if (!this.pagesWithContent.has(this.currentPage)) {
+      return;
+    }
+    
+    // Save current position and state
+    const savedY = this.doc.y;
+    const savedX = this.doc.x;
+    
+    // Add page number
+    this.addPageNumberToCurrentPage();
+    this.pagesWithPageNumbers.add(this.currentPage);
+    
+    // Restore position (font will be restored by addPageNumberToCurrentPage)
+    this.doc.x = savedX;
+    this.doc.y = savedY;
   }
 
   /**
@@ -211,6 +244,7 @@ export class LegalPDFGenerator {
 
     // Save current state
     const currentY = this.doc.y;
+    const currentX = this.doc.x;
 
     // Format page number
     const pageNumberText = this.formatPageNumber(this.currentPage, format);
@@ -239,13 +273,19 @@ export class LegalPDFGenerator {
         break;
     }
 
-    // Draw page number
-    this.doc.text(pageNumberText, x, y);
+    // Draw page number WITHOUT triggering auto-pagination
+    // Use save/restore to prevent position changes
+    this.doc.save();
+    this.doc.text(pageNumberText, x, y, {
+      lineBreak: false
+    });
+    this.doc.restore();
 
-    // Restore state
+    // Ensure we're back at the original position
+    this.doc.x = currentX;
+    this.doc.y = currentY;
     this.doc.font('Times-Roman'); // Restore default font
     this.doc.fontSize(12); // Restore default size
-    this.doc.y = currentY;
   }
 
   /**
@@ -324,7 +364,13 @@ export class LegalPDFGenerator {
   ): this {
     // Track this page as having content
     if (text.trim().length > 0) {
+      const wasFirstContent = !this.pagesWithContent.has(this.currentPage);
       this.pagesWithContent.add(this.currentPage);
+      
+      // Add page number if this is the first content on the page
+      if (wasFirstContent) {
+        this.addPageNumberIfNeeded();
+      }
     }
     
     const defaultOptions: TextOptions = {
@@ -413,7 +459,13 @@ export class LegalPDFGenerator {
   ): this {
     // Track this page as having content if any segment has text
     if (segments.some(s => s.text.trim().length > 0)) {
+      const wasFirstContent = !this.pagesWithContent.has(this.currentPage);
       this.pagesWithContent.add(this.currentPage);
+      
+      // Add page number if this is the first content on the page
+      if (wasFirstContent) {
+        this.addPageNumberIfNeeded();
+      }
     }
     
     const baseOptions = {
@@ -697,7 +749,13 @@ export class LegalPDFGenerator {
     marginRight?: number;
   }): this {
     // Track this page as having content
+    const wasFirstContent = !this.pagesWithContent.has(this.currentPage);
     this.pagesWithContent.add(this.currentPage);
+    
+    // Add page number if this is the first content on the page
+    if (wasFirstContent) {
+      this.addPageNumberIfNeeded();
+    }
     
     const pageWidth = this.doc.page.width;
     const leftMargin = options?.marginLeft ?? this.pageConfig.margins.left;
