@@ -29,12 +29,12 @@
   - [x] 2.3.5 Create formatting configuration
 
 ### Signature Block Processing
-- [ ] 2.4 Build Signature Block Parser (Details: tasks-parent-2.4-detailed.md)
+- [x] 2.4 Build Signature Block Parser (Details: tasks-parent-2.4-detailed.md)
   - [x] 2.4.1 Create SignatureBlockParser class
   - [x] 2.4.2 Implement marker detection regex
   - [x] 2.4.3 Parse signature block content
-  - [ ] 2.4.4 Handle different block types
-  - [ ] 2.4.5 Extract layout information
+  - [x] 2.4.4 Handle different block types
+  - [x] 2.4.5 Extract layout information
 
 ### Layout Engine
 - [ ] 2.5 Implement PDF Layout Engine (Details: tasks-parent-2.5-detailed.md)
@@ -99,7 +99,7 @@ Before marking complete, verify:
 - `src/config/pdf-formatting.ts` - Formatting configuration system
 - `__tests__/services/pdf/LegalPDFGenerator.test.ts` - Unit tests for PDF generator (33 tests)
 - `__tests__/services/pdf/DocumentFormatter.test.ts` - Unit tests for formatter (42 tests)
-- `__tests__/services/pdf/SignatureBlockParser.test.ts` - Unit tests for signature parser (33 tests, 27 passing)
+- `__tests__/services/pdf/SignatureBlockParser.test.ts` - Unit tests for signature parser (50 tests, all passing)
 - `__tests__/config/pdf-formatting.test.ts` - Unit tests for configuration (16 tests)
 - `__tests__/services/pdf/pdfkit-setup.test.ts` - PDFKit setup validation tests (3 tests)
 - `docs/testing/test-results/pdf-generation/` - Generated test PDFs (18+ files)

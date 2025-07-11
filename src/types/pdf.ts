@@ -1,5 +1,3 @@
-import PDFDocument from 'pdfkit';
-
 /**
  * Options for PDF document generation
  */
@@ -117,11 +115,17 @@ export interface SignatureMarker {
  * Information about a party in a signature block
  */
 export interface SignatureParty {
-  role: string;
-  name?: string;
-  title?: string;
-  company?: string;
-  lineType: 'signature' | 'initial';
+  role?: string;              // "ASSIGNOR", "LICENSEE", "NOTARY PUBLIC", etc.
+  name?: string;              // Signer's name
+  title?: string;             // Professional title
+  company?: string;           // Company name
+  date?: string;              // Date field (if present)
+  lineType?: 'signature' | 'initial';  // Type of line
+  // Notary-specific fields
+  notaryCounty?: string;      // County where notarization occurred
+  notaryState?: string;       // State where notarization occurred
+  commissionExpires?: string; // Notary commission expiration
+  commissionNumber?: string;  // Notary commission number
 }
 
 /**
