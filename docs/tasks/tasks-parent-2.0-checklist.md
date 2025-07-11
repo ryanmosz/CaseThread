@@ -62,7 +62,7 @@
 
 ### Page Flow Issues (NEW)
 - [ ] 2.9 Fix Blank Page Issues
-  - [ ] 2.9.1 Investigate why pages 2, 4, 5 are blank
+  - [x] 2.9.1 Investigate why pages 2, 4, 5 are blank
   - [ ] 2.9.2 Fix page break logic
   - [ ] 2.9.3 Ensure content flows properly
   - [ ] 2.9.4 Test with various document lengths
@@ -135,6 +135,9 @@ Before marking complete, verify:
 - `test-output/test-markdown-full.pdf` - Generated PDF with lists, quotes, and links
 - `test-output/test-markdown-comprehensive.pdf` - Full test with all Markdown features
 - `test-output/test-no-markdown.pdf` - Same doc with --no-markdown option (syntax preserved)
+- `test-output/test-blank-pages.md` - Test document for investigating blank page issues
+- `test-output/test-blank-pages.pdf` - PDF showing the blank page problem (7 pages instead of 2)
+- `docs/tasks/tasks-parent-2.9-investigation.md` - Task 2.9.1 investigation findings
 
 ## Notes
 
@@ -143,6 +146,7 @@ Before marking complete, verify:
 - Ensure all work happens in Docker container
 - Test frequently with real document examples
 - Coordinate with Developer G on integration points
-- Progress: 34/44 sub-tasks complete (77%)
+- Progress: 35/44 sub-tasks complete (80%)
 - All 597 tests passing (added 53 MarkdownParser tests + 5 horizontal rule tests)
+- Task 2.9.1 investigation complete: Found PDFKit auto-pagination causing blank pages
 - Task 2.6 complete with comprehensive error handling 

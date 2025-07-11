@@ -20,14 +20,15 @@
 - **Section 5** = Post-Task 2.0 integration work
 
 ### Task 2.0 Progress Summary:
-- **Complete**: 32 of 44 sub-tasks (73%)
-- **In Progress**: Tasks 2.8 & 2.9 (Markdown parsing & blank page fixes)
-  - ✅ 2.8.1: Markdown headings parsing (H1-H6 with proper sizing)
-  - ✅ 2.8.2: Bold/italic formatting (**text**, *text*, ***both***)
-  - ✅ 2.8.3: Horizontal rules (---, ___, *** all work)
-  - 🔄 2.8.4-2.8.5: Lists, quotes, cleanup
-- **Next Up**: Task 2.7 (Comprehensive testing)
-- **Tests**: 580 passing (223 PDF-related tests, +36 MarkdownParser tests)
+- **Complete**: 35 of 44 sub-tasks (80%)
+- **✅ COMPLETED**: Task 2.8 - Markdown Parsing (ALL 5 subtasks done!)
+- **🔍 JUST INVESTIGATED**: Task 2.9.1 - Blank Page Root Cause
+  - Found: PDFKit auto-pagination creates extra pages
+  - Layout engine calculates 2 pages, PDFKit creates 7
+  - Blank pages occur when PDFKit auto-paginates mid-render
+- **In Progress**: Task 2.9.2-2.9.4 (Fix page break logic)
+- **Next Up**: Continue Task 2.9 or jump to Task 2.7
+- **Tests**: 597 passing (all tests remain stable)
 
 ## Current Focus: PDF Generation for Friday Demo
 
