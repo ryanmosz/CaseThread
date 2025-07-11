@@ -13,6 +13,9 @@ module.exports = {
     '^.+\\.ts$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
+  moduleNameMapper: {
+    '^ora$': '<rootDir>/__mocks__/ora.js'
+  },
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
