@@ -7,6 +7,7 @@ import {
   PageNumberFormat
 } from '../../types/pdf';
 import { createChildLogger, Logger } from '../../utils/logger';
+import { TextSegment } from './MarkdownParser';
 
 /**
  * Generates PDF documents with legal formatting standards
@@ -345,6 +346,54 @@ export class LegalPDFGenerator {
       lineGap: finalOptions.lineGap,
       continued: finalOptions.continued
     });
+    
+    return this;
+  }
+
+  /**
+   * Write formatted text with bold and italic segments
+   * @param segments - Array of text segments with formatting
+   * @param options - Base text formatting options
+   * @returns This instance for method chaining
+   */
+  public writeFormattedText(
+    segments: TextSegment[],
+    options?: TextOptions
+  ): this {
+    const baseOptions = {
+      fontSize: 12,
+      font: 'Times-Roman',
+      ...options
+    };
+    
+    // Save the current X position for potential future use
+    // const startX = this.doc.x;
+    
+    segments.forEach((segment, index) => {
+      // Determine font based on formatting
+      let font = baseOptions.font;
+      if (segment.bold && segment.italic) {
+        font = 'Times-BoldItalic';
+      } else if (segment.bold) {
+        font = 'Times-Bold';
+      } else if (segment.italic) {
+        font = 'Times-Italic';
+      }
+      
+      // Apply formatting for this segment
+      this.doc.font(font);
+      this.doc.fontSize(baseOptions.fontSize || 12);
+      
+      // Write the segment text (continued unless it's the last segment)
+      this.doc.text(segment.text, {
+        continued: index < segments.length - 1,
+        lineGap: options?.lineGap,
+        align: options?.align
+      });
+    });
+    
+    // Restore default font
+    this.doc.font('Times-Roman');
     
     return this;
   }

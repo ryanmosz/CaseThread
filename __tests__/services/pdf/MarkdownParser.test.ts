@@ -143,4 +143,125 @@ describe('MarkdownParser', () => {
       expect(parser.isHorizontalRule('')).toBe(false);
     });
   });
+
+  describe('parseInlineFormatting', () => {
+    it('should parse bold text with **', () => {
+      const segments = parser.parseInlineFormatting('This is **bold** text');
+      expect(segments).toEqual([
+        { text: 'This is ' },
+        { text: 'bold', bold: true, italic: false },
+        { text: ' text' }
+      ]);
+    });
+
+    it('should parse bold text with __', () => {
+      const segments = parser.parseInlineFormatting('This is __bold__ text');
+      expect(segments).toEqual([
+        { text: 'This is ' },
+        { text: 'bold', bold: true, italic: false },
+        { text: ' text' }
+      ]);
+    });
+
+    it('should parse italic text with *', () => {
+      const segments = parser.parseInlineFormatting('This is *italic* text');
+      expect(segments).toEqual([
+        { text: 'This is ' },
+        { text: 'italic', bold: false, italic: true },
+        { text: ' text' }
+      ]);
+    });
+
+    it('should parse italic text with _', () => {
+      const segments = parser.parseInlineFormatting('This is _italic_ text');
+      expect(segments).toEqual([
+        { text: 'This is ' },
+        { text: 'italic', bold: false, italic: true },
+        { text: ' text' }
+      ]);
+    });
+
+    it('should parse bold italic text with ***', () => {
+      const segments = parser.parseInlineFormatting('This is ***bold italic*** text');
+      expect(segments).toEqual([
+        { text: 'This is ' },
+        { text: 'bold italic', bold: true, italic: true },
+        { text: ' text' }
+      ]);
+    });
+
+    it('should parse bold italic text with ___', () => {
+      const segments = parser.parseInlineFormatting('This is ___bold italic___ text');
+      expect(segments).toEqual([
+        { text: 'This is ' },
+        { text: 'bold italic', bold: true, italic: true },
+        { text: ' text' }
+      ]);
+    });
+
+    it('should handle multiple formatted segments', () => {
+      const segments = parser.parseInlineFormatting('**Bold** and *italic* and ***both***');
+      expect(segments).toEqual([
+        { text: 'Bold', bold: true, italic: false },
+        { text: ' and ' },
+        { text: 'italic', bold: false, italic: true },
+        { text: ' and ' },
+        { text: 'both', bold: true, italic: true }
+      ]);
+    });
+
+    it('should handle nested formatting', () => {
+      const segments = parser.parseInlineFormatting('**Bold with *italic* inside**');
+      // Note: Simple parser doesn't handle true nesting - the pattern doesn't match across * and _
+      expect(segments).toEqual([
+        { text: 'Bold with *italic* inside', bold: true, italic: false }
+      ]);
+    });
+
+    it('should handle plain text', () => {
+      const segments = parser.parseInlineFormatting('Just plain text');
+      expect(segments).toEqual([
+        { text: 'Just plain text' }
+      ]);
+    });
+
+    it('should handle empty text', () => {
+      const segments = parser.parseInlineFormatting('');
+      expect(segments).toEqual([
+        { text: '' }
+      ]);
+    });
+
+    it('should handle unclosed formatting', () => {
+      const segments = parser.parseInlineFormatting('This is **unclosed bold');
+      expect(segments).toEqual([
+        { text: 'This is **unclosed bold' }
+      ]);
+    });
+  });
+
+  describe('stripInlineFormatting', () => {
+    it('should strip bold formatting', () => {
+      expect(parser.stripInlineFormatting('**bold** text')).toBe('bold text');
+      expect(parser.stripInlineFormatting('__bold__ text')).toBe('bold text');
+    });
+
+    it('should strip italic formatting', () => {
+      expect(parser.stripInlineFormatting('*italic* text')).toBe('italic text');
+      expect(parser.stripInlineFormatting('_italic_ text')).toBe('italic text');
+    });
+
+    it('should strip bold italic formatting', () => {
+      expect(parser.stripInlineFormatting('***bold italic*** text')).toBe('bold italic text');
+      expect(parser.stripInlineFormatting('___bold italic___ text')).toBe('bold italic text');
+    });
+
+    it('should strip multiple formatting', () => {
+      expect(parser.stripInlineFormatting('**Bold**, *italic*, and ***both***')).toBe('Bold, italic, and both');
+    });
+
+    it('should handle plain text', () => {
+      expect(parser.stripInlineFormatting('No formatting here')).toBe('No formatting here');
+    });
+  });
 }); 

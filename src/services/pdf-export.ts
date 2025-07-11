@@ -309,7 +309,22 @@ export class PDFExportService {
           
         case 'text':
           const lineGap = formatter.applyLineSpacing(documentType, false);
-          generator.writeParagraph(block.content as string, { lineGap });
+          const textContent = block.content as string;
+          
+          // Parse for inline formatting
+          const segments = this.markdownParser.parseInlineFormatting(textContent);
+          
+          // Check if there's any formatting
+          const hasFormatting = segments.some(s => s.bold || s.italic);
+          
+          if (hasFormatting) {
+            // Use formatted text method
+            generator.writeFormattedText(segments, { lineGap });
+            generator.addSpace(1); // Add paragraph spacing
+          } else {
+            // Use regular paragraph method
+            generator.writeParagraph(textContent, { lineGap });
+          }
           break;
           
         case 'signature':

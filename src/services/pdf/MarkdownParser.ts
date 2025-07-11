@@ -28,6 +28,11 @@ export class MarkdownParser {
   private readonly headingPattern = /^(#{1,6})\s+(.+)$/;
   private readonly horizontalRulePattern = /^(-{3,}|_{3,}|\*{3,})$/;
   
+  // Inline formatting patterns
+  private readonly boldItalicPattern = /(\*\*\*|___)(.+?)\1/g;
+  private readonly boldPattern = /(\*\*|__)(.+?)\1/g;
+  private readonly italicPattern = /(\*|_)(.+?)\1/g;
+  
   constructor() {
     this.logger = createChildLogger({ service: 'MarkdownParser' });
   }
@@ -103,5 +108,107 @@ export class MarkdownParser {
    */
   isHeadingBold(level: number): boolean {
     return level <= 3;
+  }
+  
+  /**
+   * Parse inline formatting in a text string
+   * @param text Text that may contain Markdown formatting
+   * @returns Array of text segments with formatting information
+   */
+  parseInlineFormatting(text: string): TextSegment[] {
+    // Handle empty text
+    if (text.length === 0) {
+      return [{ text: '' }];
+    }
+    
+    // First, handle bold+italic (***text*** or ___text___)
+    const parts = this.splitByPattern(text, this.boldItalicPattern, (_match, _delimiter, content) => ({
+      text: content,
+      bold: true,
+      italic: true
+    }));
+    
+    // Then handle bold (**text** or __text__) in each part
+    const partsWithBold: Array<TextSegment | string> = [];
+    for (const part of parts) {
+      if (typeof part === 'string') {
+        partsWithBold.push(...this.splitByPattern(part, this.boldPattern, (_match, _delimiter, content) => ({
+          text: content,
+          bold: true,
+          italic: false
+        })));
+      } else {
+        partsWithBold.push(part);
+      }
+    }
+    
+    // Finally handle italic (*text* or _text_) in remaining strings
+    const finalParts: Array<TextSegment | string> = [];
+    for (const part of partsWithBold) {
+      if (typeof part === 'string') {
+        const italicParts = this.splitByPattern(part, this.italicPattern, (_match, _delimiter, content) => ({
+          text: content,
+          bold: false,
+          italic: true
+        }));
+        finalParts.push(...italicParts);
+      } else {
+        finalParts.push(part);
+      }
+    }
+    
+    // Convert any remaining strings to plain text segments
+    return finalParts.map(segment => 
+      typeof segment === 'string' 
+        ? { text: segment } 
+        : segment
+    );
+  }
+  
+  /**
+   * Split text by a pattern and process matches
+   * @private
+   */
+  private splitByPattern(
+    text: string, 
+    pattern: RegExp, 
+    processMatch: (match: string, delimiter: string, content: string) => TextSegment
+  ): Array<TextSegment | string> {
+    const result: Array<TextSegment | string> = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    
+    // Create a new regex with global flag to ensure we get all matches
+    const regex = new RegExp(pattern.source, 'g');
+    
+    while ((match = regex.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        result.push(text.slice(lastIndex, match.index));
+      }
+      
+      // Add the formatted segment
+      const [fullMatch, delimiter, content] = match;
+      result.push(processMatch(fullMatch, delimiter, content));
+      
+      lastIndex = regex.lastIndex;
+    }
+    
+    // Add any remaining text
+    if (lastIndex < text.length) {
+      result.push(text.slice(lastIndex));
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Strip all inline Markdown formatting from text
+   * @param text Text with potential Markdown formatting
+   * @returns Plain text without formatting symbols
+   */
+  stripInlineFormatting(text: string): string {
+    const segments = this.parseInlineFormatting(text);
+    return segments.map(segment => segment.text).join('');
   }
 } 

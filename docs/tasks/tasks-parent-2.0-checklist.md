@@ -55,7 +55,7 @@
 ### Markdown Parsing (NEW)
 - [ ] 2.8 Add Markdown Parsing to PDF Export (Details: tasks-parent-2.8-detailed.md)
   - [x] 2.8.1 Parse Markdown headings (#, ##, ###) to PDF headings
-  - [ ] 2.8.2 Parse bold/italic (**text**, *text*) to PDF formatting
+  - [x] 2.8.2 Parse bold/italic (**text**, *text*) to PDF formatting
   - [ ] 2.8.3 Parse horizontal rules (---) to PDF lines
   - [ ] 2.8.4 Handle other common Markdown elements
   - [ ] 2.8.5 Preserve document structure without syntax characters
@@ -138,6 +138,6 @@ Before marking complete, verify:
 - Ensure all work happens in Docker container
 - Test frequently with real document examples
 - Coordinate with Developer G on integration points
-- Progress: 30/44 sub-tasks complete (68%)
-- All 559 tests passing (added 20 MarkdownParser tests)
+- Progress: 31/44 sub-tasks complete (70%)
+- All 575 tests passing (added 36 MarkdownParser tests)
 - Task 2.6 complete with comprehensive error handling 
