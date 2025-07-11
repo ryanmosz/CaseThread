@@ -46,8 +46,8 @@
 
 ### CLI Integration
 - [ ] 2.6 Create CLI Export Command (Details: tasks-parent-2.6-detailed.md)
-  - [ ] 2.6.1 Create export command structure
-  - [ ] 2.6.2 Add command line arguments
+  - [x] 2.6.1 Create export command structure
+  - [x] 2.6.2 Add command line arguments
   - [ ] 2.6.3 Implement file reading logic
   - [ ] 2.6.4 Add progress indicators
   - [ ] 2.6.5 Handle errors gracefully
@@ -96,13 +96,15 @@ Before marking complete, verify:
 - `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (complete with all methods, enhanced moveTo())
 - `src/services/pdf/DocumentFormatter.ts` - Document-specific formatting rules manager
 - `src/services/pdf/SignatureBlockParser.ts` - Parser for signature block markers (Task 2.4 complete)
-- `src/services/pdf/PDFLayoutEngine.ts` - PDF layout engine (Task 2.5 in progress)
+- `src/services/pdf/PDFLayoutEngine.ts` - PDF layout engine (Task 2.5 complete)
+- `src/services/pdf-export.ts` - PDF export service that integrates all components (Pre-requisite for Task 2.6)
 - `src/config/pdf-formatting.ts` - Formatting configuration system
 - `__tests__/services/pdf/LegalPDFGenerator.test.ts` - Unit tests for PDF generator (33 tests)
 - `__tests__/services/pdf/DocumentFormatter.test.ts` - Unit tests for formatter (42 tests)
 - `__tests__/services/pdf/SignatureBlockParser.test.ts` - Unit tests for signature parser (50 tests, all passing)
 - `__tests__/services/pdf/PDFLayoutEngine.test.ts` - Unit tests for layout engine (10 tests, all passing)
 - `__tests__/config/pdf-formatting.test.ts` - Unit tests for configuration (16 tests)
+- `__tests__/services/pdf-export.test.ts` - Unit tests for PDF export service (20 tests, all passing)
 - `__tests__/services/pdf/pdfkit-setup.test.ts` - PDFKit setup validation tests (3 tests)
 - `docs/testing/test-results/pdf-generation/` - Generated test PDFs (18+ files)
 

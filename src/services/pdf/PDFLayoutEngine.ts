@@ -50,19 +50,16 @@ export class PDFLayoutEngine {
     let i = 0;
     while (i < blocks.length) {
       const block = blocks[i];
-      const maxPageHeight = this.getMaxPageHeight(documentType);
       
-      // Check if this block should stay together with others
-      if (this.shouldKeepTogether(block)) {
+      // Check if this block has keepWithNext or is part of a signature group
+      if (block.keepWithNext || (block.type === 'signature' && i < blocks.length - 1 && blocks[i + 1].type === 'signature')) {
         const groupHeight = this.calculateGroupHeight(blocks, i);
         
         // If group doesn't fit on current page
-        if (groupHeight > currentPage.remainingHeight) {
-          // Start new page if current page has content
-          if (currentPage.blocks.length > 0) {
-            pages.push(currentPage);
-            currentPage = this.createNewPage(pages.length + 1, documentType);
-          }
+        if (groupHeight > currentPage.remainingHeight && currentPage.blocks.length > 0) {
+          // Start new page
+          pages.push(currentPage);
+          currentPage = this.createNewPage(pages.length + 1, documentType);
         }
       }
       
@@ -72,94 +69,55 @@ export class PDFLayoutEngine {
         this.addBlockToPage(block, currentPage);
         i++;
       } else {
-        // Block doesn't fit
+        // Block doesn't fit on current page
         
-        // Block is too large for any page
-        if (block.height > this.getMaxPageHeight(documentType)) {
+        // Check if block is too large for any page
+        const maxPageHeight = this.getMaxPageHeight(documentType);
+        if (block.height > maxPageHeight) {
           this.logger.warn('Block too large for single page', {
             blockType: block.type,
             blockHeight: block.height,
-            maxHeight: this.getMaxPageHeight(documentType)
+            maxHeight: maxPageHeight
           });
           
-          // Try to split text blocks
+          // Try to split if it's a text block
           if (this.canSplitTextBlock(block)) {
-            const splitBlocks = this.splitTextBlock(block, currentPage.remainingHeight);
-            
-            // Add first part to current page if it fits
-            if (splitBlocks[0].height <= currentPage.remainingHeight) {
-              this.addBlockToPage(splitBlocks[0], currentPage);
-              
-              // Push current page and create new one
+            // Push current page first
+            if (currentPage.blocks.length > 0) {
               pages.push(currentPage);
               currentPage = this.createNewPage(pages.length + 1, documentType);
-              
-              // Add remaining parts
-              for (let j = 1; j < splitBlocks.length; j++) {
-                this.addBlockToPage(splitBlocks[j], currentPage);
+            }
+            
+            // Split the block
+            const splitBlocks = this.splitTextBlock(block, currentPage.remainingHeight);
+            
+            // Process all split blocks
+            for (const splitBlock of splitBlocks) {
+              if (!this.blockFitsOnPage(splitBlock, currentPage, constraints)) {
+                pages.push(currentPage);
+                currentPage = this.createNewPage(pages.length + 1, documentType);
               }
-            } else {
-
-              // Add remaining parts
-              for (let j = 1; j < splitBlocks.length; j++) {
-                this.addBlockToPage(splitBlocks[j], currentPage);
-              }
-              i++; // Move to next block after handling split
+              this.addBlockToPage(splitBlock, currentPage);
             }
+            i++;
           } else {
-            // Even split doesn't fit, just add to new page
-            pages.push(currentPage);
-            currentPage = this.createNewPage(pages.length + 1, documentType);
-            this.addBlockToPage(block, currentPage);
-            i++; // Move to next block
-          }
-        } else {
-          // Block fits on a page but not the current one
-          // Try to find a good break point
-          const breakPoint = this.findBreakPoint(blocks, i, constraints);
-          
-          if (breakPoint < i && breakPoint > 0 && currentPage.blocks.length > breakPoint) {
-            // We can move some blocks to the next page
-            const blocksToMove = currentPage.blocks.splice(breakPoint);
-            
-            // Recalculate remaining height
-            let movedHeight = 0;
-            for (const movedBlock of blocksToMove) {
-              movedHeight += movedBlock.height;
+            // Can't split, force add the oversized block
+            if (currentPage.blocks.length > 0) {
+              pages.push(currentPage);
+              currentPage = this.createNewPage(pages.length + 1, documentType);
             }
-            currentPage.remainingHeight += movedHeight;
-            
-            // Push current page and create new one
-            pages.push(currentPage);
-            currentPage = this.createNewPage(pages.length + 1, documentType);
-            
-            // Add moved blocks to new page
-            for (const movedBlock of blocksToMove) {
-              this.addBlockToPage(movedBlock, currentPage);
-            }
-            
-            // Continue to process the current block again
-            continue;
-          }
-          
-          // No good break point or current page is empty/small
-          if (currentPage.blocks.length > 0) {
-            // Move to next page
-            pages.push(currentPage);
-            currentPage = this.createNewPage(pages.length + 1, documentType);
-          } else {
-            // Current page is empty but block still doesn't fit
-            // This should only happen if constraints are misconfigured
-            this.logger.error('Empty page but block does not fit', {
-              blockType: block.type,
-              blockHeight: block.height,
-              remainingHeight: currentPage.remainingHeight,
-              maxHeight: maxPageHeight
-            });
-            // Force add it anyway to avoid infinite loop
             this.addBlockToPage(block, currentPage);
             i++;
           }
+        } else {
+          // Block fits on a page but not the current one
+          // Always push current page (even if empty) to maintain page flow
+          pages.push(currentPage);
+          currentPage = this.createNewPage(pages.length + 1, documentType);
+          
+          // Add the block to the new page
+          this.addBlockToPage(block, currentPage);
+          i++;
         }
       }
     }
@@ -225,42 +183,7 @@ export class PDFLayoutEngine {
     return block.height <= page.remainingHeight;
   }
 
-  /**
-   * Find optimal break point
-   * @param blocks - All blocks
-   * @param currentIndex - Current block index
-   * @param constraints - Layout constraints
-   * @returns Index to break at
-   */
-  private findBreakPoint(
-    blocks: LayoutBlock[],
-    currentIndex: number,
-    constraints: LayoutConstraints
-  ): number {
-    let bestBreak = currentIndex;
-    
-    // Start from current position and work backwards
-    for (let i = currentIndex; i >= 0; i--) {
-      const block = blocks[i];
-      
-      // Never break inside a signature block
-      if (block.type === 'signature') {
-        continue;
-      }
-      
-      // Check if this is a good break point
-      if (this.isGoodBreakPoint(blocks, i, constraints)) {
-        bestBreak = i;
-        break;
-      }
-    }
-    
-    // Adjust for orphan/widow control
-    const adjustedBreak = this.adjustBreakForOrphanWidow(blocks, bestBreak, constraints);
-    
-    // Make sure the adjustment doesn't exceed current index
-    return Math.min(adjustedBreak, currentIndex);
-  }
+
 
   /**
    * Check if block should stay together
@@ -298,10 +221,19 @@ export class PDFLayoutEngine {
   ): number {
     let totalHeight = 0;
     let currentIndex = startIndex;
+    const startBlock = blocks[startIndex];
     
     while (currentIndex < blocks.length) {
       const block = blocks[currentIndex];
       totalHeight += block.height;
+      
+      // Special case: consecutive signature blocks should stay together
+      if (startBlock.type === 'signature' && 
+          currentIndex < blocks.length - 1 && 
+          blocks[currentIndex + 1].type === 'signature') {
+        currentIndex++;
+        continue;
+      }
       
       // Check if next block must stay with this one
       if (!block.keepWithNext && currentIndex > startIndex) {
@@ -314,46 +246,7 @@ export class PDFLayoutEngine {
     return totalHeight;
   }
 
-  /**
-   * Check if position is a good break point
-   * @param blocks - All blocks
-   * @param index - Index to check
-   * @param constraints - Layout constraints
-   * @returns True if this is a good place to break
-   */
-  private isGoodBreakPoint(
-    blocks: LayoutBlock[],
-    index: number,
-    constraints: LayoutConstraints
-  ): boolean {
-    // Don't break if it would leave orphans
-    if (index < constraints.minOrphanLines) {
-      return false;
-    }
-    
-    // Don't break if it would create widows
-    const remainingBlocks = blocks.length - index;
-    if (remainingBlocks < constraints.minWidowLines) {
-      return false;
-    }
-    
-    // Don't break between heading and content
-    if (index > 0 && blocks[index - 1].type === 'heading') {
-      return false;
-    }
 
-    // Don't break if previous block has keepWithNext
-    if (index > 0 && blocks[index - 1].keepWithNext) {
-      return false;
-    }
-    
-    // Prefer breaking after paragraphs
-    if (index > 0 && blocks[index - 1].type === 'text') {
-      return true;
-    }
-    
-    return true;
-  }
 
   /**
    * Get maximum page height for document type
@@ -858,28 +751,40 @@ export class PDFLayoutEngine {
     let hasOrphan = false;
     let hasWidow = false;
     
-    // Count consecutive text lines before break (potential orphans)
-    let linesBefore = 0;
-    for (let i = pageBreakIndex - 1; i >= 0; i--) {
-      if (blocks[i].type !== 'text') break;
-      linesBefore++;
+    // Count consecutive text blocks before the break (for orphan check)
+    let textBlocksBefore = 0;
+    for (let i = pageBreakIndex - 1; i >= 0 && blocks[i]?.type === 'text'; i--) {
+      textBlocksBefore++;
     }
     
-    // Count consecutive text lines after break (potential widows)
-    let linesAfter = 0;
-    for (let i = pageBreakIndex; i < blocks.length; i++) {
-      if (blocks[i].type !== 'text') break;
-      linesAfter++;
+    // Count consecutive text blocks after the break (for widow check)
+    let textBlocksAfter = 0;
+    for (let i = pageBreakIndex; i < blocks.length && blocks[i]?.type === 'text'; i++) {
+      textBlocksAfter++;
     }
     
-    // Only check for orphans if we have text blocks ending the previous page
-    hasOrphan = linesBefore > 0 && linesBefore < constraints.minOrphanLines;
+    // Orphan: too few text lines at end of page
+    if (textBlocksBefore > 0 && textBlocksBefore < constraints.minOrphanLines) {
+      hasOrphan = true;
+    }
     
-    // Only check for widows if we have text blocks starting the next page
-    hasWidow = linesAfter > 0 && linesAfter < constraints.minWidowLines;
+    // Widow: too few text lines at start of page
+    if (textBlocksAfter > 0 && textBlocksAfter < constraints.minWidowLines) {
+      // Special case: if the small text group is immediately followed by a non-text element
+      // (like a heading), it's not considered a widow - it's just a short text section
+      const lastTextIndex = pageBreakIndex + textBlocksAfter - 1;
+      const isFollowedByNonText = lastTextIndex < blocks.length - 1 && 
+                                   blocks[lastTextIndex + 1]?.type !== 'text';
+      
+      if (!isFollowedByNonText) {
+        hasWidow = true;
+      }
+    }
     
     return { hasOrphan, hasWidow };
   }
+
+
 
   /**
    * Adjust page break to avoid orphans/widows
@@ -887,7 +792,9 @@ export class PDFLayoutEngine {
    * @param proposedBreak - Proposed break index
    * @param constraints - Layout constraints
    * @returns Adjusted break index
+   * @internal Used by tests only
    */
+  // @ts-ignore - Used by tests
   private adjustBreakForOrphanWidow(
     blocks: LayoutBlock[],
     proposedBreak: number,
@@ -924,49 +831,34 @@ export class PDFLayoutEngine {
     const maxLines = Math.floor(maxHeight / lineHeight);
     
     // If we can't fit at least 2 lines, don't split
-    if (maxLines < 2) {
+    if (maxLines < 2 || words.length < 10) {
       return { firstPart: '', secondPart: text };
     }
     
-    let currentLine = '';
-    let lines: string[] = [];
-    let breakIndex = 0;
+    // Calculate approximate words per line (assuming ~10-12 words per line)
+    const wordsPerLine = 10;
+    const targetWords = maxLines * wordsPerLine;
     
-    // Build lines word by word
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-      const testLine = currentLine ? `${currentLine} ${word}` : word;
-      
-      // Approximate line width (assuming ~80 chars per line)
-      if (testLine.length > 80 && currentLine) {
-        lines.push(currentLine);
-        currentLine = word;
-        
-        // If we've filled the available lines, record where to break
-        if (lines.length >= maxLines) {
-          breakIndex = i;
-          break;
-        }
-      } else {
-        currentLine = testLine;
+    // Find a good break point
+    let breakIndex = Math.min(targetWords, words.length - 5); // Leave at least 5 words
+    
+    // Look for sentence boundaries near the break point
+    let bestBreak = breakIndex;
+    for (let i = breakIndex - 5; i <= breakIndex + 5 && i < words.length; i++) {
+      if (i > 0 && words[i - 1].match(/[.!?]$/)) {
+        bestBreak = i;
+        break;
       }
     }
     
-    // If we didn't break yet, add the current line
-    if (currentLine && lines.length < maxLines && breakIndex === 0) {
-      lines.push(currentLine);
-      breakIndex = words.length;
-    }
-    
-    // Don't break if it would create a widow (less than 5 words in second part)
-    const remainingWords = words.length - breakIndex;
-    if (lines.length < 2 || remainingWords < 5 || breakIndex < 5) {
+    // Ensure we don't create tiny fragments
+    if (bestBreak < 5 || words.length - bestBreak < 5) {
       return { firstPart: '', secondPart: text };
     }
     
     return {
-      firstPart: words.slice(0, breakIndex).join(' '),
-      secondPart: words.slice(breakIndex).join(' ')
+      firstPart: words.slice(0, bestBreak).join(' '),
+      secondPart: words.slice(bestBreak).join(' ')
     };
   }
 
@@ -986,6 +878,11 @@ export class PDFLayoutEngine {
     for (let i = 0; i < optimizedPages.length - 1; i++) {
       const currentPage = optimizedPages[i];
       const nextPage = optimizedPages[i + 1];
+      
+      // Don't optimize if it would leave a page empty
+      if (currentPage.blocks.length <= 1) {
+        continue;
+      }
       
       // If current page is very full and next is very empty
       if (currentPage.remainingHeight < 50 && nextPage.blocks.length < 5) {
@@ -1013,9 +910,9 @@ export class PDFLayoutEngine {
    */
   private canSplitTextBlock(block: LayoutBlock): boolean {
     return block.type === 'text' && 
-           block.breakable && 
+           block.breakable !== false && // Default to breakable if not specified
            typeof block.content === 'string' &&
-           block.content.length > 160; // At least 2 lines worth
+           block.content.split(' ').length > 10; // At least 10 words
   }
 
   /**
@@ -1043,8 +940,12 @@ export class PDFLayoutEngine {
       return [block]; // Can't split effectively
     }
     
-    const firstLines = Math.ceil(firstPart.length / 80);
-    const secondLines = Math.ceil(secondPart.length / 80);
+    // Calculate height based on word count (assuming ~10 words per line)
+    const wordsPerLine = 10;
+    const firstWords = firstPart.split(' ').length;
+    const secondWords = secondPart.split(' ').length;
+    const firstLines = Math.ceil(firstWords / wordsPerLine);
+    const secondLines = Math.ceil(secondWords / wordsPerLine);
     
     return [
       {

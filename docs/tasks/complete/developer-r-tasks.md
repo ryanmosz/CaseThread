@@ -20,10 +20,10 @@
 - **Section 5** = Post-Task 2.0 integration work
 
 ### Task 2.0 Progress Summary:
-- **Complete**: 24 of 35 sub-tasks (69%)
-- **In Progress**: None - ready to start Task 2.6
-- **Next Up**: Task 2.6.1 (Create export command structure)
-- **Tests**: 506 passing (162 PDF-related tests, 9 need fixes)
+- **Complete**: 26 of 35 sub-tasks (74%)
+- **In Progress**: Task 2.6 (2/5 sub-tasks complete)
+- **Next Up**: Task 2.6.3 (Implement file reading logic)
+- **Tests**: 535 passing (182 PDF-related tests, all fixed!)
 
 ## Current Focus: PDF Generation for Friday Demo
 

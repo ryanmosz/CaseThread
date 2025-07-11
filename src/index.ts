@@ -2,6 +2,7 @@
 import { Command } from 'commander';
 import { generateCommand } from './commands/generate';
 import { learnCommand } from './commands/learn';
+import { exportCommand } from './commands/export';
 import { logger } from './utils/logger';
 
 // Create the main program instance
@@ -28,6 +29,7 @@ program
 // Add commands
 program.addCommand(generateCommand);
 program.addCommand(learnCommand);
+program.addCommand(exportCommand);
 
 // Parse command line arguments
 program.parse(); 
