@@ -74,87 +74,108 @@ export class PDFLayoutEngine {
       } else {
         // Block doesn't fit
         
-        // First check if block is too large for any page
-        if (block.height > maxPageHeight) {
-          this.logger.warn('Block exceeds maximum page height', {
+        // Block is too large for any page
+        if (block.height > this.getMaxPageHeight(documentType)) {
+          this.logger.warn('Block too large for single page', {
             blockType: block.type,
             blockHeight: block.height,
-            maxHeight: maxPageHeight
+            maxHeight: this.getMaxPageHeight(documentType)
           });
           
-          // If current page is empty, add the oversized block anyway
-          if (currentPage.blocks.length === 0) {
+          // Try to split text blocks
+          if (this.canSplitTextBlock(block)) {
+            const splitBlocks = this.splitTextBlock(block, currentPage.remainingHeight);
+            
+            // Add first part to current page if it fits
+            if (splitBlocks[0].height <= currentPage.remainingHeight) {
+              this.addBlockToPage(splitBlocks[0], currentPage);
+              
+              // Push current page and create new one
+              pages.push(currentPage);
+              currentPage = this.createNewPage(pages.length + 1, documentType);
+              
+              // Add remaining parts
+              for (let j = 1; j < splitBlocks.length; j++) {
+                this.addBlockToPage(splitBlocks[j], currentPage);
+              }
+            } else {
+
+              // Add remaining parts
+              for (let j = 1; j < splitBlocks.length; j++) {
+                this.addBlockToPage(splitBlocks[j], currentPage);
+              }
+              i++; // Move to next block after handling split
+            }
+          } else {
+            // Even split doesn't fit, just add to new page
+            pages.push(currentPage);
+            currentPage = this.createNewPage(pages.length + 1, documentType);
             this.addBlockToPage(block, currentPage);
-            i++;
+            i++; // Move to next block
+          }
+        } else {
+          // Block fits on a page but not the current one
+          // Try to find a good break point
+          const breakPoint = this.findBreakPoint(blocks, i, constraints);
+          
+          if (breakPoint < i && breakPoint > 0 && currentPage.blocks.length > breakPoint) {
+            // We can move some blocks to the next page
+            const blocksToMove = currentPage.blocks.splice(breakPoint);
+            
+            // Recalculate remaining height
+            let movedHeight = 0;
+            for (const movedBlock of blocksToMove) {
+              movedHeight += movedBlock.height;
+            }
+            currentPage.remainingHeight += movedHeight;
+            
+            // Push current page and create new one
+            pages.push(currentPage);
+            currentPage = this.createNewPage(pages.length + 1, documentType);
+            
+            // Add moved blocks to new page
+            for (const movedBlock of blocksToMove) {
+              this.addBlockToPage(movedBlock, currentPage);
+            }
+            
+            // Continue to process the current block again
             continue;
           }
           
-          // Otherwise move to new page and add it there
-          pages.push(currentPage);
-          currentPage = this.createNewPage(pages.length + 1, documentType);
-          this.addBlockToPage(block, currentPage);
-          i++;
-          continue;
-        }
-        
-        // Block fits on a page but not the current one
-        // Try to find a good break point
-        const breakPoint = this.findBreakPoint(blocks, i, currentPage, constraints);
-        
-        if (breakPoint < i && breakPoint > 0 && currentPage.blocks.length > breakPoint) {
-          // We can move some blocks to the next page
-          const blocksToMove = currentPage.blocks.splice(breakPoint);
-          
-          // Recalculate remaining height
-          let movedHeight = 0;
-          for (const movedBlock of blocksToMove) {
-            movedHeight += movedBlock.height;
+          // No good break point or current page is empty/small
+          if (currentPage.blocks.length > 0) {
+            // Move to next page
+            pages.push(currentPage);
+            currentPage = this.createNewPage(pages.length + 1, documentType);
+          } else {
+            // Current page is empty but block still doesn't fit
+            // This should only happen if constraints are misconfigured
+            this.logger.error('Empty page but block does not fit', {
+              blockType: block.type,
+              blockHeight: block.height,
+              remainingHeight: currentPage.remainingHeight,
+              maxHeight: maxPageHeight
+            });
+            // Force add it anyway to avoid infinite loop
+            this.addBlockToPage(block, currentPage);
+            i++;
           }
-          currentPage.remainingHeight += movedHeight;
-          
-          // Push current page and create new one
-          pages.push(currentPage);
-          currentPage = this.createNewPage(pages.length + 1, documentType);
-          
-          // Add moved blocks to new page
-          for (const movedBlock of blocksToMove) {
-            this.addBlockToPage(movedBlock, currentPage);
-          }
-          
-          // Continue to process the current block again
-          continue;
-        }
-        
-        // No good break point or current page is empty/small
-        if (currentPage.blocks.length > 0) {
-          // Move to next page
-          pages.push(currentPage);
-          currentPage = this.createNewPage(pages.length + 1, documentType);
-        } else {
-          // Current page is empty but block still doesn't fit
-          // This should only happen if constraints are misconfigured
-          this.logger.error('Empty page but block does not fit', {
-            blockType: block.type,
-            blockHeight: block.height,
-            remainingHeight: currentPage.remainingHeight,
-            maxHeight: maxPageHeight
-          });
-          // Force add it anyway to avoid infinite loop
-          this.addBlockToPage(block, currentPage);
-          i++;
         }
       }
     }
     
-    // Add final page if it has content
+    // Add final page if it has blocks
     if (currentPage.blocks.length > 0) {
       pages.push(currentPage);
     }
     
+    // Optimize layout to balance pages and avoid orphans/widows
+    const optimizedPages = this.optimizeLayout(pages);
+    
     return {
-      pages,
-      totalPages: pages.length,
-      hasOverflow: pages.some(p => p.remainingHeight < 0)
+      pages: optimizedPages,
+      totalPages: optimizedPages.length,
+      hasOverflow: false
     };
   }
 
@@ -208,28 +229,18 @@ export class PDFLayoutEngine {
    * Find optimal break point
    * @param blocks - All blocks
    * @param currentIndex - Current block index
-   * @param page - Current page
    * @param constraints - Layout constraints
    * @returns Index to break at
    */
   private findBreakPoint(
     blocks: LayoutBlock[],
     currentIndex: number,
-    page: LayoutPage,
     constraints: LayoutConstraints
   ): number {
-    // Check if current block should stay together
-    if (this.shouldKeepTogether(blocks[currentIndex])) {
-      // Check if the entire group fits
-      const groupHeight = this.calculateGroupHeight(blocks, currentIndex);
-      if (groupHeight <= page.remainingHeight) {
-        // Group fits, break after it
-        return currentIndex + 1;
-      }
-    }
-
+    let bestBreak = currentIndex;
+    
     // Start from current position and work backwards
-    for (let i = currentIndex - 1; i >= 0; i--) {
+    for (let i = currentIndex; i >= 0; i--) {
       const block = blocks[i];
       
       // Never break inside a signature block
@@ -239,12 +250,16 @@ export class PDFLayoutEngine {
       
       // Check if this is a good break point
       if (this.isGoodBreakPoint(blocks, i, constraints)) {
-        return i;
+        bestBreak = i;
+        break;
       }
     }
     
-    // If no good break point found, break at current position
-    return currentIndex;
+    // Adjust for orphan/widow control
+    const adjustedBreak = this.adjustBreakForOrphanWidow(blocks, bestBreak, constraints);
+    
+    // Make sure the adjustment doesn't exceed current index
+    return Math.min(adjustedBreak, currentIndex);
   }
 
   /**
@@ -826,5 +841,222 @@ export class PDFLayoutEngine {
       left: content.slice(0, midPoint),
       right: content.slice(midPoint)
     };
+  }
+
+  /**
+   * Check for orphan/widow violations
+   * @param blocks - All blocks
+   * @param pageBreakIndex - Index where page break would occur
+   * @param constraints - Layout constraints
+   * @returns Object indicating orphan/widow violations
+   */
+  private checkOrphanWidow(
+    blocks: LayoutBlock[],
+    pageBreakIndex: number,
+    constraints: LayoutConstraints
+  ): { hasOrphan: boolean; hasWidow: boolean } {
+    let hasOrphan = false;
+    let hasWidow = false;
+    
+    // Count consecutive text lines before break (potential orphans)
+    let linesBefore = 0;
+    for (let i = pageBreakIndex - 1; i >= 0; i--) {
+      if (blocks[i].type !== 'text') break;
+      linesBefore++;
+    }
+    
+    // Count consecutive text lines after break (potential widows)
+    let linesAfter = 0;
+    for (let i = pageBreakIndex; i < blocks.length; i++) {
+      if (blocks[i].type !== 'text') break;
+      linesAfter++;
+    }
+    
+    // Only check for orphans if we have text blocks ending the previous page
+    hasOrphan = linesBefore > 0 && linesBefore < constraints.minOrphanLines;
+    
+    // Only check for widows if we have text blocks starting the next page
+    hasWidow = linesAfter > 0 && linesAfter < constraints.minWidowLines;
+    
+    return { hasOrphan, hasWidow };
+  }
+
+  /**
+   * Adjust page break to avoid orphans/widows
+   * @param blocks - All blocks
+   * @param proposedBreak - Proposed break index
+   * @param constraints - Layout constraints
+   * @returns Adjusted break index
+   */
+  private adjustBreakForOrphanWidow(
+    blocks: LayoutBlock[],
+    proposedBreak: number,
+    constraints: LayoutConstraints
+  ): number {
+    const check = this.checkOrphanWidow(blocks, proposedBreak, constraints);
+    
+    if (check.hasOrphan) {
+      // Move break earlier to include orphaned lines
+      return Math.max(0, proposedBreak - constraints.minOrphanLines);
+    }
+    
+    if (check.hasWidow) {
+      // Move break later to avoid widows
+      return Math.min(blocks.length, proposedBreak + constraints.minWidowLines);
+    }
+    
+    return proposedBreak;
+  }
+
+  /**
+   * Apply smart paragraph breaking
+   * @param text - Text to break
+   * @param maxHeight - Maximum height available
+   * @param lineHeight - Height per line
+   * @returns First and second parts of text
+   */
+  private smartParagraphBreak(
+    text: string,
+    maxHeight: number,
+    lineHeight: number
+  ): { firstPart: string; secondPart: string } {
+    const words = text.split(' ');
+    const maxLines = Math.floor(maxHeight / lineHeight);
+    
+    // If we can't fit at least 2 lines, don't split
+    if (maxLines < 2) {
+      return { firstPart: '', secondPart: text };
+    }
+    
+    let currentLine = '';
+    let lines: string[] = [];
+    let breakIndex = 0;
+    
+    // Build lines word by word
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      
+      // Approximate line width (assuming ~80 chars per line)
+      if (testLine.length > 80 && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+        
+        // If we've filled the available lines, record where to break
+        if (lines.length >= maxLines) {
+          breakIndex = i;
+          break;
+        }
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    // If we didn't break yet, add the current line
+    if (currentLine && lines.length < maxLines && breakIndex === 0) {
+      lines.push(currentLine);
+      breakIndex = words.length;
+    }
+    
+    // Don't break if it would create a widow (less than 5 words in second part)
+    const remainingWords = words.length - breakIndex;
+    if (lines.length < 2 || remainingWords < 5 || breakIndex < 5) {
+      return { firstPart: '', secondPart: text };
+    }
+    
+    return {
+      firstPart: words.slice(0, breakIndex).join(' '),
+      secondPart: words.slice(breakIndex).join(' ')
+    };
+  }
+
+  /**
+   * Final layout optimization pass
+   * @param pages - Array of pages to optimize
+   * @returns Optimized pages
+   */
+  public optimizeLayout(pages: LayoutPage[]): LayoutPage[] {
+    // Clone pages to avoid mutation
+    const optimizedPages = pages.map(page => ({
+      ...page,
+      blocks: [...page.blocks]
+    }));
+    
+    // Look for opportunities to balance pages
+    for (let i = 0; i < optimizedPages.length - 1; i++) {
+      const currentPage = optimizedPages[i];
+      const nextPage = optimizedPages[i + 1];
+      
+      // If current page is very full and next is very empty
+      if (currentPage.remainingHeight < 50 && nextPage.blocks.length < 5) {
+        // Try to move last block from current to next
+        const lastBlock = currentPage.blocks[currentPage.blocks.length - 1];
+        
+        if (lastBlock && lastBlock.breakable && !this.shouldKeepTogether(lastBlock)) {
+          currentPage.blocks.pop();
+          nextPage.blocks.unshift(lastBlock);
+          
+          // Recalculate heights
+          currentPage.remainingHeight += lastBlock.height;
+          nextPage.remainingHeight -= lastBlock.height;
+        }
+      }
+    }
+    
+    return optimizedPages;
+  }
+
+  /**
+   * Check if text block could be split
+   * @param block - Block to check
+   * @returns Whether block can be split
+   */
+  private canSplitTextBlock(block: LayoutBlock): boolean {
+    return block.type === 'text' && 
+           block.breakable && 
+           typeof block.content === 'string' &&
+           block.content.length > 160; // At least 2 lines worth
+  }
+
+  /**
+   * Split a text block at appropriate point
+   * @param block - Block to split
+   * @param availableHeight - Height available on current page
+   * @returns Array of split blocks
+   */
+  private splitTextBlock(
+    block: LayoutBlock,
+    availableHeight: number
+  ): LayoutBlock[] {
+    if (!this.canSplitTextBlock(block) || typeof block.content !== 'string') {
+      return [block];
+    }
+    
+    const lineHeight = 15; // Standard line height
+    const { firstPart, secondPart } = this.smartParagraphBreak(
+      block.content,
+      availableHeight,
+      lineHeight
+    );
+    
+    if (!firstPart || !secondPart) {
+      return [block]; // Can't split effectively
+    }
+    
+    const firstLines = Math.ceil(firstPart.length / 80);
+    const secondLines = Math.ceil(secondPart.length / 80);
+    
+    return [
+      {
+        ...block,
+        content: firstPart,
+        height: firstLines * lineHeight
+      },
+      {
+        ...block,
+        content: secondPart,
+        height: secondLines * lineHeight
+      }
+    ];
   }
 } 

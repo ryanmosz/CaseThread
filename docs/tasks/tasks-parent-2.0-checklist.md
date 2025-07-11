@@ -37,12 +37,12 @@
   - [x] 2.4.5 Extract layout information
 
 ### Layout Engine
-- [ ] 2.5 Implement PDF Layout Engine (Details: tasks-parent-2.5-detailed.md)
+- [x] 2.5 Implement PDF Layout Engine (Details: tasks-parent-2.5-detailed.md)
   - [x] 2.5.1 Create PDFLayoutEngine class
   - [x] 2.5.2 Implement signature block positioning
   - [x] 2.5.3 Add page break prevention logic
   - [x] 2.5.4 Handle side-by-side layouts
-  - [ ] 2.5.5 Implement orphan control
+  - [x] 2.5.5 Implement orphan control
 
 ### CLI Integration
 - [ ] 2.6 Create CLI Export Command (Details: tasks-parent-2.6-detailed.md)

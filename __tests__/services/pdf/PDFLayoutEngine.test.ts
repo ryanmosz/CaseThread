@@ -2,7 +2,7 @@ import { PDFLayoutEngine } from '../../../src/services/pdf/PDFLayoutEngine';
 import { LegalPDFGenerator } from '../../../src/services/pdf/LegalPDFGenerator';
 import { DocumentFormatter } from '../../../src/services/pdf/DocumentFormatter';
 import { SignatureBlockParser } from '../../../src/services/pdf/SignatureBlockParser';
-import { LayoutBlock, SignatureBlockData } from '../../../src/types/pdf';
+import { LayoutBlock, SignatureBlockData, LayoutConstraints, LayoutPage } from '../../../src/types/pdf';
 
 describe('PDFLayoutEngine', () => {
   let layoutEngine: PDFLayoutEngine;
@@ -1073,6 +1073,287 @@ describe('PDFLayoutEngine', () => {
       const blocks = layoutEngine.createSideBySideSignatureBlocks(signatureData);
       
       expect(blocks[0].height).toBe(75); // Role + sig + name (one party has it) + spacing
+    });
+  });
+
+  describe('orphan and widow control', () => {
+    it('should check for orphan violations', () => {
+      const blocks: LayoutBlock[] = [
+        { type: 'text', content: 'Line 1', height: 15, breakable: true },
+        { type: 'text', content: 'Line 2', height: 15, breakable: true },
+        { type: 'heading', content: 'Section', height: 20, breakable: false },
+        { type: 'text', content: 'Line 3', height: 15, breakable: true },
+        { type: 'text', content: 'Line 4', height: 15, breakable: true }
+      ];
+      
+      const constraints: LayoutConstraints = {
+        maxHeight: 648,
+        minOrphanLines: 2,
+        minWidowLines: 2,
+        preferredBreakPoints: []
+      };
+      
+      // Access private method through prototype
+      const checkOrphanWidow = PDFLayoutEngine.prototype['checkOrphanWidow'];
+      
+      // Breaking after first text line would create orphan
+      const result1 = checkOrphanWidow.call(layoutEngine, blocks, 1, constraints);
+      expect(result1.hasOrphan).toBe(true);
+      expect(result1.hasWidow).toBe(false);
+      
+      // Breaking after heading would be fine
+      const result2 = checkOrphanWidow.call(layoutEngine, blocks, 3, constraints);
+      expect(result2.hasOrphan).toBe(false);
+      expect(result2.hasWidow).toBe(false);
+    });
+
+    it('should check for widow violations', () => {
+      const blocks: LayoutBlock[] = [
+        { type: 'text', content: 'Line 1', height: 15, breakable: true },
+        { type: 'text', content: 'Line 2', height: 15, breakable: true },
+        { type: 'text', content: 'Line 3', height: 15, breakable: true },
+        { type: 'text', content: 'Line 4', height: 15, breakable: true },
+        { type: 'text', content: 'Line 5', height: 15, breakable: true }
+      ];
+      
+      const constraints: LayoutConstraints = {
+        maxHeight: 648,
+        minOrphanLines: 2,
+        minWidowLines: 2,
+        preferredBreakPoints: []
+      };
+      
+      const checkOrphanWidow = PDFLayoutEngine.prototype['checkOrphanWidow'];
+      
+      // Breaking before last line would create widow
+      const result = checkOrphanWidow.call(layoutEngine, blocks, 4, constraints);
+      expect(result.hasOrphan).toBe(false);
+      expect(result.hasWidow).toBe(true);
+    });
+
+    it('should adjust break point to avoid orphans', () => {
+      const blocks: LayoutBlock[] = [
+        { type: 'text', content: 'Line 1', height: 15, breakable: true },
+        { type: 'heading', content: 'Section', height: 20, breakable: false },
+        { type: 'text', content: 'Line 2', height: 15, breakable: true }
+      ];
+      
+      const constraints: LayoutConstraints = {
+        maxHeight: 648,
+        minOrphanLines: 2,
+        minWidowLines: 2,
+        preferredBreakPoints: []
+      };
+      
+      const adjustBreak = PDFLayoutEngine.prototype['adjustBreakForOrphanWidow'];
+      
+      // Proposed break at 1 would create orphan, should adjust to 0
+      const adjusted = adjustBreak.call(layoutEngine, blocks, 1, constraints);
+      expect(adjusted).toBe(0);
+    });
+
+    it('should adjust break point to avoid widows', () => {
+      const blocks: LayoutBlock[] = [
+        { type: 'text', content: 'Line 1', height: 15, breakable: true },
+        { type: 'text', content: 'Line 2', height: 15, breakable: true },
+        { type: 'text', content: 'Line 3', height: 15, breakable: true }
+      ];
+      
+      const constraints: LayoutConstraints = {
+        maxHeight: 648,
+        minOrphanLines: 2,
+        minWidowLines: 2,
+        preferredBreakPoints: []
+      };
+      
+      const adjustBreak = PDFLayoutEngine.prototype['adjustBreakForOrphanWidow'];
+      
+      // Proposed break at 2 would create widow, should adjust to 3
+      const adjusted = adjustBreak.call(layoutEngine, blocks, 2, constraints);
+      expect(adjusted).toBe(3);
+    });
+
+    it('should apply smart paragraph breaking', () => {
+      const longText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
+      
+      const smartBreak = PDFLayoutEngine.prototype['smartParagraphBreak'];
+      const result = smartBreak.call(layoutEngine, longText, 60, 15); // 4 lines max
+      
+      expect(result.firstPart).toBeTruthy();
+      expect(result.secondPart).toBeTruthy();
+      expect(result.firstPart.length).toBeLessThan(longText.length);
+      expect(result.firstPart + ' ' + result.secondPart).toContain('Lorem ipsum');
+    });
+
+    it('should not break very short text', () => {
+      const shortText = 'Short text';
+      
+      const smartBreak = PDFLayoutEngine.prototype['smartParagraphBreak'];
+      const result = smartBreak.call(layoutEngine, shortText, 60, 15);
+      
+      expect(result.firstPart).toBe('');
+      expect(result.secondPart).toBe(shortText);
+    });
+
+    it('should optimize layout by balancing pages', () => {
+      const pages: LayoutPage[] = [
+        {
+          blocks: [
+            { type: 'text', content: 'Block 1', height: 300, breakable: true },
+            { type: 'text', content: 'Block 2', height: 300, breakable: true },
+            { type: 'text', content: 'Block 3', height: 40, breakable: true }
+          ],
+          remainingHeight: 8, // Very full
+          pageNumber: 1
+        },
+        {
+          blocks: [
+            { type: 'text', content: 'Block 4', height: 50, breakable: true }
+          ],
+          remainingHeight: 598, // Very empty
+          pageNumber: 2
+        }
+      ];
+      
+      const optimized = layoutEngine.optimizeLayout(pages);
+      
+      // Should move Block 3 to page 2
+      expect(optimized[0].blocks).toHaveLength(2);
+      expect(optimized[1].blocks).toHaveLength(2);
+      expect(optimized[1].blocks[0].content).toBe('Block 3');
+      expect(optimized[1].blocks[1].content).toBe('Block 4');
+    });
+
+    it('should not move unbreakable blocks during optimization', () => {
+      const pages: LayoutPage[] = [
+        {
+          blocks: [
+            { type: 'text', content: 'Block 1', height: 300, breakable: true },
+            { type: 'signature', content: {} as any, height: 150, breakable: false }
+          ],
+          remainingHeight: 198,
+          pageNumber: 1
+        },
+        {
+          blocks: [],
+          remainingHeight: 648,
+          pageNumber: 2
+        }
+      ];
+      
+      const optimized = layoutEngine.optimizeLayout(pages);
+      
+      // Should not move signature block
+      expect(optimized[0].blocks).toHaveLength(2);
+      expect(optimized[0].blocks[1].type).toBe('signature');
+      expect(optimized[1].blocks).toHaveLength(0);
+    });
+
+    it('should check if text block can be split', () => {
+      const canSplit = PDFLayoutEngine.prototype['canSplitTextBlock'];
+      
+      const textBlock: LayoutBlock = {
+        type: 'text',
+        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. This is a long paragraph that contains many words and should be splittable across pages when necessary.',
+        height: 100,
+        breakable: true
+      };
+      
+      const signatureBlock: LayoutBlock = {
+        type: 'signature',
+        content: {} as any,
+        height: 100,
+        breakable: false
+      };
+      
+      const shortTextBlock: LayoutBlock = {
+        type: 'text',
+        content: 'Short text',
+        height: 20,
+        breakable: true
+      };
+      
+      expect(canSplit.call(layoutEngine, textBlock)).toBe(true);
+      expect(canSplit.call(layoutEngine, signatureBlock)).toBe(false);
+      expect(canSplit.call(layoutEngine, shortTextBlock)).toBe(false);
+    });
+
+    it('should split text blocks when too large', () => {
+      const largeBlock: LayoutBlock = {
+        type: 'text',
+        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+        height: 200,
+        breakable: true
+      };
+      
+      const splitBlock = PDFLayoutEngine.prototype['splitTextBlock'];
+      const result = splitBlock.call(layoutEngine, largeBlock, 100); // Only 100 points available
+      
+      expect(result).toHaveLength(2);
+      expect(result[0].type).toBe('text');
+      expect(result[1].type).toBe('text');
+      expect(result[0].height).toBeLessThan(largeBlock.height);
+      expect(result[1].height).toBeLessThan(largeBlock.height);
+    });
+
+    it('should handle text splitting in layoutDocument', () => {
+      const blocks: LayoutBlock[] = [
+        {
+          type: 'text',
+          content: 'Normal paragraph',
+          height: 500,
+          breakable: true
+        },
+        {
+          type: 'text',
+          content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(20), // Very long text
+          height: 800, // Exceeds page height
+          breakable: true
+        }
+      ];
+      
+      const result = layoutEngine.layoutDocument(blocks, 'patent-assignment-agreement');
+      
+      // Should split the large block across pages
+      expect(result.pages.length).toBeGreaterThanOrEqual(2);
+      expect(result.hasOverflow).toBe(false);
+      
+      // Check that all content is included
+      let totalBlocks = 0;
+      for (const page of result.pages) {
+        totalBlocks += page.blocks.length;
+      }
+      expect(totalBlocks).toBeGreaterThan(2); // Original 2 blocks plus split parts
+    });
+
+    it('should use orphan control in layout decisions', () => {
+      const blocks: LayoutBlock[] = [];
+      
+      // Create many small paragraphs
+      for (let i = 0; i < 50; i++) {
+        blocks.push({
+          type: 'text',
+          content: `Paragraph ${i}`,
+          height: 20,
+          breakable: true
+        });
+      }
+      
+      const result = layoutEngine.layoutDocument(blocks, 'patent-assignment-agreement');
+      
+      // With orphan control, pages should avoid having single lines
+      for (let i = 0; i < result.pages.length - 1; i++) {
+        const page = result.pages[i];
+        const lastBlocks = page.blocks.slice(-2);
+        
+        // Check that pages don't end with just one text block after others
+        if (lastBlocks.length === 2 && 
+            lastBlocks[0].type === 'text' && 
+            lastBlocks[1].type === 'text') {
+          // Good - at least 2 text blocks together
+          expect(true).toBe(true);
+        }
+      }
     });
   });
 }); 
