@@ -14,7 +14,8 @@ import {
   SignatureParty,
   LayoutBlock,
   LayoutPage,
-  PDFGenerationOptions
+  PDFGenerationOptions,
+  ListItemData
 } from '../types/pdf';
 
 /**
@@ -270,22 +271,59 @@ export class PDFExportService {
         continue;
       }
 
+      // Check if it's a list item
+      const listItem = this.markdownParser.parseListItem(line);
+      if (listItem) {
+        blocks.push({
+          type: 'list-item',
+          content: listItem,
+          height: this.calculateTextHeight(listItem.text, rules.fontSize),
+          breakable: false,
+          keepWithNext: true,
+          listData: listItem
+        });
+        i++;
+        continue;
+      }
+
+      // Check if it's a block quote
+      if (this.markdownParser.isBlockQuote(line)) {
+        const content = this.markdownParser.parseBlockQuote(line) || '';
+        blocks.push({
+          type: 'blockquote',
+          content: content,
+          height: this.calculateTextHeight(content, rules.fontSize),
+          breakable: true,
+          keepWithNext: false
+        });
+        i++;
+        continue;
+      }
+
       // Group consecutive text lines into paragraphs
       const paragraph: string[] = [];
       while (i < parsedDoc.content.length && 
              !signatureIndices.has(i) && 
              !this.isHeading(parsedDoc.content[i]) &&
+             !this.markdownParser.isHorizontalRule(parsedDoc.content[i]) &&
+             !this.markdownParser.parseListItem(parsedDoc.content[i]) &&
+             !this.markdownParser.isBlockQuote(parsedDoc.content[i]) &&
              parsedDoc.content[i].trim() !== '') {
         paragraph.push(parsedDoc.content[i]);
         i++;
       }
 
       if (paragraph.length > 0) {
+        // Extract link text from paragraphs
+        const processedParagraph = paragraph.map(line => 
+          this.markdownParser.extractLinkText(line)
+        );
+        
         blocks.push({
           type: 'text',
-          content: paragraph.join('\n'),
+          content: processedParagraph.join('\n'),
           height: this.calculateTextHeight(
-            paragraph.join('\n'), 
+            processedParagraph.join('\n'), 
             rules.fontSize,
             rules.lineSpacing
           ),
@@ -350,6 +388,16 @@ export class PDFExportService {
           
         case 'horizontal-rule':
           generator.drawHorizontalLine();
+          break;
+          
+        case 'list-item':
+          const listData = block.content as ListItemData;
+          this.renderListItem(generator, listData, rules);
+          break;
+          
+        case 'blockquote':
+          const quoteText = block.content as string;
+          this.renderBlockQuote(generator, quoteText, rules);
           break;
           
         default:
@@ -481,6 +529,79 @@ export class PDFExportService {
        /^\d+\./.test(trimmed) ||
        /^[IVX]+\./.test(trimmed))
     );
+  }
+
+  /**
+   * Render a list item with proper indentation and markers
+   */
+  private renderListItem(
+    generator: LegalPDFGenerator,
+    listData: ListItemData,
+    rules: DocumentFormattingRules
+  ): void {
+    // Calculate indentation based on list level
+    const indentPerLevel = 36; // 0.5 inch per level
+    const baseIndent = rules.margins.left;
+    const totalIndent = baseIndent + (listData.level * indentPerLevel);
+    
+    // Save current position
+    const currentY = generator.getCurrentY();
+    
+    // Move to indented position
+    generator.moveTo(totalIndent, currentY);
+    
+    // Render marker
+    const markerWidth = 20; // Space for marker
+    const marker = listData.type === 'unordered' ? '•' : listData.marker;
+    generator.writeText(marker, { fontSize: rules.fontSize });
+    
+    // Render content with hanging indent
+    generator.moveTo(totalIndent + markerWidth, currentY);
+    
+    // Parse inline formatting in the list item text
+    const segments = this.markdownParser.parseInlineFormatting(listData.text);
+    const hasFormatting = segments.some(s => s.bold || s.italic);
+    
+    if (hasFormatting) {
+      generator.writeFormattedText(segments, { fontSize: rules.fontSize });
+    } else {
+      generator.writeText(listData.text, { fontSize: rules.fontSize });
+    }
+    
+    // Add spacing after list item
+    generator.addSpace(0.5);
+  }
+
+  /**
+   * Render a block quote with indentation and italic formatting
+   */
+  private renderBlockQuote(
+    generator: LegalPDFGenerator,
+    text: string,
+    rules: DocumentFormattingRules
+  ): void {
+    // Apply block quote indentation
+    const quoteIndent = rules.blockQuoteIndent || 72; // 1 inch default
+    generator.moveTo(rules.margins.left + quoteIndent, generator.getCurrentY());
+    
+    // Parse inline formatting in the quote text
+    const segments = this.markdownParser.parseInlineFormatting(text);
+    
+    // Add italic to all segments for block quote style
+    const italicSegments = segments.map(segment => ({
+      ...segment,
+      italic: true
+    }));
+    
+    // Render with italic formatting
+    generator.writeFormattedText(italicSegments, { 
+      fontSize: rules.fontSize,
+      lineGap: rules.lineSpacing === 'double' ? 12 : rules.lineSpacing === 'one-half' ? 6 : 0
+    });
+    
+    // Restore position and add spacing
+    generator.moveTo(rules.margins.left, generator.getCurrentY());
+    generator.addSpace(1);
   }
 
   /**

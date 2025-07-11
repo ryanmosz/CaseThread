@@ -264,4 +264,91 @@ describe('MarkdownParser', () => {
       expect(parser.stripInlineFormatting('No formatting here')).toBe('No formatting here');
     });
   });
+
+  describe('List parsing', () => {
+    it('should detect unordered list items', () => {
+      expect(parser.isUnorderedListItem('- Item')).toBe(true);
+      expect(parser.isUnorderedListItem('* Item')).toBe(true);
+      expect(parser.isUnorderedListItem('+ Item')).toBe(true);
+      expect(parser.isUnorderedListItem('  - Nested item')).toBe(true);
+    });
+
+    it('should detect ordered list items', () => {
+      expect(parser.isOrderedListItem('1. Item')).toBe(true);
+      expect(parser.isOrderedListItem('2. Item')).toBe(true);
+      expect(parser.isOrderedListItem('10. Item')).toBe(true);
+      expect(parser.isOrderedListItem('  1. Nested item')).toBe(true);
+    });
+
+    it('should not detect non-list items', () => {
+      expect(parser.isUnorderedListItem('Regular text')).toBe(false);
+      expect(parser.isUnorderedListItem('-No space')).toBe(false);
+      expect(parser.isOrderedListItem('1 No period')).toBe(false);
+      expect(parser.isOrderedListItem('1.No space')).toBe(false);
+    });
+
+    it('should parse unordered list items', () => {
+      expect(parser.parseListItem('- Item')).toEqual({
+        type: 'unordered',
+        level: 0,
+        marker: '-',
+        text: 'Item'
+      });
+      expect(parser.parseListItem('  * Nested item')).toEqual({
+        type: 'unordered',
+        level: 1,
+        marker: '*',
+        text: 'Nested item'
+      });
+    });
+
+    it('should parse ordered list items', () => {
+      expect(parser.parseListItem('1. First item')).toEqual({
+        type: 'ordered',
+        level: 0,
+        marker: '1.',
+        text: 'First item'
+      });
+      expect(parser.parseListItem('    2. Nested item')).toEqual({
+        type: 'ordered',
+        level: 2,
+        marker: '2.',
+        text: 'Nested item'
+      });
+    });
+  });
+
+  describe('Block quote parsing', () => {
+    it('should detect block quotes', () => {
+      expect(parser.isBlockQuote('> Quote')).toBe(true);
+      expect(parser.isBlockQuote('>Quote')).toBe(true);
+      expect(parser.isBlockQuote('> ')).toBe(true);
+    });
+
+    it('should not detect non-quotes', () => {
+      expect(parser.isBlockQuote('Regular text')).toBe(false);
+      expect(parser.isBlockQuote('Greater > than')).toBe(false);
+    });
+
+    it('should parse block quotes', () => {
+      expect(parser.parseBlockQuote('> This is a quote')).toBe('This is a quote');
+      expect(parser.parseBlockQuote('>No space quote')).toBe('No space quote');
+      expect(parser.parseBlockQuote('> ')).toBe('');
+    });
+  });
+
+  describe('Link parsing', () => {
+    it('should extract link text', () => {
+      expect(parser.extractLinkText('[Link text](http://example.com)')).toBe('Link text');
+      expect(parser.extractLinkText('Text with [link](url) inside')).toBe('Text with link inside');
+    });
+
+    it('should handle multiple links', () => {
+      expect(parser.extractLinkText('[First](url1) and [Second](url2)')).toBe('First and Second');
+    });
+
+    it('should handle text without links', () => {
+      expect(parser.extractLinkText('No links here')).toBe('No links here');
+    });
+  });
 }); 

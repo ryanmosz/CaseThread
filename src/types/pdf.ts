@@ -151,12 +151,23 @@ export interface ParsedDocument {
  * Layout types for PDFLayoutEngine
  */
 export interface LayoutBlock {
-  type: 'text' | 'signature' | 'heading' | 'list' | 'table' | 'horizontal-rule';
-  content: string | SignatureBlockData;
+  type: 'text' | 'signature' | 'heading' | 'list' | 'table' | 'horizontal-rule' | 'list-item' | 'blockquote';
+  content: string | SignatureBlockData | ListItemData;
   height: number;
   breakable: boolean;
   keepWithNext?: boolean;
   headingLevel?: number; // For heading blocks (1-6)
+  listData?: ListItemData; // For list items
+}
+
+/**
+ * Data for list items
+ */
+export interface ListItemData {
+  type: 'ordered' | 'unordered';
+  level: number;
+  marker: string;
+  text: string;
 }
 
 export interface LayoutConstraints {

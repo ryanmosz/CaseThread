@@ -33,6 +33,16 @@ export class MarkdownParser {
   private readonly boldPattern = /(\*\*|__)(.+?)\1/g;
   private readonly italicPattern = /(\*|_)(.+?)\1/g;
   
+  // List patterns
+  private readonly unorderedListPattern = /^(\s*)([-*+])\s+(.+)$/;
+  private readonly orderedListPattern = /^(\s*)(\d+)\.\s+(.+)$/;
+  
+  // Block quote pattern
+  private readonly blockQuotePattern = /^>\s*(.*)$/;
+  
+  // Link pattern
+  private readonly linkPattern = /\[([^\]]+)\]\([^)]+\)/g;
+  
   constructor() {
     this.logger = createChildLogger({ service: 'MarkdownParser' });
   }
@@ -210,5 +220,79 @@ export class MarkdownParser {
   stripInlineFormatting(text: string): string {
     const segments = this.parseInlineFormatting(text);
     return segments.map(segment => segment.text).join('');
+  }
+  
+  /**
+   * Check if a line is an unordered list item
+   */
+  isUnorderedListItem(line: string): boolean {
+    return this.unorderedListPattern.test(line);
+  }
+  
+  /**
+   * Check if a line is an ordered list item
+   */
+  isOrderedListItem(line: string): boolean {
+    return this.orderedListPattern.test(line);
+  }
+  
+  /**
+   * Parse a list item (ordered or unordered)
+   * @returns Object with indent level, marker, and content
+   */
+  parseListItem(line: string): { 
+    type: 'ordered' | 'unordered'; 
+    level: number; 
+    marker: string; 
+    text: string 
+  } | null {
+    const unorderedMatch = line.match(this.unorderedListPattern);
+    if (unorderedMatch) {
+      const [, indent, marker, content] = unorderedMatch;
+      return {
+        type: 'unordered',
+        level: Math.floor(indent.length / 2), // 2 spaces per level
+        marker,
+        text: content.trim()
+      };
+    }
+    
+    const orderedMatch = line.match(this.orderedListPattern);
+    if (orderedMatch) {
+      const [, indent, number, content] = orderedMatch;
+      return {
+        type: 'ordered',
+        level: Math.floor(indent.length / 2),
+        marker: `${number}.`,
+        text: content.trim()
+      };
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Check if a line is a block quote
+   */
+  isBlockQuote(line: string): boolean {
+    return this.blockQuotePattern.test(line);
+  }
+  
+  /**
+   * Parse a block quote line
+   * @returns The content without the > prefix
+   */
+  parseBlockQuote(line: string): string | null {
+    const match = line.match(this.blockQuotePattern);
+    return match ? match[1] : null;
+  }
+  
+  /**
+   * Extract link text from Markdown links
+   * @param text Text containing potential links
+   * @returns Text with link URLs removed, keeping only link text
+   */
+  extractLinkText(text: string): string {
+    return text.replace(this.linkPattern, '$1');
   }
 } 
