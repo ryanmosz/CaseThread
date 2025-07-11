@@ -13,6 +13,7 @@ interface ExportOptions {
   margins?: string;
   lineSpacing?: string;  // Changed to string to accept 'auto'
   fontSize?: string;
+  noMarkdown?: boolean;
 }
 
 const SPINNER_MESSAGES = {
@@ -95,6 +96,7 @@ export const exportCommand = new Command('export')
   .option('-m, --margins <margins>', 'Custom margins in points (e.g., "72,72,72,72" for 1 inch all around)')
   .option('-l, --line-spacing <spacing>', 'Line spacing (single, one-half, double)', 'auto')
   .option('-f, --font-size <size>', 'Font size in points (e.g., "12")')
+  .option('--no-markdown', 'Disable Markdown parsing')
   .action(async (inputPath: string, outputPath: string, options: ExportOptions) => {
     // Check for command-level debug flag
     if (options.debug && logger.level !== 'debug') {
@@ -112,6 +114,7 @@ export const exportCommand = new Command('export')
     logger.debug(`Margins: ${options.margins || 'default'}`);
     logger.debug(`Line Spacing: ${options.lineSpacing || 'auto'}`);
     logger.debug(`Font Size: ${options.fontSize || 'default'}`);
+    logger.debug(`Markdown Parsing: ${!options.noMarkdown}`);
     logger.debug(`Debug Mode: ${options.debug || logger.level === 'debug'}`);
     logger.debug('================================');
     
@@ -193,6 +196,7 @@ export const exportCommand = new Command('export')
       // Build export options
       const exportOptions: PDFExportOptions = {
         pageNumbers: options.pageNumbers !== false,
+        parseMarkdown: !options.noMarkdown,
         onProgress: (step: string, detail?: string) => {
           const message = detail ? `${step}: ${detail}` : step;
           spinner.updateMessage(message);

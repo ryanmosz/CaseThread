@@ -43,6 +43,10 @@ export class MarkdownParser {
   // Link pattern
   private readonly linkPattern = /\[([^\]]+)\]\([^)]+\)/g;
   
+  // Simple table pattern (detects table separator rows)
+  private readonly tableRowPattern = /^\s*\|?(.+\|.+)\|?\s*$/;
+  private readonly tableSeparatorPattern = /^\s*\|?[\s-]+\|[\s-]+\|?\s*$/;
+  
   constructor() {
     this.logger = createChildLogger({ service: 'MarkdownParser' });
   }
@@ -294,5 +298,69 @@ export class MarkdownParser {
    */
   extractLinkText(text: string): string {
     return text.replace(this.linkPattern, '$1');
+  }
+  
+  /**
+   * Check if a line looks like a table row
+   */
+  isTableRow(line: string): boolean {
+    return this.tableRowPattern.test(line) && !this.tableSeparatorPattern.test(line);
+  }
+  
+  /**
+   * Check if a line is a table separator
+   */
+  isTableSeparator(line: string): boolean {
+    return this.tableSeparatorPattern.test(line);
+  }
+  
+  /**
+   * Parse a table row into cells
+   * @param line Table row line
+   * @returns Array of cell contents
+   */
+  parseTableRow(line: string): string[] {
+    // Remove leading/trailing pipes and whitespace
+    const cleaned = line.trim().replace(/^\||\|$/g, '');
+    // Split by pipes and trim each cell
+    return cleaned.split('|').map(cell => cell.trim());
+  }
+  
+  /**
+   * Strip all Markdown syntax from text
+   * This is a comprehensive method that removes all syntax while preserving content
+   */
+  stripAllMarkdownSyntax(text: string): string {
+    let result = text;
+    
+    // Strip inline formatting
+    result = this.stripInlineFormatting(result);
+    
+    // Extract link text
+    result = this.extractLinkText(result);
+    
+    // Remove heading syntax
+    if (this.isMarkdownHeading(result)) {
+      const heading = this.parseHeading(result);
+      result = heading ? heading.text : result;
+    }
+    
+    // Remove list markers
+    const listItem = this.parseListItem(result);
+    if (listItem) {
+      result = listItem.text;
+    }
+    
+    // Remove blockquote markers
+    if (this.isBlockQuote(result)) {
+      result = this.parseBlockQuote(result) || result;
+    }
+    
+    // Remove horizontal rule (replace with empty string as it's a visual element)
+    if (this.isHorizontalRule(result)) {
+      result = '';
+    }
+    
+    return result;
   }
 } 

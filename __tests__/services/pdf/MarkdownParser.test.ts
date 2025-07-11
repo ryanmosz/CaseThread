@@ -351,4 +351,42 @@ describe('MarkdownParser', () => {
       expect(parser.extractLinkText('No links here')).toBe('No links here');
     });
   });
+
+  describe('Table parsing', () => {
+    it('should detect table rows', () => {
+      expect(parser.isTableRow('Year | Minimum')).toBe(true);
+      expect(parser.isTableRow('| Col1 | Col2 |')).toBe(true);
+      expect(parser.isTableRow('Col1 | Col2')).toBe(true);
+    });
+
+    it('should not detect table separators as rows', () => {
+      expect(parser.isTableRow('-----|------')).toBe(false);
+      expect(parser.isTableRow('| --- | --- |')).toBe(false);
+    });
+
+    it('should parse table rows', () => {
+      expect(parser.parseTableRow('Year | Minimum')).toEqual(['Year', 'Minimum']);
+      expect(parser.parseTableRow('| Col1 | Col2 |')).toEqual(['Col1', 'Col2']);
+      expect(parser.parseTableRow(' Col1  |  Col2  ')).toEqual(['Col1', 'Col2']);
+    });
+  });
+
+  describe('stripAllMarkdownSyntax', () => {
+    it('should strip all markdown syntax', () => {
+      expect(parser.stripAllMarkdownSyntax('# Heading')).toBe('Heading');
+      expect(parser.stripAllMarkdownSyntax('**bold** text')).toBe('bold text');
+      expect(parser.stripAllMarkdownSyntax('- List item')).toBe('List item');
+      expect(parser.stripAllMarkdownSyntax('> Quote')).toBe('Quote');
+      expect(parser.stripAllMarkdownSyntax('[link](url)')).toBe('link');
+      expect(parser.stripAllMarkdownSyntax('---')).toBe('');
+    });
+
+    it('should handle plain text', () => {
+      expect(parser.stripAllMarkdownSyntax('Plain text')).toBe('Plain text');
+    });
+
+    it('should handle complex combined syntax', () => {
+      expect(parser.stripAllMarkdownSyntax('## **Bold** heading with *italic*')).toBe('Bold heading with italic');
+    });
+  });
 }); 

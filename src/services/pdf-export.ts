@@ -36,6 +36,7 @@ export interface PDFExportOptions {
     keywords?: string[];
   };
   onProgress?: (step: string, detail?: string) => void;
+  parseMarkdown?: boolean; // Enable/disable Markdown parsing (default: true)
 }
 
 /**
@@ -124,8 +125,11 @@ export class PDFExportService {
 
       // Step 5: Prepare layout blocks
       reportProgress('Preparing document layout');
-      const layoutBlocks = this.prepareLayoutBlocks(parsedDoc, rules);
-      this.logger.debug('Layout blocks prepared', { blockCount: layoutBlocks.length });
+      const layoutBlocks = this.prepareLayoutBlocks(parsedDoc, rules, options.parseMarkdown !== false);
+      this.logger.debug('Layout blocks prepared', { 
+        blockCount: layoutBlocks.length,
+        markdownParsing: options.parseMarkdown !== false
+      });
 
       // Step 6: Calculate layout with page breaks
       reportProgress('Calculating page breaks');
@@ -163,7 +167,7 @@ export class PDFExportService {
         }
 
         // Render blocks on this page
-        await this.renderPage(generator, formatter, page, documentType as DocumentType, rules);
+        await this.renderPage(generator, formatter, page, documentType as DocumentType, rules, options.parseMarkdown !== false);
 
         // Add page number if enabled
         if (options.pageNumbers !== false) {
@@ -193,7 +197,8 @@ export class PDFExportService {
    */
   private prepareLayoutBlocks(
     parsedDoc: { content: string[]; signatureBlocks: SignatureBlockData[] },
-    rules: DocumentFormattingRules
+    rules: DocumentFormattingRules,
+    parseMarkdown: boolean = true
   ): LayoutBlock[] {
     const blocks: LayoutBlock[] = [];
     const signatureIndices = new Map<number, SignatureBlockData>();
@@ -227,8 +232,8 @@ export class PDFExportService {
         continue;
       }
 
-      // Detect horizontal rule
-      if (this.markdownParser.isHorizontalRule(line)) {
+      // Detect horizontal rule (only if markdown parsing enabled)
+      if (parseMarkdown && this.markdownParser.isHorizontalRule(line)) {
         blocks.push({
           type: 'horizontal-rule',
           content: '',
@@ -242,8 +247,8 @@ export class PDFExportService {
 
       // Detect heading
       if (this.isHeading(line)) {
-        // Check if it's a Markdown heading
-        const parsedHeading = this.markdownParser.parseHeading(line);
+        // Check if it's a Markdown heading (only if markdown parsing enabled)
+        const parsedHeading = parseMarkdown ? this.markdownParser.parseHeading(line) : null;
         
         if (parsedHeading) {
           // Markdown heading - use parsed text and level
@@ -271,8 +276,8 @@ export class PDFExportService {
         continue;
       }
 
-      // Check if it's a list item
-      const listItem = this.markdownParser.parseListItem(line);
+      // Check if it's a list item (only if markdown parsing enabled)
+      const listItem = parseMarkdown ? this.markdownParser.parseListItem(line) : null;
       if (listItem) {
         blocks.push({
           type: 'list-item',
@@ -286,8 +291,8 @@ export class PDFExportService {
         continue;
       }
 
-      // Check if it's a block quote
-      if (this.markdownParser.isBlockQuote(line)) {
+      // Check if it's a block quote (only if markdown parsing enabled)
+      if (parseMarkdown && this.markdownParser.isBlockQuote(line)) {
         const content = this.markdownParser.parseBlockQuote(line) || '';
         blocks.push({
           type: 'blockquote',
@@ -300,24 +305,47 @@ export class PDFExportService {
         continue;
       }
 
+      // Skip table separator rows (only if markdown parsing enabled)
+      if (parseMarkdown && this.markdownParser.isTableSeparator(line)) {
+        i++;
+        continue;
+      }
+
+      // Check if it's a table row (only if markdown parsing enabled)
+      if (parseMarkdown && this.markdownParser.isTableRow(line)) {
+        // For simple legal document formatting, convert table to aligned text
+        const cells = this.markdownParser.parseTableRow(line);
+        const formattedRow = this.formatTableRowAsText(cells);
+        blocks.push({
+          type: 'text',
+          content: formattedRow,
+          height: this.calculateTextHeight(formattedRow, rules.fontSize),
+          breakable: false,
+          keepWithNext: true
+        });
+        i++;
+        continue;
+      }
+
       // Group consecutive text lines into paragraphs
       const paragraph: string[] = [];
       while (i < parsedDoc.content.length && 
              !signatureIndices.has(i) && 
              !this.isHeading(parsedDoc.content[i]) &&
-             !this.markdownParser.isHorizontalRule(parsedDoc.content[i]) &&
-             !this.markdownParser.parseListItem(parsedDoc.content[i]) &&
-             !this.markdownParser.isBlockQuote(parsedDoc.content[i]) &&
+             (!parseMarkdown || !this.markdownParser.isHorizontalRule(parsedDoc.content[i])) &&
+             (!parseMarkdown || !this.markdownParser.parseListItem(parsedDoc.content[i])) &&
+             (!parseMarkdown || !this.markdownParser.isBlockQuote(parsedDoc.content[i])) &&
+             (!parseMarkdown || !this.markdownParser.isTableRow(parsedDoc.content[i])) &&
              parsedDoc.content[i].trim() !== '') {
         paragraph.push(parsedDoc.content[i]);
         i++;
       }
 
       if (paragraph.length > 0) {
-        // Extract link text from paragraphs
-        const processedParagraph = paragraph.map(line => 
-          this.markdownParser.extractLinkText(line)
-        );
+        // Extract link text from paragraphs (only if markdown parsing enabled)
+        const processedParagraph = parseMarkdown 
+          ? paragraph.map(line => this.markdownParser.extractLinkText(line))
+          : paragraph;
         
         blocks.push({
           type: 'text',
@@ -349,7 +377,8 @@ export class PDFExportService {
     formatter: DocumentFormatter,
     page: LayoutPage,
     documentType: DocumentType,
-    rules: DocumentFormattingRules
+    rules: DocumentFormattingRules,
+    parseMarkdown: boolean = true
   ): Promise<void> {
     for (const block of page.blocks) {
       switch (block.type) {
@@ -362,8 +391,10 @@ export class PDFExportService {
           const lineGap = formatter.applyLineSpacing(documentType, false);
           const textContent = block.content as string;
           
-          // Parse for inline formatting
-          const segments = this.markdownParser.parseInlineFormatting(textContent);
+          // Parse for inline formatting (only if markdown parsing enabled)
+          const segments = parseMarkdown 
+            ? this.markdownParser.parseInlineFormatting(textContent)
+            : [{ text: textContent }];
           
           // Check if there's any formatting
           const hasFormatting = segments.some(s => s.bold || s.italic);
@@ -602,6 +633,25 @@ export class PDFExportService {
     // Restore position and add spacing
     generator.moveTo(rules.margins.left, generator.getCurrentY());
     generator.addSpace(1);
+  }
+
+  /**
+   * Format table row cells as aligned text
+   * For legal documents, we use simple text alignment rather than drawing table borders
+   */
+  private formatTableRowAsText(cells: string[]): string {
+    if (cells.length === 0) return '';
+    
+    // For 2-column tables (common in legal docs), use specific alignment
+    if (cells.length === 2) {
+      // Left-align first column, right-align second column with dots
+      const leftCol = cells[0].padEnd(20, ' ');
+      const rightCol = cells[1].padStart(20, ' ');
+      return `${leftCol}  ${rightCol}`;
+    }
+    
+    // For other tables, use tab-like spacing
+    return cells.join('    ');
   }
 
   /**

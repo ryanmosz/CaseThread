@@ -52,13 +52,13 @@
   - [x] 2.6.4 Add progress indicators
   - [x] 2.6.5 Handle errors gracefully
 
-### Markdown Parsing (NEW)
-- [ ] 2.8 Add Markdown Parsing to PDF Export (Details: tasks-parent-2.8-detailed.md)
+### Markdown Parsing (NEW) ✅
+- [x] 2.8 Add Markdown Parsing to PDF Export (Details: tasks-parent-2.8-detailed.md)
   - [x] 2.8.1 Parse Markdown headings (#, ##, ###) to PDF headings
   - [x] 2.8.2 Parse bold/italic (**text**, *text*) to PDF formatting
   - [x] 2.8.3 Parse horizontal rules (---) to PDF lines
-  - [x] 2.8.4 Handle other common Markdown elements (lists, quotes, links)
-  - [ ] 2.8.5 Preserve document structure without syntax characters
+  - [x] 2.8.4 Handle other common Markdown elements (lists, quotes, links, tables)
+  - [x] 2.8.5 Preserve document structure without syntax characters
 
 ### Page Flow Issues (NEW)
 - [ ] 2.9 Fix Blank Page Issues
@@ -132,6 +132,9 @@ Before marking complete, verify:
 - `test-output/test-markdown-headings.pdf` - Generated PDF from Markdown test (headings only)
 - `test-output/test-markdown-formatting.pdf` - Generated PDF with bold/italic formatting
 - `test-output/test-markdown-hr.pdf` - Generated PDF with horizontal rules (---, ___, ***)
+- `test-output/test-markdown-full.pdf` - Generated PDF with lists, quotes, and links
+- `test-output/test-markdown-comprehensive.pdf` - Full test with all Markdown features
+- `test-output/test-no-markdown.pdf` - Same doc with --no-markdown option (syntax preserved)
 
 ## Notes
 
@@ -140,6 +143,6 @@ Before marking complete, verify:
 - Ensure all work happens in Docker container
 - Test frequently with real document examples
 - Coordinate with Developer G on integration points
-- Progress: 33/44 sub-tasks complete (75%)
-- All 591 tests passing (added 47 MarkdownParser tests + 5 horizontal rule tests)
+- Progress: 34/44 sub-tasks complete (77%)
+- All 597 tests passing (added 53 MarkdownParser tests + 5 horizontal rule tests)
 - Task 2.6 complete with comprehensive error handling 
