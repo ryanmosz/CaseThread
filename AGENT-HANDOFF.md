@@ -36,8 +36,10 @@
     - ✅ 2.5.3: Add page break prevention logic
     - ✅ 2.5.4: Handle side-by-side layouts
     - ✅ 2.5.5: Implement orphan control
-  - ⏳ 2.6: Create CLI Export Command (0 of 5 sub-tasks)
+  - ⏳ 2.6: Create CLI Export Command (3 of 5 sub-tasks)
   - ⏳ 2.7: Add Comprehensive Tests (0 of 5 sub-tasks)
+  - ⏳ 2.8: Add Markdown Parsing to PDF Export (0 of 5 sub-tasks) - NEW
+  - ⏳ 2.9: Fix Blank Page Issues (0 of 4 sub-tasks) - NEW
 
 ### Recent Changes
 
@@ -435,7 +437,7 @@
 ### Next Steps for Task 2.0 Implementation
 
 #### Current Progress Summary
-✅ Completed: Tasks 2.1, 2.2, 2.3, 2.4, 2.5, and 2.6.1-2.6.3 (27 of 35 sub-tasks complete - 77%)
+✅ Completed: Tasks 2.1, 2.2, 2.3, 2.4, 2.5, and 2.6.1-2.6.3 (27 of 44 sub-tasks complete - 61%)
 ✅ Pre-requisite: PDFExportService created and tested
 ✅ Bug fixes: All PDFLayoutEngine tests passing
 - PDFKit setup and configuration complete
@@ -444,7 +446,9 @@
 - Signature block parser with full content extraction
 - PDF layout engine with orphan/widow control (fully debugged)
 - PDF export service integrating all components
-- CLI export command structure with all arguments
+- CLI export command structure with all arguments and file reading
+
+**Note: Added 9 new sub-tasks (2.8 and 2.9) to address Markdown parsing and blank page issues**
 
 #### Next Sub-task: 2.6.4 - Add progress indicators (next)
 - ✅ 2.6.1: Created export command structure
@@ -452,3 +456,29 @@
 - ✅ 2.6.3: Implemented file reading logic
 - 📋 2.6.4: Add progress indicators (next)
 - 📋 2.6.5: Handle errors gracefully 
+
+## 5. Current Challenges & Blockers 🚨
+
+**PDF Generation Issues Discovered:**
+1. **Markdown Syntax Appearing in PDFs**
+   - `#` characters showing instead of rendering as headings
+   - `**` characters showing instead of rendering as bold text
+   - `---` showing as three dashes instead of rendering as horizontal lines
+   - Root cause: PDF export treats input as plain text, not Markdown
+
+2. **Blank Pages Issue**
+   - Pages 2, 4, and 5 are blank in generated PDFs
+   - Needs investigation into page break/content flow logic
+
+**Solution Approach:**
+- Keep Markdown in input files (provides structure)
+- Parse Markdown to extract formatting intent
+- Apply formatting in PDF without showing syntax characters
+- Added Tasks 2.8 (Markdown parsing) and 2.9 (blank pages) to roadmap
+
+**Test Output Organization Issue:**
+- ✅ Fixed: Was incorrectly saving test files to root directory
+- Now properly using `docs/testing/test-results/` folder as per guidelines
+
+## 6. Next Steps 📋
+  - 📋 2.6.5: Handle errors gracefully 

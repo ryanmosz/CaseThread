@@ -52,6 +52,21 @@
   - [ ] 2.6.4 Add progress indicators
   - [ ] 2.6.5 Handle errors gracefully
 
+### Markdown Parsing (NEW)
+- [ ] 2.8 Add Markdown Parsing to PDF Export
+  - [ ] 2.8.1 Parse Markdown headings (#, ##, ###) to PDF headings
+  - [ ] 2.8.2 Parse bold/italic (**text**, *text*) to PDF formatting
+  - [ ] 2.8.3 Parse horizontal rules (---) to PDF lines
+  - [ ] 2.8.4 Handle other common Markdown elements
+  - [ ] 2.8.5 Preserve document structure without syntax characters
+
+### Page Flow Issues (NEW)
+- [ ] 2.9 Fix Blank Page Issues
+  - [ ] 2.9.1 Investigate why pages 2, 4, 5 are blank
+  - [ ] 2.9.2 Fix page break logic
+  - [ ] 2.9.3 Ensure content flows properly
+  - [ ] 2.9.4 Test with various document lengths
+
 ### Testing and Validation
 - [ ] 2.7 Add Comprehensive Tests (Details: tasks-parent-2.7-detailed.md)
   - [ ] 2.7.1 Write unit tests for PDF generator
