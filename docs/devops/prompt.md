@@ -365,10 +365,9 @@ Key tools: mcp_RepoPrompt_search, mcp_RepoPrompt_read_selected_files, mcp_RepoPr
 20. Update AGENT-HANDOFF.md at the end of every chat response
 
 21. ## Completion Sound
-**Play the Hero system sound as the last action before completing each chat response**
-- Execute: `afplay /System/Library/Sounds/Hero.aiff`
-- This provides audio feedback that the task/response is complete
-- Always do this as the final step after all other work is done
+**Hero sound: DISABLED** (enable when Cursor chime fails)
+- When enabled: Execute `afplay /System/Library/Sounds/Hero.aiff` as final action
+- Provides audio feedback when Cursor's built-in chime isn't working
 
 Using the guidelines above, produce your plan to implement and verify the current task from **docs/tasks/prd-parent-task-6.0.md**. Analyze the plan and decide if it would be more efficient to do all subtasks defined at **docs/tasks/tasks-parent-6.0-checklist.md** at once and then test everything, or if it would be better to stop after some of the subtasks and test them individually before moving on. Remember, our goal is to write quality software at each step, minimizing bugs and mistakes and thus minimizing the need for backtracking, confusion and wasted effort.
 
