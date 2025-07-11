@@ -108,11 +108,11 @@ Before marking complete, verify:
 ## Relevant Files
 
 - `src/types/pdf.ts` - TypeScript interfaces for PDF generation (includes formatting types and signature interfaces)
-- `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (complete with all methods, enhanced writeHeading)
+- `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (enhanced writeHeading, writeFormattedText)
 - `src/services/pdf/DocumentFormatter.ts` - Document-specific formatting rules manager
 - `src/services/pdf/SignatureBlockParser.ts` - Parser for signature block markers (Task 2.4 complete)
 - `src/services/pdf/PDFLayoutEngine.ts` - PDF layout engine (Task 2.5 complete)
-- `src/services/pdf/MarkdownParser.ts` - Markdown syntax parser for headings and formatting (Task 2.8.1 complete)
+- `src/services/pdf/MarkdownParser.ts` - Markdown parser for headings and inline formatting (Tasks 2.8.1-2.8.2 complete)
 - `src/services/pdf-export.ts` - PDF export service that integrates all components (updated for Markdown)
 - `src/commands/export.ts` - CLI export command with comprehensive error handling (Task 2.6 complete)
 - `src/config/pdf-formatting.ts` - Formatting configuration system
@@ -128,8 +128,9 @@ Before marking complete, verify:
 - `__tests__/index.test.ts` - CLI entry point tests (3 tests, fixed ora import issue)
 - `__tests__/utils/error-handler.test.ts` - Error handler tests (13 tests, all passing)
 - `docs/testing/test-results/pdf-generation/` - Generated test PDFs (18+ files)
-- `test-output/test-markdown-headings.md` - Test document with Markdown headings
-- `test-output/test-markdown-headings.pdf` - Generated PDF from Markdown test
+- `test-output/test-markdown-headings.md` - Test document with Markdown headings and formatting
+- `test-output/test-markdown-headings.pdf` - Generated PDF from Markdown test (headings only)
+- `test-output/test-markdown-formatting.pdf` - Generated PDF with bold/italic formatting
 
 ## Notes
 
