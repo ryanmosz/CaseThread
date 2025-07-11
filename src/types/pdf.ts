@@ -146,3 +146,33 @@ export interface ParsedDocument {
   signatureBlocks: SignatureBlockData[];
   hasSignatures: boolean;
 } 
+
+/**
+ * Layout types for PDFLayoutEngine
+ */
+export interface LayoutBlock {
+  type: 'text' | 'signature' | 'heading' | 'list' | 'table';
+  content: string | SignatureBlockData;
+  height: number;
+  breakable: boolean;
+  keepWithNext?: boolean;
+}
+
+export interface LayoutConstraints {
+  maxHeight: number;
+  minOrphanLines: number;
+  minWidowLines: number;
+  preferredBreakPoints: number[];
+}
+
+export interface LayoutResult {
+  pages: LayoutPage[];
+  totalPages: number;
+  hasOverflow: boolean;
+}
+
+export interface LayoutPage {
+  blocks: LayoutBlock[];
+  remainingHeight: number;
+  pageNumber: number;
+} 

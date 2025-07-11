@@ -436,6 +436,14 @@ export class LegalPDFGenerator {
   }
 
   /**
+   * Get current horizontal position on the page
+   * @returns Current X position in points
+   */
+  public getCurrentX(): number {
+    return this.doc.x;
+  }
+
+  /**
    * Get remaining space on current page
    * @returns Remaining vertical space in points
    */
@@ -480,12 +488,24 @@ export class LegalPDFGenerator {
   }
 
   /**
-   * Move to specific vertical position
-   * @param y - Y position in points
+   * Move to specific position
+   * @param yOrOptions - Y position or options object
+   * @param y - Y position when first parameter is X
    * @returns This instance for method chaining
    */
-  public moveTo(y: number): this {
-    this.doc.y = y;
+  public moveTo(yOrOptions: number | { x: number; y: number }, y?: number): this {
+    if (typeof yOrOptions === 'object') {
+      // Object with x,y coordinates
+      this.doc.x = yOrOptions.x;
+      this.doc.y = yOrOptions.y;
+    } else if (y !== undefined) {
+      // Two number parameters: x, y
+      this.doc.x = yOrOptions;
+      this.doc.y = y;
+    } else {
+      // Single number parameter: y only
+      this.doc.y = yOrOptions;
+    }
     return this;
   }
 } 
