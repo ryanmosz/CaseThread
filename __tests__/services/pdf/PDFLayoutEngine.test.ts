@@ -2,7 +2,7 @@ import { PDFLayoutEngine } from '../../../src/services/pdf/PDFLayoutEngine';
 import { LegalPDFGenerator } from '../../../src/services/pdf/LegalPDFGenerator';
 import { DocumentFormatter } from '../../../src/services/pdf/DocumentFormatter';
 import { SignatureBlockParser } from '../../../src/services/pdf/SignatureBlockParser';
-import { LayoutBlock } from '../../../src/types/pdf';
+import { LayoutBlock, SignatureBlockData } from '../../../src/types/pdf';
 
 describe('PDFLayoutEngine', () => {
   let layoutEngine: PDFLayoutEngine;
@@ -13,8 +13,16 @@ describe('PDFLayoutEngine', () => {
   beforeEach(() => {
     // Create mock instances
     mockGenerator = {
-      // Add any methods needed for tests
-    } as unknown as jest.Mocked<LegalPDFGenerator>;
+      writeText: jest.fn(),
+      writeParagraph: jest.fn(),
+      moveTo: jest.fn(),
+      getDocument: jest.fn().mockReturnValue({
+        moveTo: jest.fn().mockReturnThis(),
+        lineTo: jest.fn().mockReturnThis(),
+        stroke: jest.fn().mockReturnThis()
+      }),
+      getCurrentX: jest.fn().mockReturnValue(72) // Left margin
+    } as any;
 
     mockFormatter = {
       getUsablePageArea: jest.fn().mockReturnValue({
@@ -302,8 +310,8 @@ describe('PDFLayoutEngine', () => {
       const endY = layoutEngine.renderSignatureBlock(blockData, 100);
 
       expect(mockParser.analyzeLayout).toHaveBeenCalledWith(blockData);
-      expect(mockGenerator.writeText).toHaveBeenCalledWith('LICENSOR:', { fontSize: 12 });
-      expect(mockGenerator.writeText).toHaveBeenCalledWith('LICENSEE:', { fontSize: 12 });
+      expect(mockGenerator.writeText).toHaveBeenCalledWith('LICENSOR:', { fontSize: 12, align: 'left' });
+      expect(mockGenerator.writeText).toHaveBeenCalledWith('LICENSEE:', { fontSize: 12, align: 'left' });
       expect(mockGenerator.writeText).toHaveBeenCalledWith('Name: Alice Smith', { fontSize: 10 });
       expect(mockGenerator.writeText).toHaveBeenCalledWith('Name: Bob Jones', { fontSize: 10 });
       expect(endY).toBeGreaterThan(100);
@@ -831,6 +839,240 @@ describe('PDFLayoutEngine', () => {
       expect(result.pages[1].blocks).toHaveLength(2);
       expect(result.pages[1].blocks[0].type).toBe('signature');
       expect(result.pages[1].blocks[1].type).toBe('signature');
+    });
+  });
+
+  describe('side-by-side layouts', () => {
+    beforeEach(() => {
+      // Set up default analyzeLayout mock for side-by-side tests
+      mockParser.analyzeLayout = jest.fn().mockReturnValue({
+        columns: 2,
+        columnWidth: 209,
+        spacing: 50,
+        alignment: 'left'
+      });
+    });
+
+    it('should prepare side-by-side layout blocks', () => {
+      const leftContent = ['Left Line 1', 'Left Line 2', 'Left Line 3'];
+      const rightContent = ['Right Line 1', 'Right Line 2'];
+      
+      const blocks = layoutEngine.prepareSideBySideLayout(leftContent, rightContent);
+      
+      expect(blocks).toHaveLength(3); // Max of left/right content
+      expect(blocks[0].content).toBe('Left Line 1\tRight Line 1');
+      expect(blocks[1].content).toBe('Left Line 2\tRight Line 2');
+      expect(blocks[2].content).toBe('Left Line 3\t'); // Right side empty
+      expect(blocks[0].keepWithNext).toBe(true);
+      expect(blocks[1].keepWithNext).toBe(true);
+      expect(blocks[2].keepWithNext).toBe(false); // Last block
+    });
+
+    it('should calculate side-by-side height correctly', () => {
+      const leftContent = ['Line 1', 'Line 2'];
+      const rightContent = ['Line 1', 'Line 2', 'Line 3', 'Line 4'];
+      
+      const height = layoutEngine.calculateSideBySideHeight(leftContent, rightContent);
+      
+      expect(height).toBe(60); // 4 lines * 15 height
+    });
+
+    it('should calculate custom line height', () => {
+      const leftContent = ['Line 1'];
+      const rightContent = ['Line 1', 'Line 2'];
+      
+      const height = layoutEngine.calculateSideBySideHeight(leftContent, rightContent, 20);
+      
+      expect(height).toBe(40); // 2 lines * 20 height
+    });
+
+    it('should render side-by-side content', () => {
+      const startY = 100;
+      const columnWidth = 200;
+      const spacing = 50;
+      
+      const endY = layoutEngine.renderSideBySideContent(
+        'Left Text',
+        'Right Text',
+        startY,
+        columnWidth,
+        spacing
+      );
+      
+      expect(endY).toBe(115); // startY + 15
+      
+      // Check left content was rendered
+      expect(mockGenerator.moveTo).toHaveBeenCalledWith({ x: 72, y: 100 });
+      expect(mockGenerator.writeText).toHaveBeenCalledWith('Left Text', {
+        fontSize: 12,
+        align: 'left'
+      });
+      
+      // Check right content was rendered at correct position
+      expect(mockGenerator.moveTo).toHaveBeenCalledWith({ x: 322, y: 100 }); // 72 + 200 + 50
+      expect(mockGenerator.writeText).toHaveBeenCalledWith('Right Text', {
+        fontSize: 12,
+        align: 'left'
+      });
+    });
+
+    it('should handle empty content in side-by-side render', () => {
+      const endY = layoutEngine.renderSideBySideContent(
+        '',
+        'Only Right',
+        100,
+        200,
+        50
+      );
+      
+      expect(endY).toBe(115);
+      expect(mockGenerator.writeText).toHaveBeenCalledTimes(1); // Only right content
+      expect(mockGenerator.writeText).toHaveBeenCalledWith('Only Right', expect.any(Object));
+    });
+
+    it('should create side-by-side signature blocks', () => {
+      const signatureData: SignatureBlockData = {
+        marker: {
+          type: 'signature' as const,
+          id: 'test',
+          fullMarker: '[SIGNATURE_BLOCK:test]',
+          startIndex: 0,
+          endIndex: 0
+        },
+        layout: 'side-by-side' as const,
+        parties: [
+          { role: 'ASSIGNOR', name: 'John Doe', title: 'President' },
+          { role: 'ASSIGNEE', name: 'Jane Smith', title: 'CEO' }
+        ],
+        notaryRequired: false
+      };
+
+      const blocks = layoutEngine.createSideBySideSignatureBlocks(signatureData);
+      
+      expect(blocks).toHaveLength(1);
+      expect(blocks[0].type).toBe('signature');
+      expect(blocks[0].content).toBe(signatureData);
+      expect(blocks[0].height).toBe(90); // Role + sig + name + title + spacing
+      expect(blocks[0].breakable).toBe(false);
+    });
+
+    it('should add notary block when required for side-by-side', () => {
+      const signatureData: SignatureBlockData = {
+        marker: {
+          type: 'signature' as const,
+          id: 'test',
+          fullMarker: '[SIGNATURE_BLOCK:test]',
+          startIndex: 0,
+          endIndex: 0
+        },
+        layout: 'side-by-side' as const,
+        parties: [
+          { role: 'PARTY A' },
+          { role: 'PARTY B' }
+        ],
+        notaryRequired: true
+      };
+
+      const blocks = layoutEngine.createSideBySideSignatureBlocks(signatureData);
+      
+      expect(blocks).toHaveLength(2);
+      expect(blocks[0].keepWithNext).toBe(true); // Keep with notary
+      expect(blocks[1].type).toBe('signature');
+      expect((blocks[1].content as any).isNotarySection).toBe(true);
+      expect(blocks[1].height).toBe(120); // Standard notary height
+    });
+
+    it('should fall back to single column when not suitable for side-by-side', () => {
+      const signatureData: SignatureBlockData = {
+        marker: {
+          type: 'signature' as const,
+          id: 'test',
+          fullMarker: '[SIGNATURE_BLOCK:test]',
+          startIndex: 0,
+          endIndex: 0
+        },
+        layout: 'side-by-side' as const,
+        parties: [{ role: 'ONLY ONE PARTY' }], // Only one party
+        notaryRequired: false
+      };
+
+      const blocks = layoutEngine.createSideBySideSignatureBlocks(signatureData);
+      
+      expect(blocks).toHaveLength(1);
+      expect(blocks[0].height).toBe(60); // Single party height calculation
+    });
+
+    it('should create single column signature blocks', () => {
+      const signatureData: SignatureBlockData = {
+        marker: {
+          type: 'signature' as const,
+          id: 'test',
+          fullMarker: '[SIGNATURE_BLOCK:test]',
+          startIndex: 0,
+          endIndex: 0
+        },
+        layout: 'single' as const,
+        parties: [
+          { role: 'PARTY A', name: 'Alice', title: 'Director' },
+          { role: 'PARTY B', name: 'Bob' }
+        ],
+        notaryRequired: false
+      };
+
+      // Override for single column test
+      mockParser.analyzeLayout.mockReturnValue({
+        columns: 1,
+        columnWidth: 468,
+        spacing: 0,
+        alignment: 'left'
+      });
+
+      // Access private method through side-by-side method with single column data
+      const blocks = layoutEngine.createSideBySideSignatureBlocks(signatureData);
+      
+      expect(blocks).toHaveLength(1);
+      expect(blocks[0].type).toBe('signature');
+      expect(blocks[0].height).toBe(165); // 2 parties with different fields
+    });
+
+    it('should split content into columns', () => {
+      const content = ['Line 1', 'Line 2', 'Line 3', 'Line 4', 'Line 5'];
+      
+      const { left, right } = layoutEngine.splitContentForColumns(content);
+      
+      expect(left).toEqual(['Line 1', 'Line 2', 'Line 3']);
+      expect(right).toEqual(['Line 4', 'Line 5']);
+    });
+
+    it('should handle odd number of lines when splitting', () => {
+      const content = ['Only one line'];
+      
+      const { left, right } = layoutEngine.splitContentForColumns(content);
+      
+      expect(left).toEqual(['Only one line']);
+      expect(right).toEqual([]);
+    });
+
+    it('should calculate correct height for signatures with minimal fields', () => {
+      const signatureData: SignatureBlockData = {
+        marker: {
+          type: 'signature' as const,
+          id: 'test',
+          fullMarker: '[SIGNATURE_BLOCK:test]',
+          startIndex: 0,
+          endIndex: 0
+        },
+        layout: 'side-by-side' as const,
+        parties: [
+          { role: 'PARTY A' }, // No name or title
+          { role: 'PARTY B', name: 'Bob' } // Only name
+        ],
+        notaryRequired: false
+      };
+
+      const blocks = layoutEngine.createSideBySideSignatureBlocks(signatureData);
+      
+      expect(blocks[0].height).toBe(75); // Role + sig + name (one party has it) + spacing
     });
   });
 }); 

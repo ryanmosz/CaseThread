@@ -1,15 +1,16 @@
-import { 
-  LayoutBlock, 
-  LayoutConstraints, 
-  LayoutResult,
-  LayoutPage,
-  DocumentType,
-  SignatureBlockData
-} from '../../types/pdf';
+import { createChildLogger, Logger } from '../../utils/logger';
 import { LegalPDFGenerator } from './LegalPDFGenerator';
 import { DocumentFormatter } from './DocumentFormatter';
 import { SignatureBlockParser } from './SignatureBlockParser';
-import { createChildLogger, Logger } from '../../utils/logger';
+import {
+  LayoutBlock,
+  LayoutConstraints,
+  LayoutResult,
+  LayoutPage,
+  DocumentType,
+  SignatureBlockData,
+  SignatureParty
+} from '../../types/pdf';
 
 /**
  * PDF Layout Engine for advanced document layout management
@@ -467,53 +468,97 @@ export class PDFLayoutEngine {
     const leftX = x;
     const rightX = x + layout.columnWidth + layout.spacing;
     
-    // Assume two parties for side-by-side
+    // Ensure we have at least two parties for side-by-side
+    if (blockData.parties.length < 2) {
+      this.logger.warn('Side-by-side layout requested but fewer than 2 parties', {
+        partyCount: blockData.parties.length
+      });
+      return this.renderSingleSignature(blockData, x, y, layout);
+    }
+    
     const leftParty = blockData.parties[0];
     const rightParty = blockData.parties[1];
     
-    // Render headers
-    if (leftParty?.role) {
-      this.generator.moveTo({ x: leftX, y: currentY });
-      this.generator.writeText(`${leftParty.role}:`, { fontSize: 12 });
+    // Render role headers
+    if (leftParty?.role || rightParty?.role) {
+      currentY = this.renderSideBySideContent(
+        leftParty?.role ? `${leftParty.role}:` : '',
+        rightParty?.role ? `${rightParty.role}:` : '',
+        currentY,
+        layout.columnWidth,
+        layout.spacing
+      );
+      currentY += 5; // Extra spacing after role
     }
-    
-    if (rightParty?.role) {
-      this.generator.moveTo({ x: rightX, y: currentY });
-      this.generator.writeText(`${rightParty.role}:`, { fontSize: 12 });
-    }
-    
-    currentY += 20;
     
     // Signature lines
     this.drawSignatureLine(leftX, currentY, layout.columnWidth);
     this.drawSignatureLine(rightX, currentY, layout.columnWidth);
     currentY += 20;
     
-    // Name lines
-    if (leftParty?.name) {
+    // Name lines if either party has a name
+    if (leftParty?.name || rightParty?.name) {
       this.generator.moveTo({ x: leftX, y: currentY });
-      this.generator.writeText(`Name: ${leftParty.name}`, { fontSize: 10 });
-    }
-    
-    if (rightParty?.name) {
+      if (leftParty?.name) {
+        this.generator.writeText(`Name: ${leftParty.name}`, { fontSize: 10 });
+      }
+      
       this.generator.moveTo({ x: rightX, y: currentY });
-      this.generator.writeText(`Name: ${rightParty.name}`, { fontSize: 10 });
+      if (rightParty?.name) {
+        this.generator.writeText(`Name: ${rightParty.name}`, { fontSize: 10 });
+      }
+      currentY += 15;
     }
     
-    currentY += 15;
-    
-    // Title lines
-    if (leftParty?.title) {
+    // Title lines if either party has a title
+    if (leftParty?.title || rightParty?.title) {
       this.generator.moveTo({ x: leftX, y: currentY });
-      this.generator.writeText(`Title: ${leftParty.title}`, { fontSize: 10 });
-    }
-    
-    if (rightParty?.title) {
+      if (leftParty?.title) {
+        this.generator.writeText(`Title: ${leftParty.title}`, { fontSize: 10 });
+      }
+      
       this.generator.moveTo({ x: rightX, y: currentY });
-      this.generator.writeText(`Title: ${rightParty.title}`, { fontSize: 10 });
+      if (rightParty?.title) {
+        this.generator.writeText(`Title: ${rightParty.title}`, { fontSize: 10 });
+      }
+      currentY += 15;
     }
     
-    currentY += 35; // Extra spacing after signature block
+    // Add bottom spacing
+    currentY += 20;
+    
+    // Handle additional parties if more than 2
+    if (blockData.parties.length > 2) {
+      this.logger.info('More than 2 parties in side-by-side layout', {
+        totalParties: blockData.parties.length
+      });
+      
+      // Render additional parties in single column format
+      for (let i = 2; i < blockData.parties.length; i++) {
+        const party = blockData.parties[i];
+        if (party.role) {
+          this.generator.moveTo({ x, y: currentY });
+          this.generator.writeText(`${party.role}:`, { fontSize: 12 });
+          currentY += 20;
+        }
+        
+        currentY = this.drawSignatureLine(x, currentY, layout.columnWidth * 2 + layout.spacing);
+        
+        if (party.name) {
+          this.generator.moveTo({ x, y: currentY });
+          this.generator.writeText(`Name: ${party.name}`, { fontSize: 10 });
+          currentY += 15;
+        }
+        
+        if (party.title) {
+          this.generator.moveTo({ x, y: currentY });
+          this.generator.writeText(`Title: ${party.title}`, { fontSize: 10 });
+          currentY += 15;
+        }
+        
+        currentY += 20;
+      }
+    }
     
     return currentY;
   }
@@ -565,5 +610,221 @@ export class PDFLayoutEngine {
     currentY += 20;
     
     return currentY;
+  }
+
+  /**
+   * Prepare side-by-side layout blocks
+   * @param leftContent - Content for left column
+   * @param rightContent - Content for right column
+   * @param blockType - Type of blocks to create
+   * @returns Array of layout blocks
+   */
+  public prepareSideBySideLayout(
+    leftContent: string[],
+    rightContent: string[],
+    blockType: LayoutBlock['type'] = 'text'
+  ): LayoutBlock[] {
+    const blocks: LayoutBlock[] = [];
+    const lineHeight = 15;
+    const maxLines = Math.max(leftContent.length, rightContent.length);
+    
+    for (let i = 0; i < maxLines; i++) {
+      const left = leftContent[i] || '';
+      const right = rightContent[i] || '';
+      
+      blocks.push({
+        type: blockType,
+        content: `${left}\t${right}`, // Tab-separated for rendering
+        height: lineHeight,
+        breakable: true,
+        keepWithNext: i < maxLines - 1
+      });
+    }
+    
+    return blocks;
+  }
+
+  /**
+   * Render side-by-side content
+   * @param leftContent - Left column text
+   * @param rightContent - Right column text
+   * @param y - Y position
+   * @param columnWidth - Width of each column
+   * @param spacing - Space between columns
+   * @returns Y position after rendering
+   */
+  public renderSideBySideContent(
+    leftContent: string,
+    rightContent: string,
+    y: number,
+    columnWidth: number,
+    spacing: number
+  ): number {
+    const leftX = this.generator.getCurrentX();
+    const rightX = leftX + columnWidth + spacing;
+    
+    // Render left content
+    if (leftContent) {
+      this.generator.moveTo({ x: leftX, y });
+      this.generator.writeText(leftContent, { 
+        fontSize: 12,
+        align: 'left'
+      });
+    }
+    
+    // Render right content
+    if (rightContent) {
+      this.generator.moveTo({ x: rightX, y });
+      this.generator.writeText(rightContent, {
+        fontSize: 12,
+        align: 'left'
+      });
+    }
+    
+    return y + 15;
+  }
+
+  /**
+   * Calculate side-by-side block height
+   * @param leftContent - Left column content
+   * @param rightContent - Right column content
+   * @param lineHeight - Height per line
+   * @returns Total height needed
+   */
+  public calculateSideBySideHeight(
+    leftContent: string[],
+    rightContent: string[],
+    lineHeight: number = 15
+  ): number {
+    const maxLines = Math.max(leftContent.length, rightContent.length);
+    return maxLines * lineHeight;
+  }
+
+  /**
+   * Create layout blocks for side-by-side signature
+   * @param signatureData - Signature block data
+   * @returns Array of layout blocks
+   */
+  public createSideBySideSignatureBlocks(
+    signatureData: SignatureBlockData
+  ): LayoutBlock[] {
+    const blocks: LayoutBlock[] = [];
+    const layout = this.parser.analyzeLayout(signatureData);
+    
+    if (layout.columns !== 2 || signatureData.parties.length < 2) {
+      // Fall back to single column if not suitable for side-by-side
+      return this.createSingleColumnSignatureBlocks(signatureData);
+    }
+    
+    const leftParty = signatureData.parties[0];
+    const rightParty = signatureData.parties[1];
+    
+    // Create a single block for the entire side-by-side signature
+    const height = this.calculateSideBySideSignatureHeight(leftParty, rightParty);
+    
+    blocks.push({
+      type: 'signature',
+      content: signatureData,
+      height,
+      breakable: false,
+      keepWithNext: signatureData.notaryRequired
+    });
+    
+    // Add notary block if required
+    if (signatureData.notaryRequired) {
+      blocks.push({
+        type: 'signature',
+        content: { ...signatureData, isNotarySection: true } as any,
+        height: 120, // Standard notary section height
+        breakable: false
+      });
+    }
+    
+    return blocks;
+  }
+
+  /**
+   * Create layout blocks for single column signature
+   * @param signatureData - Signature block data
+   * @returns Array of layout blocks
+   */
+  private createSingleColumnSignatureBlocks(
+    signatureData: SignatureBlockData
+  ): LayoutBlock[] {
+    const blocks: LayoutBlock[] = [];
+    
+    // Calculate height based on parties and fields
+    let totalHeight = 0;
+    for (const party of signatureData.parties) {
+      totalHeight += 20; // Role line
+      totalHeight += 20; // Signature line
+      if (party.name) totalHeight += 15; // Name line
+      if (party.title) totalHeight += 15; // Title line
+      totalHeight += 20; // Spacing between parties
+    }
+    
+    blocks.push({
+      type: 'signature',
+      content: signatureData,
+      height: totalHeight,
+      breakable: false,
+      keepWithNext: signatureData.notaryRequired
+    });
+    
+    // Add notary block if required
+    if (signatureData.notaryRequired) {
+      blocks.push({
+        type: 'signature',
+        content: { ...signatureData, isNotarySection: true } as any,
+        height: 120, // Standard notary section height
+        breakable: false
+      });
+    }
+    
+    return blocks;
+  }
+
+  /**
+   * Calculate height for side-by-side signature
+   * @param leftParty - Left party info
+   * @param rightParty - Right party info
+   * @returns Total height needed
+   */
+  private calculateSideBySideSignatureHeight(
+    leftParty: SignatureParty,
+    rightParty: SignatureParty
+  ): number {
+    let height = 20; // Role line
+    height += 20; // Signature line
+    
+    // Check if either party has name
+    if (leftParty.name || rightParty.name) {
+      height += 15; // Name line
+    }
+    
+    // Check if either party has title
+    if (leftParty.title || rightParty.title) {
+      height += 15; // Title line
+    }
+    
+    height += 20; // Bottom spacing
+    
+    return height;
+  }
+
+  /**
+   * Split content into columns for side-by-side rendering
+   * @param content - Content to split
+   * @returns Split content for left and right columns
+   */
+  public splitContentForColumns(
+    content: string[]
+  ): { left: string[]; right: string[] } {
+    const midPoint = Math.ceil(content.length / 2);
+    
+    return {
+      left: content.slice(0, midPoint),
+      right: content.slice(midPoint)
+    };
   }
 } 
