@@ -564,4 +564,55 @@ export class LegalPDFGenerator {
     }
     return this;
   }
+
+  /**
+   * Draw a horizontal line across the page
+   * @param options - Line drawing options
+   * @returns This instance for method chaining
+   */
+  public drawHorizontalLine(options?: {
+    width?: number;
+    color?: string;
+    opacity?: number;
+    marginLeft?: number;
+    marginRight?: number;
+  }): this {
+    const pageWidth = this.doc.page.width;
+    const leftMargin = options?.marginLeft ?? this.pageConfig.margins.left;
+    const rightMargin = options?.marginRight ?? this.pageConfig.margins.right;
+    const lineWidth = options?.width ?? 0.5;
+    const lineColor = options?.color ?? '#000000';
+    const opacity = options?.opacity ?? 1;
+    
+    // Save current state
+    const currentY = this.doc.y;
+    
+    // Calculate line position and length
+    const startX = leftMargin;
+    const endX = pageWidth - rightMargin;
+    const lineY = currentY + 10; // Add some spacing above the line
+    
+    // Set line properties
+    this.doc
+      .strokeColor(lineColor)
+      .strokeOpacity(opacity)
+      .lineWidth(lineWidth);
+    
+    // Draw the line
+    this.doc
+      .moveTo(startX, lineY)
+      .lineTo(endX, lineY)
+      .stroke();
+    
+    // Move cursor below the line
+    this.doc.y = lineY + 10; // Add spacing below the line
+    
+    // Restore default stroke properties
+    this.doc
+      .strokeColor('#000000')
+      .strokeOpacity(1)
+      .lineWidth(1);
+    
+    return this;
+  }
 } 

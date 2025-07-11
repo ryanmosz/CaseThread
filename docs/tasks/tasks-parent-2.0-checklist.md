@@ -56,7 +56,7 @@
 - [ ] 2.8 Add Markdown Parsing to PDF Export (Details: tasks-parent-2.8-detailed.md)
   - [x] 2.8.1 Parse Markdown headings (#, ##, ###) to PDF headings
   - [x] 2.8.2 Parse bold/italic (**text**, *text*) to PDF formatting
-  - [ ] 2.8.3 Parse horizontal rules (---) to PDF lines
+  - [x] 2.8.3 Parse horizontal rules (---) to PDF lines
   - [ ] 2.8.4 Handle other common Markdown elements
   - [ ] 2.8.5 Preserve document structure without syntax characters
 
@@ -108,11 +108,11 @@ Before marking complete, verify:
 ## Relevant Files
 
 - `src/types/pdf.ts` - TypeScript interfaces for PDF generation (includes formatting types and signature interfaces)
-- `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (enhanced writeHeading, writeFormattedText)
+- `src/services/pdf/LegalPDFGenerator.ts` - Base PDF generator class (enhanced writeHeading, writeFormattedText, drawHorizontalLine)
 - `src/services/pdf/DocumentFormatter.ts` - Document-specific formatting rules manager
 - `src/services/pdf/SignatureBlockParser.ts` - Parser for signature block markers (Task 2.4 complete)
 - `src/services/pdf/PDFLayoutEngine.ts` - PDF layout engine (Task 2.5 complete)
-- `src/services/pdf/MarkdownParser.ts` - Markdown parser for headings and inline formatting (Tasks 2.8.1-2.8.2 complete)
+- `src/services/pdf/MarkdownParser.ts` - Markdown parser for headings, formatting, and horizontal rules (Tasks 2.8.1-2.8.3 complete)
 - `src/services/pdf-export.ts` - PDF export service that integrates all components (updated for Markdown)
 - `src/commands/export.ts` - CLI export command with comprehensive error handling (Task 2.6 complete)
 - `src/config/pdf-formatting.ts` - Formatting configuration system
@@ -128,9 +128,10 @@ Before marking complete, verify:
 - `__tests__/index.test.ts` - CLI entry point tests (3 tests, fixed ora import issue)
 - `__tests__/utils/error-handler.test.ts` - Error handler tests (13 tests, all passing)
 - `docs/testing/test-results/pdf-generation/` - Generated test PDFs (18+ files)
-- `test-output/test-markdown-headings.md` - Test document with Markdown headings and formatting
+- `test-output/test-markdown-headings.md` - Test document with Markdown headings, formatting, and horizontal rules
 - `test-output/test-markdown-headings.pdf` - Generated PDF from Markdown test (headings only)
 - `test-output/test-markdown-formatting.pdf` - Generated PDF with bold/italic formatting
+- `test-output/test-markdown-hr.pdf` - Generated PDF with horizontal rules (---, ___, ***)
 
 ## Notes
 
@@ -139,6 +140,6 @@ Before marking complete, verify:
 - Ensure all work happens in Docker container
 - Test frequently with real document examples
 - Coordinate with Developer G on integration points
-- Progress: 31/44 sub-tasks complete (70%)
-- All 575 tests passing (added 36 MarkdownParser tests)
+- Progress: 32/44 sub-tasks complete (73%)
+- All 580 tests passing (added 36 MarkdownParser tests + 5 horizontal rule tests)
 - Task 2.6 complete with comprehensive error handling 

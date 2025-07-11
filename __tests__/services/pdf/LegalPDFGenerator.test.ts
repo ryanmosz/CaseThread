@@ -691,4 +691,91 @@ describe('LegalPDFGenerator', () => {
       expect(fs.existsSync(testFile)).toBe(true);
     });
   });
+
+  describe('Drawing Elements', () => {
+    it('should draw a horizontal line', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      const doc = generator.getDocument();
+      const strokeColorSpy = jest.spyOn(doc, 'strokeColor');
+      const strokeSpy = jest.spyOn(doc, 'stroke');
+      const lineWidthSpy = jest.spyOn(doc, 'lineWidth');
+      
+      const initialY = generator.getCurrentY();
+      
+      generator.drawHorizontalLine();
+      
+      // Should have set stroke properties
+      expect(strokeColorSpy).toHaveBeenCalledWith('#000000');
+      expect(lineWidthSpy).toHaveBeenCalledWith(0.5);
+      expect(strokeSpy).toHaveBeenCalled();
+      
+      // Y position should have moved down
+      const afterLineY = generator.getCurrentY();
+      expect(afterLineY).toBeGreaterThan(initialY);
+      
+      await generator.finalize();
+    });
+
+    it('should draw a horizontal line with custom options', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      const doc = generator.getDocument();
+      const strokeColorSpy = jest.spyOn(doc, 'strokeColor');
+      const strokeOpacitySpy = jest.spyOn(doc, 'strokeOpacity');
+      const lineWidthSpy = jest.spyOn(doc, 'lineWidth');
+      
+      generator.drawHorizontalLine({
+        width: 2,
+        color: '#FF0000',
+        opacity: 0.5,
+        marginLeft: 100,
+        marginRight: 100
+      });
+      
+      // Should have used custom properties
+      expect(strokeColorSpy).toHaveBeenCalledWith('#FF0000');
+      expect(strokeOpacitySpy).toHaveBeenCalledWith(0.5);
+      expect(lineWidthSpy).toHaveBeenCalledWith(2);
+      
+      // Should restore defaults
+      expect(strokeColorSpy).toHaveBeenLastCalledWith('#000000');
+      expect(strokeOpacitySpy).toHaveBeenLastCalledWith(1);
+      expect(lineWidthSpy).toHaveBeenLastCalledWith(1);
+      
+      await generator.finalize();
+    });
+
+    it('should create document with horizontal lines', async () => {
+      const generator = new LegalPDFGenerator(testFile, {
+        documentType: 'test-document'
+      });
+
+      await generator.start();
+      
+      generator
+        .writeHeading('Section 1', 1)
+        .writeParagraph('Content for section 1')
+        .drawHorizontalLine()
+        .writeHeading('Section 2', 1)
+        .writeParagraph('Content for section 2')
+        .drawHorizontalLine()
+        .writeHeading('Section 3', 1)
+        .writeParagraph('Content for section 3');
+      
+      await generator.finalize();
+      
+      // Verify file was created
+      await new Promise(resolve => setTimeout(resolve, 100));
+      expect(fs.existsSync(testFile)).toBe(true);
+    });
+  });
 }); 

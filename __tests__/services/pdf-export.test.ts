@@ -402,6 +402,76 @@ Regular paragraph text here.`;
         expect.objectContaining({ type: 'text', content: 'Regular paragraph text here.' })
       ]));
     });
+
+    it('should detect and handle horizontal rules', async () => {
+      const textWithRules = `Section 1
+Content for section 1.
+
+---
+
+Section 2
+Content for section 2.
+
+___
+
+Section 3
+Content for section 3.
+
+***`;
+
+      mockParser.parseDocument.mockReturnValueOnce({
+        content: textWithRules.split('\n'),
+        signatureBlocks: [],
+        hasSignatures: false
+      });
+
+      // Add mock for drawHorizontalLine
+      mockGenerator.drawHorizontalLine = jest.fn();
+
+      await service.export(textWithRules, testPdfPath, 'patent-assignment-agreement');
+
+      // Verify layout engine was called with horizontal rule blocks
+      const layoutCall = mockLayoutEngine.layoutDocument.mock.calls[0][0];
+      const hrBlocks = layoutCall.filter((block: any) => block.type === 'horizontal-rule');
+      expect(hrBlocks).toHaveLength(3);
+      
+      // Each horizontal rule should have standard properties
+      hrBlocks.forEach((block: any) => {
+        expect(block).toMatchObject({
+          type: 'horizontal-rule',
+          content: '',
+          height: 20,
+          breakable: false,
+          keepWithNext: false
+        });
+      });
+    });
+
+    it('should render horizontal rule blocks with drawHorizontalLine', async () => {
+      // Mock layout with a horizontal rule block
+      mockLayoutEngine.layoutDocument.mockReturnValueOnce({
+        pages: [{
+          blocks: [
+            { type: 'text', content: 'Before rule', height: 15, breakable: true },
+            { type: 'horizontal-rule', content: '', height: 20, breakable: false },
+            { type: 'text', content: 'After rule', height: 15, breakable: true }
+          ],
+          remainingHeight: 500,
+          pageNumber: 1
+        }],
+        totalPages: 1,
+        hasOverflow: false
+      });
+
+      // Add mock for drawHorizontalLine
+      mockGenerator.drawHorizontalLine = jest.fn();
+
+      await service.export('Before rule\n---\nAfter rule', testPdfPath, 'patent-assignment-agreement');
+
+      // Verify drawHorizontalLine was called
+      expect(mockGenerator.drawHorizontalLine).toHaveBeenCalledTimes(1);
+      expect(mockGenerator.drawHorizontalLine).toHaveBeenCalledWith();
+    });
   });
 
   describe('integration with all document types', () => {

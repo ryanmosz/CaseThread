@@ -20,13 +20,14 @@
 - **Section 5** = Post-Task 2.0 integration work
 
 ### Task 2.0 Progress Summary:
-- **Complete**: 31 of 44 sub-tasks (70%)
+- **Complete**: 32 of 44 sub-tasks (73%)
 - **In Progress**: Tasks 2.8 & 2.9 (Markdown parsing & blank page fixes)
   - ✅ 2.8.1: Markdown headings parsing (H1-H6 with proper sizing)
   - ✅ 2.8.2: Bold/italic formatting (**text**, *text*, ***both***)
-  - 🔄 2.8.3-2.8.5: Horizontal rules, lists, cleanup
+  - ✅ 2.8.3: Horizontal rules (---, ___, *** all work)
+  - 🔄 2.8.4-2.8.5: Lists, quotes, cleanup
 - **Next Up**: Task 2.7 (Comprehensive testing)
-- **Tests**: 575 passing (218 PDF-related tests, +36 MarkdownParser tests)
+- **Tests**: 580 passing (223 PDF-related tests, +36 MarkdownParser tests)
 
 ## Current Focus: PDF Generation for Friday Demo
 
@@ -73,7 +74,7 @@
 
 ### 🟡 Medium Priority (Thursday)
 3. **Fix remaining PDF issues**
-   - Task 2.8: Add Markdown parsing (✅ 2.8.1 headings, ✅ 2.8.2 bold/italic complete)
+   - Task 2.8: Add Markdown parsing (✅ 2.8.1 headings, ✅ 2.8.2 bold/italic, ✅ 2.8.3 horizontal rules)
    - Task 2.9: Fix blank page issues
    - These are secondary to core functionality
 

@@ -226,6 +226,19 @@ export class PDFExportService {
         continue;
       }
 
+      // Detect horizontal rule
+      if (this.markdownParser.isHorizontalRule(line)) {
+        blocks.push({
+          type: 'horizontal-rule',
+          content: '',
+          height: 20, // Fixed height for horizontal rules
+          breakable: false,
+          keepWithNext: false
+        });
+        i++;
+        continue;
+      }
+
       // Detect heading
       if (this.isHeading(line)) {
         // Check if it's a Markdown heading
@@ -333,6 +346,10 @@ export class PDFExportService {
             block.content as SignatureBlockData,
             rules
           );
+          break;
+          
+        case 'horizontal-rule':
+          generator.drawHorizontalLine();
           break;
           
         default:
