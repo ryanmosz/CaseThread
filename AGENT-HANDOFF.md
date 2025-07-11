@@ -418,7 +418,16 @@
   - `-f, --font-size <size>` - Font size in points
   - All options properly typed and documented
   
-- **Command Status**: Structure complete, ready for implementation
+- ✅ Completed Task 2.6.3 - Implement file reading logic
+  - Fixed TypeScript errors in export command
+  - Integrated PDFExportService with proper method signature
+  - Added document type detection from content or filename
+  - Implemented margin parsing (supports 1, 2, or 4 values)
+  - Added validation for line spacing and font size options
+  - Successfully tested export with various options
+  - All 535 tests passing
+
+**Command Status**: Structure complete, ready for implementation
   - Verified command registration and help display
   - Tested basic error handling (file not found, invalid extension)
   - Placeholder message indicates implementation coming in Task 2.6.3
@@ -426,7 +435,7 @@
 ### Next Steps for Task 2.0 Implementation
 
 #### Current Progress Summary
-✅ Completed: Tasks 2.1, 2.2, 2.3, 2.4, 2.5, and 2.6.1-2.6.2 (26 of 35 sub-tasks complete - 74%)
+✅ Completed: Tasks 2.1, 2.2, 2.3, 2.4, 2.5, and 2.6.1-2.6.3 (27 of 35 sub-tasks complete - 77%)
 ✅ Pre-requisite: PDFExportService created and tested
 ✅ Bug fixes: All PDFLayoutEngine tests passing
 - PDFKit setup and configuration complete
@@ -437,8 +446,9 @@
 - PDF export service integrating all components
 - CLI export command structure with all arguments
 
-#### Next Sub-task: 2.6.3 - Implement file reading logic
-- Read the input text file
-- Detect document type from content or filename
-- Parse the document content
-- Connect to PDFExportService for actual PDF generation 
+#### Next Sub-task: 2.6.4 - Add progress indicators (next)
+- ✅ 2.6.1: Created export command structure
+- ✅ 2.6.2: Added command line arguments
+- ✅ 2.6.3: Implemented file reading logic
+- 📋 2.6.4: Add progress indicators (next)
+- 📋 2.6.5: Handle errors gracefully 

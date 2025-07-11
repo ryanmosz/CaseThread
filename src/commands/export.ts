@@ -4,15 +4,13 @@ import { promises as fs } from 'fs';
 import { createSpinner } from '../utils/spinner';
 import { logger } from '../utils/logger';
 import { handleError, createError } from '../utils/error-handler';
-// TODO: Will be used in Task 2.6.3
-// import { PDFExportService } from '../services/pdf-export';
-// import { SignatureBlockParser } from '../services/pdf/SignatureBlockParser';
+import { PDFExportService } from '../services/pdf-export';
 
 interface ExportOptions {
   debug?: boolean;
   pageNumbers?: boolean;
   margins?: string;
-  lineSpacing?: 'single' | 'one-half' | 'double';
+  lineSpacing?: string;  // Changed to string to accept 'auto'
   fontSize?: string;
 }
 
@@ -24,6 +22,68 @@ const SPINNER_MESSAGES = {
   SAVE_PDF: 'Saving PDF file...',
   SUCCESS: 'PDF exported successfully!'
 };
+
+/**
+ * Parse margins string into individual values
+ * @param marginsStr - Comma-separated margin values in points
+ * @returns Object with top, right, bottom, left margins
+ */
+function parseMargins(marginsStr?: string): { top?: number; right?: number; bottom?: number; left?: number } | undefined {
+  if (!marginsStr) return undefined;
+  
+  const values = marginsStr.split(',').map(v => parseInt(v.trim(), 10));
+  
+  if (values.length === 1) {
+    // Single value applies to all sides
+    return { top: values[0], right: values[0], bottom: values[0], left: values[0] };
+  } else if (values.length === 2) {
+    // Two values: vertical, horizontal
+    return { top: values[0], right: values[1], bottom: values[0], left: values[1] };
+  } else if (values.length === 4) {
+    // Four values: top, right, bottom, left
+    return { top: values[0], right: values[1], bottom: values[2], left: values[3] };
+  }
+  
+  throw new Error('Invalid margins format. Use 1, 2, or 4 comma-separated values');
+}
+
+/**
+ * Extract document type from content or filename
+ * @param content - Document content
+ * @param filename - Input filename
+ * @returns Document type or 'unknown'
+ */
+function extractDocumentType(content: string, filename: string): string {
+  // Look for document type in metadata header
+  const metadataMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (metadataMatch) {
+    const typeMatch = metadataMatch[1].match(/documentType:\s*(.+)/);
+    if (typeMatch) {
+      return typeMatch[1].trim();
+    }
+  }
+  
+  // Try to extract from filename
+  const basename = path.basename(filename, path.extname(filename));
+  const knownTypes = [
+    'provisional-patent-application',
+    'patent-assignment-agreement',
+    'patent-license-agreement',
+    'nda-ip-specific',
+    'trademark-application',
+    'office-action-response',
+    'cease-and-desist-letter',
+    'technology-transfer-agreement'
+  ];
+  
+  for (const type of knownTypes) {
+    if (basename.toLowerCase().includes(type)) {
+      return type;
+    }
+  }
+  
+  return 'unknown';
+}
 
 export const exportCommand = new Command('export')
   .description('Export a text document to PDF with legal formatting')
@@ -55,18 +115,22 @@ export const exportCommand = new Command('export')
     logger.debug('================================');
     
     try {
-      // TODO: Implement actual PDF export logic in Task 2.6.3
-      spinner.updateMessage('Export command created - implementation coming in Task 2.6.3');
-      
-      // For now, just validate the input file exists
+      // Resolve paths
       const resolvedInputPath = path.resolve(inputPath);
       const resolvedOutputPath = path.resolve(outputPath);
       
+      // Validate input file exists
+      spinner.updateMessage(SPINNER_MESSAGES.READ_FILE);
       try {
         await fs.access(resolvedInputPath);
         logger.debug(`Input file exists: ${resolvedInputPath}`);
       } catch {
         throw createError('FILE_NOT_FOUND', resolvedInputPath);
+      }
+      
+      // Ensure output has .pdf extension
+      if (!resolvedOutputPath.endsWith('.pdf')) {
+        throw new Error('Output file must have .pdf extension');
       }
       
       // Ensure output directory exists
@@ -78,18 +142,60 @@ export const exportCommand = new Command('export')
         throw createError('PERMISSION_ERROR', outputDir);
       }
       
-      // Ensure output has .pdf extension
-      if (!resolvedOutputPath.endsWith('.pdf')) {
-        throw new Error('Output file must have .pdf extension');
+      // Read input file
+      let content: string;
+      try {
+        content = await fs.readFile(resolvedInputPath, 'utf-8');
+        logger.debug(`Read ${content.length} characters from input file`);
+      } catch (error) {
+        throw createError('PERMISSION_ERROR', resolvedInputPath);
       }
       
-      spinner.success('Export command structure created successfully!');
-      console.log('\n✨ PDF Export Command Ready!\n');
-      console.log('📄 Implementation will be completed in subsequent tasks:');
-      console.log('  • Task 2.6.2: Add command line arguments ✅');
-      console.log('  • Task 2.6.3: Implement file reading logic');
-      console.log('  • Task 2.6.4: Add progress indicators');
-      console.log('  • Task 2.6.5: Handle errors gracefully');
+      // Extract document type
+      const documentType = extractDocumentType(content, resolvedInputPath);
+      logger.debug(`Detected document type: ${documentType}`);
+      
+      // Create PDF export service
+      spinner.updateMessage(SPINNER_MESSAGES.GENERATE_PDF);
+      const pdfService = new PDFExportService();
+      
+      // Build export options
+      const exportOptions: any = {
+        pageNumbers: options.pageNumbers !== false
+      };
+      
+      if (options.lineSpacing && options.lineSpacing !== 'auto') {
+        const validSpacings = ['single', 'one-half', 'double'];
+        if (validSpacings.includes(options.lineSpacing)) {
+          exportOptions.lineSpacing = options.lineSpacing as 'single' | 'one-half' | 'double';
+        } else {
+          throw new Error('Line spacing must be one of: single, one-half, double');
+        }
+      }
+      
+      if (options.fontSize) {
+        const fontSize = parseInt(options.fontSize, 10);
+        if (isNaN(fontSize) || fontSize < 8 || fontSize > 24) {
+          throw new Error('Font size must be between 8 and 24 points');
+        }
+        exportOptions.fontSize = fontSize;
+      }
+      
+      if (options.margins) {
+        exportOptions.margins = parseMargins(options.margins);
+      }
+      
+      // Generate PDF
+      spinner.updateMessage(SPINNER_MESSAGES.SAVE_PDF);
+      await pdfService.export(
+        content,
+        resolvedOutputPath,
+        documentType,
+        exportOptions
+      );
+      
+      spinner.success(SPINNER_MESSAGES.SUCCESS);
+      console.log(`\n✅ PDF exported successfully to: ${resolvedOutputPath}\n`);
       
       process.exit(0);
       

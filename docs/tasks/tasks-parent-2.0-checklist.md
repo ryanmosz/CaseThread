@@ -48,7 +48,7 @@
 - [ ] 2.6 Create CLI Export Command (Details: tasks-parent-2.6-detailed.md)
   - [x] 2.6.1 Create export command structure
   - [x] 2.6.2 Add command line arguments
-  - [ ] 2.6.3 Implement file reading logic
+  - [x] 2.6.3 Implement file reading logic
   - [ ] 2.6.4 Add progress indicators
   - [ ] 2.6.5 Handle errors gracefully
 
