@@ -179,6 +179,17 @@ const App: React.FC = () => {
   };
 
   const handleDocumentSelect = async (filePath: string) => {
+    // Prevent document switching if there are pending AI suggestions
+    if (state.suggestedContent) {
+      addToast({
+        title: "Pending AI Changes",
+        description: "Please accept or reject the current AI suggestions before switching documents.",
+        color: "warning",
+        timeout: 5000,
+      });
+      return;
+    }
+
     try {
       const result = await window.electronAPI.readFile(filePath);
       if (result.success && result.data) {
@@ -198,6 +209,17 @@ const App: React.FC = () => {
 
   const handleGenerateDocument = async (formData: any) => {
     if (!state.selectedTemplate) return;
+
+    // Prevent document generation if there are pending AI suggestions
+    if (state.suggestedContent) {
+      addToast({
+        title: "Pending AI Changes",
+        description: "Please accept or reject the current AI suggestions before generating a new document.",
+        color: "warning",
+        timeout: 5000,
+      });
+      return;
+    }
 
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -355,6 +377,21 @@ const App: React.FC = () => {
     }));
   };
 
+  const handleTabSelect = (key: string) => {
+    // Prevent tab switching if there are pending AI suggestions
+    if (state.suggestedContent) {
+      addToast({
+        title: "Pending AI Changes",
+        description: "Please accept or reject the current AI suggestions before switching tabs.",
+        color: "warning",
+        timeout: 5000,
+      });
+      return;
+    }
+
+    setState(prev => ({ ...prev, selectedTab: key }));
+  };
+
   if (state.isLoading && state.templates.length === 0) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -495,7 +532,7 @@ const App: React.FC = () => {
               <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
                 <Tabs
                   selectedKey={state.selectedTab}
-                  onSelectionChange={(key) => setState(prev => ({ ...prev, selectedTab: key as string }))}
+                  onSelectionChange={(key) => handleTabSelect(key as string)}
                   variant="underlined"
                   className="w-full"
                 >

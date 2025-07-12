@@ -249,10 +249,11 @@ INSTRUCTIONS:
 1. Provide professional legal advice and suggestions
 2. If the user asks for document changes, provide specific rewritten sections
 3. Maintain legal accuracy and proper formatting
-4. If providing a complete rewrite, wrap the entire document in a code block using triple backticks
-5. Be helpful but remind users that all legal work should be reviewed by a qualified attorney
-6. Use clear, professional language
-7. Respect existing legal structure and terminology
+4. IMPORTANT: When providing revised document content, wrap it in a code block using triple backticks (the content will be automatically extracted for side-by-side comparison)
+5. Focus your written response on explaining the changes rather than showing the full text
+6. Be helpful but remind users that all legal work should be reviewed by a qualified attorney
+7. Use clear, professional language
+8. Respect existing legal structure and terminology
 
 Please provide your response:`;
   };
@@ -271,6 +272,19 @@ Please provide your response:`;
     }
     
     return null;
+  };
+
+  const filterDocumentCodeBlocks = (content: string): string => {
+    // Remove large code blocks that contain document content
+    // This prevents showing the full document in the chat while still extracting it for diffs
+    return content.replace(/```(?:markdown|md|plaintext)?\s*([\s\S]*?)```/g, (match, codeContent) => {
+      // If the code block is longer than 500 characters, likely contains document content
+      if (codeContent.trim().length > 500) {
+        return '📄 **Document content has been extracted and is available in the diff viewer above**\n\n*Click "Show Changes" to see the word-by-word comparison of the AI\'s suggestions.*';
+      }
+      // Keep shorter code blocks (likely code snippets or examples)
+      return match;
+    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -392,7 +406,10 @@ Please provide your response:`;
                   }`}
                 >
                   <div className="text-sm whitespace-pre-wrap">
-                    {message.content}
+                    {message.role === 'assistant' 
+                      ? filterDocumentCodeBlocks(message.content) 
+                      : message.content
+                    }
                   </div>
                   <div className="text-xs opacity-70 mt-1">
                     {message.timestamp.toLocaleTimeString()}

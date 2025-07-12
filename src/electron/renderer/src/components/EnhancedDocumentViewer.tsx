@@ -196,13 +196,68 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   };
 
   // Handle suggested content acceptance
-  const handleAcceptSuggestedContent = useCallback((newContent: string) => {
+  const handleAcceptSuggestedContent = useCallback(async (newContent: string) => {
     setEditedContent(newContent);
     setShowDiff(false);
+    
+    // Automatically save the changes if this is a markdown file
+    if (documentPath?.endsWith('.md')) {
+      try {
+        setIsSaving(true);
+        setSaveStatus('saving');
+        setSaveError(null);
+
+        // Create a minimum 1-second delay promise
+        const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Run both the save operation and the minimum delay
+        const [result] = await Promise.all([
+          window.electronAPI.writeFile(documentPath, newContent),
+          minDelay
+        ]);
+        
+        if (result.success) {
+          setSaveStatus('success');
+          setHasUnsavedChanges(false);
+          
+          // Show success toast
+          addToast({
+            title: "AI changes applied and saved!",
+            description: "Document has been updated with AI suggestions and saved to disk.",
+            color: "success",
+            timeout: 3000,
+          });
+          
+          // Call callback to notify parent component
+          if (onContentSaved) {
+            onContentSaved(newContent);
+          }
+          
+          // Show success for 2 seconds then return to idle
+          setTimeout(() => setSaveStatus('idle'), 2000);
+        } else {
+          throw new Error(result.error || 'Failed to save file');
+        }
+      } catch (error) {
+        console.error('Error saving AI changes:', error);
+        setSaveError(error instanceof Error ? error.message : 'Failed to save AI changes');
+        setSaveStatus('error');
+        
+        addToast({
+          title: "Failed to save AI changes",
+          description: "The changes were applied but could not be saved to disk.",
+          color: "danger",
+          timeout: 5000,
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    }
+    
     if (onSuggestedContentAccepted) {
       onSuggestedContentAccepted();
     }
-  }, [onSuggestedContentAccepted]);
+  }, [onSuggestedContentAccepted, documentPath, onContentSaved]);
 
   // Handle suggested content rejection
   const handleRejectSuggestedContent = useCallback(() => {
