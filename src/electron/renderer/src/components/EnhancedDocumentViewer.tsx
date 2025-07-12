@@ -15,6 +15,33 @@ import {
   Divider,
   addToast
 } from '@heroui/react';
+import DiffViewer from './DiffViewer';
+
+// Simple Error Boundary for diff viewer
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('DiffViewer Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 interface EnhancedDocumentViewerProps {
   content: string | null;
@@ -26,6 +53,9 @@ interface EnhancedDocumentViewerProps {
   generationProgress?: number;
   generationStage?: string;
   onContentSaved?: (newContent: string) => void;
+  suggestedContent?: string;
+  onSuggestedContentAccepted?: () => void;
+  onSuggestedContentRejected?: () => void;
 }
 
 const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
@@ -37,13 +67,17 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   generatedAt,
   generationProgress = 0,
   generationStage = 'Preparing...',
-  onContentSaved
+  onContentSaved,
+  suggestedContent,
+  onSuggestedContentAccepted,
+  onSuggestedContentRejected
 }) => {
   const [editedContent, setEditedContent] = useState(content || '');
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
   
   // Update editedContent when content prop changes
   useEffect(() => {
@@ -52,6 +86,18 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
     setSaveStatus('idle');
     setSaveError(null);
   }, [content]);
+
+  // Show diff when suggested content is provided
+  useEffect(() => {
+    if (suggestedContent && content && suggestedContent !== content) {
+      // Add a small delay to prevent immediate rendering of large diffs
+      const timer = setTimeout(() => {
+        setShowDiff(true);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [suggestedContent, content]);
 
   // Track content changes
   useEffect(() => {
@@ -148,6 +194,23 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
       console.error('Export error:', error);
     }
   };
+
+  // Handle suggested content acceptance
+  const handleAcceptSuggestedContent = useCallback((newContent: string) => {
+    setEditedContent(newContent);
+    setShowDiff(false);
+    if (onSuggestedContentAccepted) {
+      onSuggestedContentAccepted();
+    }
+  }, [onSuggestedContentAccepted]);
+
+  // Handle suggested content rejection
+  const handleRejectSuggestedContent = useCallback(() => {
+    setShowDiff(false);
+    if (onSuggestedContentRejected) {
+      onSuggestedContentRejected();
+    }
+  }, [onSuggestedContentRejected]);
   
   // Parse document metadata and content
   const documentInfo = useMemo(() => {
@@ -233,6 +296,23 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* Diff Toggle Button - show when suggested content is available */}
+            {suggestedContent && content && (
+              <Button
+                variant={showDiff ? "solid" : "flat"}
+                size="sm"
+                color="secondary"
+                onClick={() => setShowDiff(!showDiff)}
+                startContent={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                }
+              >
+                {showDiff ? 'Hide Diff' : 'Show Changes'}
+              </Button>
+            )}
+
             {/* Save Button - only show for markdown files */}
             {isMarkdownFile && (
               <Button
@@ -301,28 +381,55 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
       </div>
 
       {/* Document Content */}
-      <ScrollShadow className="flex-1 overflow-auto">
-        <div className="p-6">
-          {isFormData ? (
-            <div className="bg-background/50 border border-divider rounded-lg p-4">
-              <pre className="text-xs text-foreground/80 whitespace-pre-wrap">
-                {content}
-              </pre>
+      <div className="flex-1 overflow-hidden">
+        {showDiff && suggestedContent && content ? (
+          <ErrorBoundary fallback={
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-danger mb-4">Unable to display document diff</p>
+                <Button
+                  variant="flat"
+                  size="sm"
+                  onClick={handleRejectSuggestedContent}
+                >
+                  Close Diff View
+                </Button>
+              </div>
             </div>
-          ) : (
-            <Textarea
-              value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
-              className="w-full h-full min-h-[500px] font-mono text-sm resize-none !overflow-hidden"
-              variant="bordered"
-              minRows={20}
-              maxRows={999}
-              placeholder={isMarkdownFile ? "Start typing to edit this document..." : "Document content"}
-              isReadOnly={!isMarkdownFile}
+          }>
+            <DiffViewer
+              originalText={content}
+              modifiedText={suggestedContent}
+              title="AI Assistant Suggestions"
+              onApplyChanges={handleAcceptSuggestedContent}
+              onClose={handleRejectSuggestedContent}
             />
-          )}
-        </div>
-      </ScrollShadow>
+          </ErrorBoundary>
+        ) : (
+          <ScrollShadow className="h-full overflow-auto">
+            <div className="p-6">
+              {isFormData ? (
+                <div className="bg-background/50 border border-divider rounded-lg p-4">
+                  <pre className="text-xs text-foreground/80 whitespace-pre-wrap">
+                    {content}
+                  </pre>
+                </div>
+              ) : (
+                <Textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  className="w-full h-full min-h-[500px] font-mono text-sm resize-none !overflow-hidden"
+                  variant="bordered"
+                  minRows={20}
+                  maxRows={999}
+                  placeholder={isMarkdownFile ? "Start typing to edit this document..." : "Document content"}
+                  isReadOnly={!isMarkdownFile}
+                />
+              )}
+            </div>
+          </ScrollShadow>
+        )}
+      </div>
     </div>
   );
 };

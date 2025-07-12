@@ -25,6 +25,9 @@ export const IPC_CHANNELS = {
   // Dialog operations
   SHOW_SAVE_DIALOG: 'dialog:showSaveDialog',
   SHOW_OPEN_DIALOG: 'dialog:showOpenDialog',
+  
+  // AI Assistant operations
+  CALL_AI_ASSISTANT: 'ai:callAssistant',
 } as const;
 
 // Recursively build directory tree structure
@@ -304,6 +307,66 @@ export function setupIpcHandlers(): void {
       ...options,
     });
     return result;
+  });
+
+  // AI Assistant handler
+  ipcMain.handle(IPC_CHANNELS.CALL_AI_ASSISTANT, async (_, prompt: string) => {
+    try {
+      // Import OpenAI directly for chat completion
+      const OpenAI = await import('openai');
+      
+      // Create OpenAI client
+      const apiKey = process.env.OPENAI_API_KEY || '';
+      
+      // Validate API key
+      if (!apiKey) {
+        throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY in your environment variables.');
+      }
+      
+      const openai = new OpenAI.default({
+        apiKey: apiKey,
+        timeout: 60000
+      });
+      
+             // Create chat completion for AI assistant
+       const completion = await openai.chat.completions.create({
+         model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a helpful AI assistant integrated into CaseThread, a legal document generation application. You help users with:
+- Document editing and improvement suggestions
+- Legal writing assistance
+- Document structure and formatting
+- Content clarification and enhancement
+- General questions about legal documents
+
+Please provide helpful, accurate, and professional responses. Keep your responses concise and focused on the user's needs.`
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 4000,
+        temperature: 0.3,
+        stream: false
+      });
+      
+      const response = completion.choices[0]?.message?.content;
+      
+      if (!response) {
+        throw new Error('No response received from AI assistant');
+      }
+      
+      return { success: true, data: response };
+    } catch (error) {
+      console.error('AI Assistant error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
+    }
   });
 }
 

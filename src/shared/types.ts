@@ -95,6 +95,9 @@ export interface ElectronAPI {
   // Dialog operations
   showSaveDialog: (options?: any) => Promise<any>;
   showOpenDialog: (options?: any) => Promise<any>;
+  
+  // AI Assistant operations
+  callAIAssistant: (prompt: string) => Promise<{ success: boolean; data?: string; error?: string }>;
 }
 
 // Types are exported for use in both main and renderer processes

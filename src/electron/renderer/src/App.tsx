@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardBody, Button, Spinner, addToast } from '@heroui/react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardBody, Button, Spinner, addToast, Tabs, Tab } from '@heroui/react';
 import { ThemeProvider } from './components/ThemeProvider';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import DocumentBrowser from './components/DocumentBrowser';
 import EnhancedDocumentViewer from './components/EnhancedDocumentViewer';
 import TemplateSelector from './components/TemplateSelector';
+import AIAssistant from './components/AIAssistant';
 import { Template, DirectoryEntry } from '../../../shared/types';
 
 // Error Boundary Component
@@ -64,6 +65,8 @@ interface AppState {
   documentTree: DirectoryEntry[];
   isLoading: boolean;
   error: string | null;
+  selectedTab: string;
+  suggestedContent: string | null;
 }
 
 const App: React.FC = () => {
@@ -74,6 +77,8 @@ const App: React.FC = () => {
     documentTree: [],
     isLoading: true,
     error: null,
+    selectedTab: 'templates',
+    suggestedContent: null,
   });
 
   // Load initial data
@@ -321,6 +326,35 @@ const App: React.FC = () => {
     }));
   };
 
+  const handleSuggestedContent = useCallback((suggestedContent: string) => {
+    // Debounce suggested content updates to prevent excessive re-renders
+    const timer = setTimeout(() => {
+      setState(prev => ({
+        ...prev,
+        suggestedContent
+      }));
+    }, 150); // 150ms delay to prevent excessive updates
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleAcceptSuggestedContent = () => {
+    if (state.suggestedContent) {
+      handleContentSaved(state.suggestedContent);
+      setState(prev => ({
+        ...prev,
+        suggestedContent: null
+      }));
+    }
+  };
+
+  const handleRejectSuggestedContent = () => {
+    setState(prev => ({
+      ...prev,
+      suggestedContent: null
+    }));
+  };
+
   if (state.isLoading && state.templates.length === 0) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -450,33 +484,71 @@ const App: React.FC = () => {
                 documentPath={state.selectedDocument?.path || ''}
                 generatedAt={new Date().toISOString()}
                 onContentSaved={handleContentSaved}
+                suggestedContent={state.suggestedContent || undefined}
+                onSuggestedContentAccepted={handleAcceptSuggestedContent}
+                onSuggestedContentRejected={handleRejectSuggestedContent}
               />
             </div>
 
-            {/* Right Pane - Template Selector */}
+            {/* Right Pane - Tabbed Interface */}
             <div className="w-80 bg-card border-l border-dashed border-divider flex flex-col">
               <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                      </svg>
+                <Tabs
+                  selectedKey={state.selectedTab}
+                  onSelectionChange={(key) => setState(prev => ({ ...prev, selectedTab: key as string }))}
+                  variant="underlined"
+                  className="w-full"
+                >
+                  <Tab key="templates" title="Templates">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div>
+                        <h2 className="font-semibold text-sm text-foreground">Templates</h2>
+                        <p className="text-xs text-foreground/60">Generate new documents</p>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-sm text-foreground">Templates</h2>
-                    <p className="text-xs text-foreground/60">Generate new documents</p>
-                  </div>
-                </div>
+                  </Tab>
+                  <Tab key="ai-assistant" title="AI Assistant">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div>
+                        <h2 className="font-semibold text-sm text-foreground">AI Assistant</h2>
+                        <p className="text-xs text-foreground/60">Improve your documents</p>
+                      </div>
+                    </div>
+                  </Tab>
+                </Tabs>
               </div>
               <div className="flex-1 overflow-hidden">
-                <TemplateSelector
-                  templates={state.templates}
-                  selectedTemplate={state.selectedTemplate}
-                  onTemplateSelect={handleTemplateSelect}
-                  onGenerateDocument={handleGenerateDocument}
-                />
+                {state.selectedTab === 'templates' && (
+                  <TemplateSelector
+                    templates={state.templates}
+                    selectedTemplate={state.selectedTemplate}
+                    onTemplateSelect={handleTemplateSelect}
+                    onGenerateDocument={handleGenerateDocument}
+                  />
+                )}
+                {state.selectedTab === 'ai-assistant' && (
+                  <AIAssistant
+                    documentContent={state.selectedDocument?.content || ''}
+                    documentName={state.selectedDocument?.name || ''}
+                    documentPath={state.selectedDocument?.path || ''}
+                    onDocumentUpdate={handleSuggestedContent}
+                    isVisible={true}
+                  />
+                )}
               </div>
             </div>
           </main>
