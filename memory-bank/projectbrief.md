@@ -1,44 +1,50 @@
-# CaseThread Electron GUI - Project Brief
+# CaseThread Multi-Model Agent Pipeline - Project Brief
 
 ## Project Overview
-CaseThread is a sophisticated CLI-based legal document generation system that uses multi-agent AI architecture to create IP legal documents. This project aims to add an Electron-based GUI to provide a modern, user-friendly interface for attorneys to generate legal documents.
+CaseThread is a sophisticated CLI-based legal document generation system that uses multi-agent AI architecture to create IP legal documents. This project aims to implement a quality-focused 3-agent pipeline with strategic model selection to achieve partner-level document quality through iterative refinement.
 
 ## Core Requirements
 
 ### Primary Goal
-Transform the existing CLI-based document generation workflow into an intuitive desktop application that maintains the sophisticated multi-agent architecture while providing a visual interface.
+Transform the existing speed-focused single-agent system into a quality-first 3-agent pipeline that delivers partner-level legal documents through contextual intelligence, rigorous quality gates, and iterative refinement.
 
 ### Key Features
-1. **Three-Pane Interface Design**
-   - Left Pane: Document browser (static mock-data folder view)
-   - Middle Pane: Document viewer/generator display
-   - Right Pane: IP Document Template selector
+1. **Multi-Model Agent Architecture**
+   - Agent 1: Contextual Document Writer (GPT-4 + o3 + GPT-4)
+   - Agent 2: Quality Gate Analyzer (GPT-4 + o3 + GPT-4)
+   - Agent 3: Final Reviewer (GPT-4 + o3 + GPT-4)
 
-2. **Template-Based Document Generation**
-   - Visual selection from 8 core IP document templates
-   - Form modal for template field input
-   - Real-time document generation and preview
+2. **Cost-Optimized Intelligence**
+   - Strategic model selection: GPT-4 for processing, o3 for complex legal reasoning
+   - 40-50% cost reduction compared to all-o3 approach
+   - 3-4 o3 calls per document for high-value tasks
 
-3. **Integration with Existing System**
-   - Maintain existing CLI generate functionality
-   - Preserve multi-agent architecture (Context Builder, Drafting, Overseer)
-   - Keep vector search and ChromaDB integration
+3. **Quality-First Approach**
+   - 25-35 second generation time vs 6 seconds current
+   - 90%+ quality standards with iterative refinement
+   - Partner-level consistency across all documents
+
+4. **Context Integration**
+   - Fix critical gap: ContextBundle now actively used in generation
+   - ChromaDB legal precedents enhance document quality
+   - Attorney pattern learning and client preference adaptation
 
 ## Success Criteria
-- [ ] User can browse documents visually in left pane
-- [ ] User can select from IP document templates in right pane
-- [ ] Form modal captures all required template fields
-- [ ] Generate button successfully calls existing CLI functionality
-- [ ] Generated documents display in middle viewer pane
-- [ ] Application maintains performance of existing system
+- [ ] 40% reduction in attorney revision time
+- [ ] 90% of documents meet quality standards on final review
+- [ ] Partner-level quality consistency across all generations
+- [ ] Cost-efficient operation with strategic model selection
+- [ ] Backwards compatibility with existing speed mode
+- [ ] Context utilization improves document quality measurably
 
 ## Technical Constraints
-- Must integrate with existing TypeScript codebase
-- Preserve existing Docker deployment capability
-- Maintain OpenAI integration and vector search functionality
-- Keep existing template system intact
+- Must preserve existing CLI functionality and multi-agent architecture
+- Maintain Docker deployment capability and ChromaDB integration
+- Keep existing template system and 266 tests intact
+- Ensure backwards compatibility with optional quality mode
 
 ## Target Users
-- IP attorneys using CaseThread for document generation
-- Legal professionals who prefer GUI over CLI interfaces
-- Law firms wanting desktop application deployment 
+- IP attorneys requiring partner-level document quality
+- Legal professionals who value accuracy over speed
+- Law firms seeking competitive advantage through premium quality
+- Attorneys working on high-stakes legal matters 

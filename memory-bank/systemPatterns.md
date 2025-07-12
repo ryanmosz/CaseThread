@@ -1,286 +1,317 @@
-# CaseThread GUI - System Patterns
+# CaseThread Multi-Model Pipeline - System Patterns
 
 ## Architecture Overview
 
-### Three-Pane Desktop Pattern
+### Multi-Model Agent Pipeline
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ [Menu Bar] File Edit View Generate Help                                    │
+│                           Quality-First Document Generation                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ [Left Pane]        │ [Middle Pane - Viewer]      │ [Right Pane]            │
-│ Documents          │                              │ Template Selector       │
-│ ├── attorneys/     │                              │                         │
-│ │   ├── sarah-chen/ │                              │ ┌─ Patent Documents ─┐ │
-│ │   │   ├── clients/│                              │ │ □ Provisional Patent│ │
-│ │   │   │   └── ... │                              │ │ □ Patent Assignment │ │
-│ │   └── michael-r.. │                              │ │ □ Patent License    │ │
-│ ├── firm-profile..  │                              │ │ □ Office Action Resp│ │
-│ └── templates/      │                              │ └─────────────────────┘ │
-│     └── core/       │                              │                         │
-│                     │                              │ ┌─ Trademark Docs ───┐ │
-│                     │                              │ │ □ Trademark App     │ │
-│                     │                              │ └─────────────────────┘ │
-│                     │                              │                         │
-│                     │                              │ ┌─ Business Docs ────┐ │
-│                     │                              │ │ □ NDA (IP-Specific) │ │
-│                     │                              │ │ □ Tech Transfer     │ │
-│                     │                              │ │ □ Cease & Desist    │ │
-│                     │                              │ └─────────────────────┘ │
-│                     │                              │                         │
-│                     │                              │ [Generate] [Cancel]    │
-├─────────────────────┴──────────────────────────────┴─────────────────────────┤
-│ [Status Bar] Ready | Vector DB: Connected | Last Generated: 2024-01-15     │
+│ [Agent 1: Contextual Document Writer]                                      │
+│                                                                             │
+│ Context Assembly (GPT-4) → Document Generation (o3) → Basic Refinement (GPT-4) │
+│                                     ↓                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [Agent 2: Quality Gate Analyzer]                                           │
+│                                                                             │
+│ Initial Scanning (GPT-4) → Legal Analysis (o3) → Scoring & Feedback (GPT-4) │
+│                                     ↓                                        │
+│                         [80% Quality Gate Decision]                         │
+│                                     ↓                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [Agent 3: Final Reviewer]                                                  │
+│                                                                             │
+│ Consistency Check (GPT-4) → Strategic Review (o3) → Client Ready (GPT-4)    │
+│                                     ↓                                        │
+│                         [90% Quality Gate Decision]                         │
+│                                     ↓                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ [Context Integration System]                                               │
+│                                                                             │
+│ ChromaDB Precedents ←→ Attorney Patterns ←→ Client Preferences ←→ Quality Learning │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Key Design Patterns
 
-### 1. Model-View-Controller (MVC) Pattern
-- **Model**: Existing CLI business logic and data structures
-- **View**: Electron renderer process with React components
-- **Controller**: IPC bridge between GUI and CLI functionality
+### 1. Strategic Model Selection Pattern
+- **High Intelligence Tasks (o3)**: Complex legal reasoning, strategic analysis
+- **Medium Intelligence Tasks (GPT-4)**: Organization, basic analysis, feedback
+- **Cost Optimization**: 40-50% reduction compared to all-o3 approach
 
-### 2. Observer Pattern for State Management
-- Template selection state
-- Form validation state
-- Document generation progress
-- File system watching for document updates
+### 2. Quality Gate Pattern
+- **Progressive Quality Checks**: Each agent has specific quality thresholds
+- **Iterative Refinement**: Failed quality gates trigger targeted improvement
+- **Feedback Loops**: Specific, actionable feedback for each refinement cycle
 
-### 3. Command Pattern for CLI Integration
-- Encapsulate CLI commands as objects
-- Enable undo/redo functionality
-- Provide command history and logging
+### 3. Context Integration Pattern
+- **ChromaDB Utilization**: Legal precedents actively enhance document generation
+- **Attorney Pattern Learning**: Successful approaches learned and applied
+- **Client Preference Adaptation**: Customization based on client requirements
 
-### 4. Factory Pattern for Template Processing
-- Dynamic form generation based on template schema
-- Template-specific validation rules
-- Consistent field rendering across templates
+### 4. Multi-Agent Orchestration Pattern
+- **QualityOrchestrator**: Manages 3-agent pipeline flow
+- **Parallel Processing**: Independent quality checks and context assembly
+- **Error Recovery**: Graceful handling of quality gate failures
 
-### 5. HeroUI Design System Integration
-- Consistent component library across all UI elements
-- Built-in Tailwind CSS utilities for custom styling
-- Professional legal software appearance
-- Responsive design with mobile-first approach
+### 5. Learning System Pattern
+- **Pattern Recognition**: Successful document generation strategies
+- **Continuous Improvement**: Quality metrics improve over time
+- **Preference Learning**: Attorney and client-specific customization
 
-### 6. Backend-Agnostic Architecture (Future-Ready)
-- CLI interface abstraction for backend flexibility
-- Template system independence from agent implementation
-- IPC communication layer supports multiple backend languages
-- Modular design enables TypeScript → Python migration
+## Agent Architecture
 
-## Component Architecture
+### Core Agent Components
 
-### Core Components
-
-#### 1. DocumentBrowser (Left Pane)
+#### 1. Agent 1: Contextual Document Writer
 ```typescript
-interface DocumentBrowserProps {
-  documentTree: DirectoryEntry[];
-  onDocumentSelect: (filePath: string) => void;
+interface ContextualDocumentWriter {
+  contextAssembly: {
+    model: 'gpt-4';
+    function: 'organizeContext';
+    input: ContextBundle;
+    output: StructuredContext;
+  };
+  
+  documentGeneration: {
+    model: 'o3';
+    function: 'generateDocument';
+    input: StructuredContext + Template + MatterContext;
+    output: GeneratedDocument;
+  };
+  
+  basicRefinement: {
+    model: 'gpt-4';
+    function: 'refineDocument';
+    input: GeneratedDocument + SimpleFeedback;
+    output: RefinedDocument;
+  };
 }
-
-interface TreeNode {
-  id: string;
-  name: string;
-  isDirectory: boolean;
-  path: string;
-  children?: TreeNode[];
-}
-
-// Using react-arborist for tree navigation
-// Custom Node component with expand/collapse behavior
-// File system-like icons and navigation
 ```
 
-#### 2. TemplateSelector (Right Pane)
+#### 2. Agent 2: Quality Gate Analyzer
 ```typescript
-interface TemplateSelectorProps {
-  templates: Template[];
-  selectedTemplate: Template | null;
-  onTemplateSelect: (template: Template) => void;
-  onGenerate: (formData: FormData) => void;
+interface QualityGateAnalyzer {
+  initialScanning: {
+    model: 'gpt-4';
+    function: 'scanDocument';
+    input: GeneratedDocument;
+    output: BasicQualityReport;
+  };
+  
+  legalAnalysis: {
+    model: 'o3';
+    function: 'analyzeLegalQuality';
+    input: GeneratedDocument + Template;
+    output: LegalQualityAnalysis;
+  };
+  
+  scoringFeedback: {
+    model: 'gpt-4';
+    function: 'generateFeedback';
+    input: LegalQualityAnalysis + BasicQualityReport;
+    output: QualityScore + ActionableFeedback;
+  };
 }
-
-// Using HeroUI components: Listbox, Card, Button, Divider
-// Grouped template categories with clean visual hierarchy
 ```
 
-#### 3. DocumentViewer (Middle Pane)
+#### 3. Agent 3: Final Reviewer
 ```typescript
-interface DocumentViewerProps {
-  document: GeneratedDocument | null;
-  loading: boolean;
-  error: string | null;
-  onExport: (format: 'pdf' | 'docx' | 'md') => void;
+interface FinalReviewer {
+  consistencyCheck: {
+    model: 'gpt-4';
+    function: 'checkConsistency';
+    input: QualityApprovedDocument;
+    output: ConsistencyReport;
+  };
+  
+  strategicReview: {
+    model: 'o3';
+    function: 'strategicAnalysis';
+    input: QualityApprovedDocument + ClientContext;
+    output: StrategicAssessment;
+  };
+  
+  clientReadiness: {
+    model: 'gpt-4';
+    function: 'finalPolish';
+    input: StrategicAssessment + ConsistencyReport;
+    output: ClientReadyDocument;
+  };
 }
-
-// Using HeroUI components: Card, Spinner, Dropdown, Button
-// Markdown rendering with HeroUI typography styles
-```
-
-#### 4. TemplateForm (Modal)
-```typescript
-interface TemplateFormProps {
-  template: Template;
-  isOpen: boolean;
-  onSubmit: (data: FormData) => void;
-  onCancel: () => void;
-  validation: ValidationState;
-}
-
-// Using HeroUI components: Modal, Input, Textarea, Select, Button
-// Form validation with HeroUI error states and styling
 ```
 
 ## Data Flow Architecture
 
-### 1. Template Loading Flow
+### 1. Context Assembly Flow
 ```
-App Start → Load Templates from /templates/core → Parse JSON Schemas → Generate Form Definitions → Cache in State
-```
-
-### 2. Document Generation Flow
-```
-Template Selection → Form Modal → Field Validation → Generate Button → IPC to Main Process → CLI Command Execution → Result Display
+ChromaDB Query → Precedent Retrieval → Attorney Pattern Matching → Client Preference Loading → Structured Context Bundle
 ```
 
-### 3. File System Integration
+### 2. Quality Pipeline Flow
 ```
-Static Mock Data → Recursive Directory Tree → React-arborist Tree → Expand/Collapse Navigation → Document Selection → Context Loading
+User Request → Agent 1 (Write) → Agent 2 (Analyze) → [Quality Gate] → Agent 3 (Review) → [Final Gate] → Delivery
+```
+
+### 3. Refinement Loop Flow
+```
+Quality Failure → Specific Feedback → Targeted Refinement → Quality Re-analysis → Gate Decision
 ```
 
 ## Integration Patterns
 
-### IPC (Inter-Process Communication) Bridge
+### Quality Orchestrator
 ```typescript
-// Main Process API
-interface MainProcessAPI {
-  generateDocument: (templateId: string, formData: FormData) => Promise<GeneratedDocument>;
-  loadTemplate: (templateId: string) => Promise<Template>;
-  watchFileSystem: (path: string) => void;
-  getDocumentTree: () => Promise<DocumentTree>;
+interface QualityOrchestrator {
+  executeQualityPipeline: (request: DocumentRequest) => Promise<QualityDocument>;
+  handleQualityGate: (score: QualityScore, threshold: number) => QualityDecision;
+  manageRefinementLoop: (feedback: QualityFeedback) => RefinementStrategy;
+  trackQualityMetrics: (session: DocumentSession) => QualityMetrics;
 }
 ```
 
-### CLI Command Integration
+### Context Integration Bridge
 ```typescript
-// Command execution pattern (Backend-Agnostic)
-const executeGenerate = async (templateId: string, formData: FormData) => {
-  // Abstract command execution - supports future Python migration
-  const command = await getGenerateCommand(templateId, formData);
-  return await exec(command);
-};
-
-// Current TypeScript CLI
-const getGenerateCommand = (templateId: string, formData: FormData) => {
-  return `npm run cli -- generate ${templateId} --input ${JSON.stringify(formData)}`;
-};
-
-// Future Python CLI (same interface)
-const getPythonGenerateCommand = (templateId: string, formData: FormData) => {
-  return `python scripts/generate.py --template ${templateId} --data ${JSON.stringify(formData)}`;
-};
+interface ContextIntegrationBridge {
+  assembleContext: (request: DocumentRequest) => Promise<ContextBundle>;
+  enhanceWithPrecedents: (context: ContextBundle) => EnhancedContext;
+  applyAttorneyPatterns: (context: EnhancedContext) => PatternEnhancedContext;
+  adaptClientPreferences: (context: PatternEnhancedContext) => ClientAdaptedContext;
+}
 ```
 
 ## State Management Patterns
 
-### Local Component State
-- Form validation states
-- UI visibility states
-- Loading and error states
+### Quality Pipeline State
+```typescript
+interface QualityPipelineState {
+  currentAgent: 'writer' | 'analyzer' | 'reviewer';
+  qualityScore: number;
+  iterationCount: number;
+  refinementHistory: RefinementAttempt[];
+  contextUtilization: ContextMetrics;
+}
+```
 
-### Global Application State
-- Selected template
-- Generated document
-- File system tree
-- Application configuration
+### Learning System State
+```typescript
+interface LearningSystemState {
+  attorneyPatterns: Map<string, AttorneyPattern>;
+  clientPreferences: Map<string, ClientPreference>;
+  qualityImprovement: QualityTrend;
+  successfulStrategies: StrategyPattern[];
+}
+```
 
 ## Error Handling Patterns
 
-### 1. Progressive Error Boundaries
-- Component-level error boundaries
-- Global error fallback
-- User-friendly error messages
+### 1. Quality Gate Failure Recovery
+- **Immediate Feedback**: Specific, actionable improvement instructions
+- **Progressive Refinement**: Focused improvement on identified weaknesses
+- **Escalation**: Maximum 3 iterations before human review
 
-### 2. Validation Chain Pattern
-- Field-level validation
-- Form-level validation
-- Server-side validation echo
+### 2. Context Integration Failure
+- **Graceful Degradation**: Fallback to basic template generation
+- **Partial Context**: Use available context even if incomplete
+- **Error Logging**: Comprehensive logging for debugging
 
-### 3. Graceful Degradation
-- Fallback for missing templates
-- Offline mode handling
-- Performance optimization under load
-
-## Security Patterns
-
-### File System Access
-- Sandboxed file operations
-- Restricted path access
-- Validation of file inputs
-
-### Command Execution
-- Sanitized CLI arguments
-- Process isolation
-- Output validation
+### 3. Model Availability Fallback
+- **o3 Unavailable**: Fallback to GPT-4 with quality warning
+- **GPT-4 Unavailable**: Fallback to existing single-agent system
+- **Total Failure**: Graceful error message with retry options
 
 ## Performance Patterns
 
-### Lazy Loading
-- Template definitions loaded on demand
-- Document preview rendering optimization
-- Virtual scrolling for large document lists
-
-### Caching Strategy
-- Template schema caching
-- Generated document caching
-- File system metadata caching
-
-## HeroUI Integration Patterns
-
-### Theme Configuration
+### Strategic Caching
 ```typescript
-// HeroUI theme customization for legal software
-const legalTheme = {
-  colors: {
-    primary: {
-      50: '#f0f9ff',
-      500: '#0ea5e9',
-      900: '#0c4a6e'
-    },
-    secondary: {
-      50: '#f8fafc',
-      500: '#64748b',
-      900: '#0f172a'
-    }
-  },
-  fontFamily: {
-    sans: ['Inter', 'system-ui', 'sans-serif'],
-    mono: ['JetBrains Mono', 'monospace']
-  }
-};
+interface StrategicCache {
+  contextCache: Map<string, ContextBundle>;
+  attorneyPatternCache: Map<string, AttorneyPattern>;
+  qualityMetricsCache: Map<string, QualityMetrics>;
+  templateCache: Map<string, Template>;
+}
 ```
 
-### Component Styling Patterns
+### Parallel Processing
 ```typescript
-// Consistent legal document styling
-const documentStyles = {
-  card: "bg-white border border-gray-200 rounded-lg shadow-sm",
-  header: "text-lg font-semibold text-gray-900",
-  text: "text-sm text-gray-600",
-  button: "bg-blue-600 hover:bg-blue-700 text-white"
-};
+interface ParallelProcessor {
+  contextAssembly: Promise<ContextBundle>;
+  templateValidation: Promise<ValidationResult>;
+  precedentSearch: Promise<PrecedentResult>;
+  qualityMetricsPreparation: Promise<QualityMetrics>;
+}
 ```
 
-### Form Field Mapping
+## Quality Metrics Patterns
+
+### 5-Criteria Scoring System
 ```typescript
-// Template field type to HeroUI component mapping
-const fieldComponentMap = {
-  text: Input,
-  textarea: Textarea,
-  select: Select,
-  checkbox: Checkbox,
-  date: DatePicker,
-  number: Input
-};
-``` 
+interface QualityMetrics {
+  legalAccuracy: { score: number; weight: 0.25 };
+  completeness: { score: number; weight: 0.25 };
+  consistency: { score: number; weight: 0.20 };
+  professionalTone: { score: number; weight: 0.15 };
+  riskMitigation: { score: number; weight: 0.15 };
+  overallScore: number;
+}
+```
+
+### Learning Pattern Recognition
+```typescript
+interface LearningPattern {
+  patternType: 'attorney' | 'client' | 'quality';
+  frequency: number;
+  successRate: number;
+  applicableScenarios: string[];
+  qualityImpact: number;
+}
+```
+
+## Security Patterns
+
+### Model Access Control
+- **API Key Management**: Secure storage and rotation
+- **Rate Limiting**: Prevent abuse and cost overruns
+- **Input Validation**: Sanitize all user inputs
+- **Output Filtering**: Remove sensitive information
+
+### Context Security
+- **Data Encryption**: ChromaDB data encrypted at rest
+- **Access Control**: Role-based access to client data
+- **Audit Logging**: Complete audit trail for document generation
+- **Privacy Protection**: Client confidentiality maintained
+
+## Backwards Compatibility Patterns
+
+### Dual Mode Operation
+```typescript
+interface DualModeOrchestrator {
+  speedMode: () => StandardOrchestrator;
+  qualityMode: () => QualityOrchestrator;
+  modeSelection: (flags: CLIFlags) => OrchestratorType;
+}
+```
+
+### Preserved Interfaces
+- **Existing CLI**: All current commands remain functional
+- **Template System**: No changes to template structure
+- **Mock Data**: Existing test data continues to work
+- **Docker Deployment**: Container setup unchanged
+
+## Cost Optimization Patterns
+
+### Model Selection Strategy
+```typescript
+interface ModelSelectionStrategy {
+  taskComplexity: (task: Task) => ComplexityLevel;
+  modelRecommendation: (complexity: ComplexityLevel) => ModelType;
+  costEstimation: (pipeline: AgentPipeline) => CostEstimate;
+  optimizationSuggestions: (usage: UsageMetrics) => OptimizationPlan;
+}
+```
+
+### Resource Management
+- **Smart Caching**: Reduce redundant API calls
+- **Batch Processing**: Optimize concurrent operations
+- **Context Reuse**: Leverage previous context where applicable
+- **Quality Threshold Optimization**: Balance quality vs cost 
