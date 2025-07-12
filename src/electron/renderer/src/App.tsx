@@ -226,15 +226,15 @@ const App: React.FC = () => {
         console.log('App: Document preview:', documentContent.substring(0, 200));
         
         if (documentContent.trim()) {
-                      setState(prev => ({
-              ...prev,
-              selectedDocument: {
-                content: documentContent,
-                path: `output/${result.data?.folderName || 'document-folder'}`,
-                name: `${state.selectedTemplate?.name || 'Document'} - Generated`,
-              },
-              isLoading: false,
-            }));
+          setState(prev => ({
+            ...prev,
+            selectedDocument: {
+              content: documentContent,
+              path: result.data?.savedFilePath || `output/${result.data?.folderName || 'document-folder'}/document.md`,
+              name: `${state.selectedTemplate?.name || 'Document'} - Generated`,
+            },
+            isLoading: false,
+          }));
           
           // Show success toast with folder path
           const folderName = result.data?.folderName || 'document-folder';
@@ -308,6 +308,17 @@ const App: React.FC = () => {
         isLoading: false,
       }));
     }
+  };
+
+  const handleContentSaved = (newContent: string) => {
+    // Update the selected document content in state
+    setState(prev => ({
+      ...prev,
+      selectedDocument: prev.selectedDocument ? {
+        ...prev.selectedDocument,
+        content: newContent,
+      } : null,
+    }));
   };
 
   if (state.isLoading && state.templates.length === 0) {
@@ -438,6 +449,7 @@ const App: React.FC = () => {
                 documentName={state.selectedDocument?.name || ''}
                 documentPath={state.selectedDocument?.path || ''}
                 generatedAt={new Date().toISOString()}
+                onContentSaved={handleContentSaved}
               />
             </div>
 

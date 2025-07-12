@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   Card, 
   CardBody, 
@@ -11,7 +11,9 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  Textarea
+  Textarea,
+  Divider,
+  addToast
 } from '@heroui/react';
 
 interface EnhancedDocumentViewerProps {
@@ -23,6 +25,7 @@ interface EnhancedDocumentViewerProps {
   generatedAt?: string;
   generationProgress?: number;
   generationStage?: string;
+  onContentSaved?: (newContent: string) => void;
 }
 
 const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
@@ -33,14 +36,118 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   documentPath,
   generatedAt,
   generationProgress = 0,
-  generationStage = 'Preparing...'
+  generationStage = 'Preparing...',
+  onContentSaved
 }) => {
   const [editedContent, setEditedContent] = useState(content || '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Update editedContent when content prop changes
   useEffect(() => {
     setEditedContent(content || '');
+    setHasUnsavedChanges(false);
+    setSaveStatus('idle');
+    setSaveError(null);
   }, [content]);
+
+  // Track content changes
+  useEffect(() => {
+    if (content !== null && editedContent !== content) {
+      setHasUnsavedChanges(true);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+  }, [editedContent, content]);
+
+  // Save functionality
+  const handleSave = useCallback(async () => {
+    if (!documentPath || !hasUnsavedChanges) return;
+    
+    // Only allow saving .md files
+    if (!documentPath.endsWith('.md')) {
+      setSaveError('Only Markdown files can be saved');
+      setSaveStatus('error');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setSaveStatus('saving');
+      setSaveError(null);
+
+      // Create a minimum 1-second delay promise
+      const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Run both the save operation and the minimum delay
+      const [result] = await Promise.all([
+        window.electronAPI.writeFile(documentPath, editedContent),
+        minDelay
+      ]);
+      
+      if (result.success) {
+        setSaveStatus('success');
+        setHasUnsavedChanges(false);
+        
+        // Show success toast immediately
+        addToast({
+          title: "Document saved successfully!",
+          description: "Your changes have been saved.",
+          color: "success",
+          timeout: 3000,
+        });
+        
+        // Call callback to notify parent component
+        if (onContentSaved) {
+          onContentSaved(editedContent);
+        }
+        
+        // Show success for 2 seconds then return to idle
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        throw new Error(result.error || 'Failed to save file');
+      }
+    } catch (error) {
+      console.error('Error saving file:', error);
+      setSaveError(error instanceof Error ? error.message : 'Failed to save file');
+      setSaveStatus('error');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [documentPath, editedContent, hasUnsavedChanges, onContentSaved]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        handleSave();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave]);
+
+  // Handle export functions
+  const handleExport = async (format: 'markdown' | 'text') => {
+    try {
+      const result = await window.electronAPI.showSaveDialog({
+        defaultPath: `${documentName || 'document'}.${format === 'markdown' ? 'md' : 'txt'}`,
+        filters: [
+          { name: format === 'markdown' ? 'Markdown' : 'Text', extensions: [format === 'markdown' ? 'md' : 'txt'] }
+        ]
+      });
+
+      if (result.success && result.data?.filePath) {
+        await window.electronAPI.writeFile(result.data.filePath, editedContent);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+    }
+  };
   
   // Parse document metadata and content
   const documentInfo = useMemo(() => {
@@ -51,6 +158,10 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
     
     return { wordCount, sections };
   }, [content]);
+
+  // Determine if this is a markdown file
+  const isMarkdownFile = documentPath?.endsWith('.md') || false;
+  const isFormData = documentPath?.endsWith('form-data.yaml') || false;
 
   if (isLoading) {
     return (
@@ -71,8 +182,6 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
       </div>
     );
   }
-
-  const isFormData = documentPath?.endsWith('form-data.yaml') || false;
 
   // Show placeholder when no content is available
   if (!content && !isLoading && !error) {
@@ -121,57 +230,74 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
                 )}
               </div>
             </div>
-            
-            {documentInfo && (
-              <div className="flex items-center space-x-2">
-                <Chip size="sm" variant="flat" color="primary">
-                  {documentInfo.wordCount} words
-                </Chip>
-                <Chip size="sm" variant="flat" color="secondary">
-                  {documentInfo.sections} sections
-                </Chip>
-              </div>
-            )}
           </div>
 
-          <Dropdown>
-            <DropdownTrigger>
-              <Button 
-                variant="flat" 
+          <div className="flex items-center space-x-2">
+            {/* Save Button - only show for markdown files */}
+            {isMarkdownFile && (
+              <Button
+                variant="flat"
                 size="sm"
+                color="primary"
+                isLoading={isSaving}
+                isDisabled={!hasUnsavedChanges || isSaving}
+                onClick={handleSave}
                 startContent={
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                  !isSaving && (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                  )
                 }
               >
-                Export
+                {isSaving ? 'Saving...' : 'Ctrl+S'}
               </Button>
-            </DropdownTrigger>
-            <DropdownMenu>
-              <DropdownItem
-                key="markdown"
-                startContent={
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                }
-              >
-                Save as Markdown
-              </DropdownItem>
-              <DropdownItem
-                key="text"
-                startContent={
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                }
-              >
-                Save as Text
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
+            )}
+
+            {/* Export Dropdown */}
+            <Dropdown>
+              <DropdownTrigger>
+                <Button 
+                  variant="flat" 
+                  size="sm"
+                  startContent={
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  }
+                >
+                  Export
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu>
+                <DropdownItem
+                  key="markdown"
+                  onClick={() => handleExport('markdown')}
+                  startContent={
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  }
+                >
+                  Save as Markdown
+                </DropdownItem>
+                <DropdownItem
+                  key="text"
+                  onClick={() => handleExport('text')}
+                  startContent={
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  }
+                >
+                  Save as Text
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         </div>
+
+
       </div>
 
       {/* Document Content */}
@@ -191,6 +317,8 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
               variant="bordered"
               minRows={20}
               maxRows={999}
+              placeholder={isMarkdownFile ? "Start typing to edit this document..." : "Document content"}
+              isReadOnly={!isMarkdownFile}
             />
           )}
         </div>
