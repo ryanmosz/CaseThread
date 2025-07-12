@@ -315,37 +315,31 @@ Please provide your response:`;
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Header */}
+      {/* Context and Status Bar */}
       <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
         <div className="flex items-center justify-between">
-                     <div className="flex items-center space-x-3">
-             <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-               <BotIcon />
-             </div>
-             <div>
-               <h3 className="font-semibold text-sm text-foreground">AI Assistant</h3>
-               <p className="text-xs text-foreground/60">Legal document helper</p>
-             </div>
-           </div>
-           <div className="flex items-center space-x-2">
-             <Button
-               isIconOnly
-               variant="light"
-               size="sm"
-               onClick={() => setShowContext(!showContext)}
-               className="text-foreground/60"
-             >
-               <FileTextIcon />
-             </Button>
-            <Chip
+          <div className="flex items-center space-x-2">
+            <Button
+              isIconOnly
+              variant="light"
               size="sm"
-              variant="flat"
-              color={documentContent ? 'success' : 'default'}
-              className="text-xs"
+              onClick={() => setShowContext(!showContext)}
+              className="text-foreground/60"
             >
-              {documentContent ? 'Document Loaded' : 'No Document'}
-            </Chip>
+              <FileTextIcon />
+            </Button>
+            <span className="text-xs text-foreground/60">
+              {showContext ? 'Hide Context' : 'Show Context'}
+            </span>
           </div>
+          <Chip
+            size="sm"
+            variant="flat"
+            color={documentContent ? 'success' : 'default'}
+            className="text-xs"
+          >
+            {documentContent ? 'Document Loaded' : 'No Document'}
+          </Chip>
         </div>
       </div>
 
