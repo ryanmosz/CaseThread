@@ -1,0 +1,42 @@
+# CaseThread - All Scenario Commands
+# Copy and paste any of these commands to run individual scenarios
+
+# ChemInnovate Labs scenarios
+npm run cli -- generate "patent-assignment-agreement" "docs/testing/scenario-inputs/cil-01-patent-assignment.yaml" --output "./output/cil-01-patent-assignment.md"
+npm run cli -- generate "patent-license-agreement" "docs/testing/scenario-inputs/cil-02-patent-license.yaml" --output "./output/cil-02-patent-license.md"
+npm run cli -- generate "office-action-response" "docs/testing/scenario-inputs/cil-03-office-action-response.yaml" --output "./output/cil-03-office-action-response.md"
+npm run cli -- generate "provisional-patent-application" "docs/testing/scenario-inputs/cil-04-provisional-patent.yaml" --output "./output/cil-04-provisional-patent.md"
+npm run cli -- generate "cease-and-desist-letter" "docs/testing/scenario-inputs/cil-05-cease-desist-false-claims.yaml" --output "./output/cil-05-cease-desist-false-claims.md"
+npm run cli -- generate "technology-transfer-agreement" "docs/testing/scenario-inputs/cil-06-tech-transfer-manufacturing.yaml" --output "./output/cil-06-tech-transfer-manufacturing.md"
+
+# Iris Design Studio scenarios
+npm run cli -- generate "trademark-amendment" "docs/testing/scenario-inputs/ids-01-trademark-amendment.yaml" --output "./output/ids-01-trademark-amendment.md"
+npm run cli -- generate "nda-settlement" "docs/testing/scenario-inputs/ids-02-settlement-nda.yaml" --output "./output/ids-02-settlement-nda.md"
+npm run cli -- generate "opposition-response" "docs/testing/scenario-inputs/ids-03-opposition-response.yaml" --output "./output/ids-03-opposition-response.md"
+npm run cli -- generate "office-action-response" "docs/testing/scenario-inputs/ids-04-office-action-response.yaml" --output "./output/ids-04-office-action-response.md"
+
+# Rainbow Tales Publishing scenarios
+npm run cli -- generate "nda-collaboration" "docs/testing/scenario-inputs/rtp-01-collaboration-nda.yaml" --output "./output/rtp-01-collaboration-nda.md"
+npm run cli -- generate "trademark-application" "docs/testing/scenario-inputs/rtp-02-trademark-application.yaml" --output "./output/rtp-02-trademark-application.md"
+npm run cli -- generate "technology-transfer-agreement" "docs/testing/scenario-inputs/rtp-03-tech-transfer-animation.yaml" --output "./output/rtp-03-tech-transfer-animation.md"
+npm run cli -- generate "cease-and-desist-response" "docs/testing/scenario-inputs/rtp-04-cease-desist-response.yaml" --output "./output/rtp-04-cease-desist-response.md"
+
+# TechFlow Solutions scenarios
+npm run cli -- generate "patent-assignment-agreement" "docs/testing/scenario-inputs/tfs-01-patent-assignment-founders.yaml" --output "./output/tfs-01-patent-assignment-founders.md"
+npm run cli -- generate "office-action-response" "docs/testing/scenario-inputs/tfs-02-office-action-alice.yaml" --output "./output/tfs-02-office-action-alice.md"
+npm run cli -- generate "compliance-memo" "docs/testing/scenario-inputs/tfs-03-gpl-compliance-memo.yaml" --output "./output/tfs-03-gpl-compliance-memo.md"
+npm run cli -- generate "patent-license-agreement" "docs/testing/scenario-inputs/tfs-04-patent-license-cloudgiant.yaml" --output "./output/tfs-04-patent-license-cloudgiant.md"
+npm run cli -- generate "cease-and-desist-letter" "docs/testing/scenario-inputs/tfs-05-cease-desist-cacheflow.yaml" --output "./output/tfs-05-cease-desist-cacheflow.md"
+npm run cli -- generate "patent-strategy-memo" "docs/testing/scenario-inputs/tfs-06-non-provisional-strategy.yaml" --output "./output/tfs-06-non-provisional-strategy.md"
+
+# With Quality Mode (LangGraph pipeline) - add --quality flag
+npm run cli -- generate "patent-assignment-agreement" "docs/testing/scenario-inputs/cil-01-patent-assignment.yaml" --output "./output/cil-01-patent-assignment-quality.md" --quality
+npm run cli -- generate "office-action-response" "docs/testing/scenario-inputs/cil-03-office-action-response.yaml" --output "./output/cil-03-office-action-response-quality.md" --quality
+npm run cli -- generate "provisional-patent-application" "docs/testing/scenario-inputs/cil-04-provisional-patent.yaml" --output "./output/cil-04-provisional-patent-quality.md" --quality
+
+# Run all scenarios with scripts
+./scripts/run-all-scenarios.sh                    # Run all scenarios (standard mode)
+./scripts/run-scenarios-quality.sh --quality      # Run all scenarios with quality mode
+./scripts/run-scenarios-quality.sh --dry-run      # Show commands without running
+./scripts/run-scenarios-quality.sh --file cil-01-patent-assignment.yaml  # Run single file
+./scripts/run-scenarios-quality.sh --quality --file cil-01-patent-assignment.yaml  # Quality mode single file 

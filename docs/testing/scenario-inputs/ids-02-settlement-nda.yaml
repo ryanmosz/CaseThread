@@ -1,7 +1,7 @@
 # Metadata
 client: "Iris Design Studio"
 attorney: "Michael Rodriguez"
-document_type: "nda-settlement"
+document_type: "nda-ip-specific"
 template: "nda-ip-specific.json"
 
 # Document Parameters
