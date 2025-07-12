@@ -539,7 +539,7 @@ const App: React.FC = () => {
                     <Tab key="templates" title="Templates">
             
                     </Tab>
-                    <Tab key="ai-assistant" title="AI Assistant">
+                    <Tab key="ai-assistant" title="Rewrite with AI">
                       {/* Removed duplicate AI Assistant heading - the tab title is sufficient */}
                     </Tab>
                   </Tabs>
