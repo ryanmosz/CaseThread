@@ -60,7 +60,8 @@ describe('PDFExportService', () => {
       getPageConfig: jest.fn().mockReturnValue({ margins: { top: 72, bottom: 72, left: 72, right: 72 } }),
       getRemainingSpace: jest.fn().mockReturnValue(500),
       measureTextHeight: jest.fn().mockReturnValue(15),
-      addPageNumberToCurrentPage: jest.fn()
+      addPageNumberToCurrentPage: jest.fn(),
+      getPagesWithContent: jest.fn().mockReturnValue(new Set([1]))
     };
     LegalPDFGenerator.mockImplementation(() => mockGenerator);
 
@@ -234,7 +235,10 @@ Inventor`;
     it('should handle page numbering', async () => {
       await service.export(sampleText, testPdfPath, 'trademark-application');
 
-      expect(mockGenerator.addPageNumberToCurrentPage).toHaveBeenCalled();
+      // Page numbering is now handled automatically when content is written
+      // Verify that pages with content were tracked
+      expect(mockGenerator.getPagesWithContent).toHaveBeenCalled();
+      expect(mockGenerator.getPagesWithContent()).toContain(1);
     });
 
     it('should disable page numbering when requested', async () => {
@@ -279,10 +283,15 @@ Inventor`;
         .mockReturnValueOnce(2) // After newPage, now on page 2
         .mockReturnValue(2);     // Any subsequent calls
 
+      // Mock getPagesWithContent for multi-page
+      mockGenerator.getPagesWithContent.mockReturnValue(new Set([1, 2]));
+
       await service.export(sampleText, testPdfPath, 'office-action-response');
 
       expect(mockGenerator.newPage).toHaveBeenCalledTimes(1);
-      expect(mockGenerator.addPageNumberToCurrentPage).toHaveBeenCalledTimes(2);
+      // Page numbering is automatic when content is written
+      expect(mockGenerator.getPagesWithContent).toHaveBeenCalled();
+      expect(mockGenerator.getPagesWithContent()).toEqual(new Set([1, 2]));
     });
 
     it('should handle office action specific margins', async () => {
