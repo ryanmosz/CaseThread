@@ -716,8 +716,9 @@ Return a JSON object with this structure:
 }
 
 /**
- * Comprehensive Legal Analysis & Strategic Review Node (o3)
+ * Comprehensive Legal Analysis & Strategic Review Node (GPT-4)
  * Combines sophisticated legal analysis with partner-level strategic assessment
+ * OPTIMIZED: Changed from o3 to GPT-4 to reduce cost and generation time
  */
 export async function legalAnalysisNode(state: PipelineState): Promise<PipelineState> {
   logger.info('⚖️🎖️  Comprehensive Legal Analysis & Strategic Review - Starting', {
@@ -733,7 +734,7 @@ export async function legalAnalysisNode(state: PipelineState): Promise<PipelineS
     const documentToAnalyze = state.refinedDocument || state.generatedDocument;
     
     const response = await openai.chat.completions.create({
-      model: "o3",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -909,17 +910,17 @@ Return a JSON object with this exact structure:
       ],
       modelUsage: {
         ...state.modelUsage,
-        o3Calls: state.modelUsage.o3Calls + 1,
+        gpt4Calls: state.modelUsage.gpt4Calls + 1,
         totalTokensUsed: state.modelUsage.totalTokensUsed + (response.usage?.total_tokens || 0),
-        totalCost: state.modelUsage.totalCost + calculateCost('o3', response.usage?.total_tokens || 0),
+        totalCost: state.modelUsage.totalCost + calculateCost('gpt-4', response.usage?.total_tokens || 0),
         callDetails: [
           ...state.modelUsage.callDetails,
           {
             id: `comprehensive-analysis-${Date.now()}`,
             node: 'legal_analysis',
-            model: 'o3',
+            model: 'gpt-4',
             tokens: response.usage?.total_tokens || 0,
-            cost: calculateCost('o3', response.usage?.total_tokens || 0),
+            cost: calculateCost('gpt-4', response.usage?.total_tokens || 0),
             duration,
             timestamp: new Date(),
             success: true
@@ -1320,8 +1321,9 @@ Return a JSON object with this structure:
 }
 
 /**
- * Strategic Review Node (o3) - DEPRECATED
+ * Strategic Review Node (GPT-4) - DEPRECATED
  * Functionality merged into legalAnalysisNode for streamlined pipeline
+ * OPTIMIZED: Changed from o3 to GPT-4 to reduce cost and generation time
  */
 export async function strategicReviewNode(state: PipelineState): Promise<PipelineState> {
   logger.info('🎖️  Strategic Review Node - Starting', {
@@ -1334,7 +1336,7 @@ export async function strategicReviewNode(state: PipelineState): Promise<Pipelin
 
   try {
     const response = await openai.chat.completions.create({
-      model: "o3",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -1402,17 +1404,17 @@ Return a JSON object with this exact structure:
       passedFinalGate: strategicReview.finalScore >= 90,
       modelUsage: {
         ...state.modelUsage,
-        o3Calls: state.modelUsage.o3Calls + 1,
+        gpt4Calls: state.modelUsage.gpt4Calls + 1,
         totalTokensUsed: state.modelUsage.totalTokensUsed + (response.usage?.total_tokens || 0),
-        totalCost: state.modelUsage.totalCost + calculateCost('o3', response.usage?.total_tokens || 0),
+        totalCost: state.modelUsage.totalCost + calculateCost('gpt-4', response.usage?.total_tokens || 0),
         callDetails: [
           ...state.modelUsage.callDetails,
           {
             id: `strategic-review-${Date.now()}`,
             node: 'strategic_review',
-            model: 'o3',
+            model: 'gpt-4',
             tokens: response.usage?.total_tokens || 0,
-            cost: calculateCost('o3', response.usage?.total_tokens || 0),
+            cost: calculateCost('gpt-4', response.usage?.total_tokens || 0),
             duration,
             timestamp: new Date(),
             success: true

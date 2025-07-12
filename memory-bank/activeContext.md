@@ -123,21 +123,20 @@ function finalGateRouter(state: PipelineState): string {
 - **SOLUTION**: LangGraph context_assembly node will integrate ChromaDB context into document generation
 - **IMPACT**: Transforms unused sophisticated legal precedents into active document enhancement
 
-### Cost Optimization Strategy ✅
-- **High Intelligence Tasks (o3)**: 3-4 calls per document
-  - document_generation: Core legal document creation
-  - legal_analysis: Complex legal accuracy analysis
-  - strategic_review: Partner-level strategic positioning
-- **Medium Intelligence Tasks (GPT-4)**: 4-5 calls per document
+### Cost Optimization Strategy ✅ (Updated)
+- **High Intelligence Tasks (o3)**: 1 call per document
+  - document_generation: Core legal document creation with complex reasoning
+- **Medium Intelligence Tasks (GPT-4)**: 3-4 calls per document
   - context_assembly: Context organization and structure
   - basic_refinement, targeted_refinement, final_refinement: Document improvements
-  - initial_scanning, scoring_feedback, refinement_generator: Quality analysis
+  - legal_analysis: Legal accuracy analysis and strategic review
   - consistency_check, client_readiness: Final polish and formatting
 
-### Quality-First Performance Metrics ✅
-- **Total Time**: 25-35 seconds (vs 6 seconds current, 45+ seconds all-o3)
-- **Cost Efficiency**: 40-50% less than all-o3 pipeline
+### Quality-First Performance Metrics ✅ (Updated)
+- **Total Time**: 15-25 seconds (vs 118-338 seconds previous, 6 seconds speed mode)
+- **Cost Efficiency**: 70-80% less than all-o3 pipeline (only 1 o3 call vs 2-3)
 - **Quality Standards**: 90%+ pass rate on final review
+- **Model Usage**: 1 o3 call + 3-4 GPT-4 calls per document
 - **Refinement Loops**: Maximum 3 iterations with targeted feedback
 - **Orchestration Simplification**: 60-70% reduction in custom orchestration code
 

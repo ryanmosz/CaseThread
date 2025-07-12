@@ -232,18 +232,18 @@ export async function executeQualityPipeline(
 
   try {
     // Execute streamlined LangGraph workflow nodes
-    logger.info('🚀 Executing Streamlined Quality Pipeline (3 API calls)...');
+    logger.info('🚀 Executing Optimized Quality Pipeline (1 o3 call + GPT-4 for analysis)...');
     
-    // Node 1: Document Generation (o3)
-    logger.info('📝 Node 1: Document Generation');
+    // Node 1: Document Generation (o3) - Only o3 call for core legal reasoning
+    logger.info('📝 Node 1: Document Generation (o3)');
     const generationState = await documentGenerationNode(state);
     
     // Node 2: Basic Refinement & Validation (GPT-4)
-    logger.info('✨ Node 2: Basic Refinement & Validation');
+    logger.info('✨ Node 2: Basic Refinement & Validation (GPT-4)');
     const refinementState = await basicRefinementNode(generationState);
     
-    // Node 3: Comprehensive Legal Analysis & Strategic Review (o3)
-    logger.info('⚖️🎖️ Node 3: Comprehensive Legal Analysis & Strategic Review');
+    // Node 3: Comprehensive Legal Analysis & Strategic Review (GPT-4)
+    logger.info('⚖️🎖️ Node 3: Comprehensive Legal Analysis & Strategic Review (GPT-4)');
     const analysisState = await legalAnalysisNode(refinementState);
     
     // Final Gate Check (90% threshold)
@@ -275,14 +275,15 @@ export async function executeQualityPipeline(
     clientReadyState.endTime = new Date();
     const executionTime = Date.now() - startTime;
 
-    logger.info('✅ Streamlined Quality Pipeline execution completed successfully', {
+    logger.info('✅ Optimized Quality Pipeline execution completed successfully', {
       executionTime: `${executionTime}ms`,
       finalQualityScore: clientReadyState.qualityScore,
       iterations: clientReadyState.currentIteration,
       status: clientReadyState.completionStatus,
       passedFinalGate: clientReadyState.passedFinalGate,
-      apiCalls: clientReadyState.passedFinalGate ? 3 : 4,
-      costOptimization: '62% fewer API calls than original pipeline'
+      o3Calls: clientReadyState.modelUsage.o3Calls,
+      gpt4Calls: clientReadyState.modelUsage.gpt4Calls,
+      costOptimization: 'Only 1 o3 call per document, GPT-4 for analysis and retries'
     });
 
     return clientReadyState;

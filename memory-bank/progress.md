@@ -96,9 +96,9 @@
 ## 📊 Performance Targets
 
 ### Quality Metrics (Target vs Current)
-- **Generation Time**: 25-35 seconds (vs 6 seconds current)
+- **Generation Time**: 15-25 seconds (vs 118-338 seconds previous)
 - **Quality Score**: 90%+ partner-level (vs unmeasured current)
-- **Cost Efficiency**: 40-50% reduction vs all-o3 approach
+- **Cost Efficiency**: 70-80% reduction vs all-o3 approach (1 o3 call vs 2-3)
 - **Context Utilization**: Active ChromaDB integration (vs unused current)
 - **Code Complexity**: 60-70% reduction with LangGraph (vs custom orchestration)
 
@@ -169,10 +169,10 @@ const qualityPipelineWorkflow = new StateGraph(PipelineState)
   .addConditionalEdges("client_readiness", finalGateRouter);
 ```
 
-### Cost Optimization
-- **o3 Calls**: 3-4 per document (high-value tasks)
-- **GPT-4 Calls**: 4-5 per document (processing tasks)
-- **Total Cost**: 40-50% less than all-o3 approach
+### Cost Optimization (Updated)
+- **o3 Calls**: 1 per document (only for core document generation)
+- **GPT-4 Calls**: 3-4 per document (analysis, refinement, and quality checks)
+- **Total Cost**: 70-80% less than all-o3 approach
 
 ### Quality Pipeline Flow
 ```
