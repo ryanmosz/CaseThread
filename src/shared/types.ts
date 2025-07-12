@@ -85,6 +85,7 @@ export interface ElectronAPI {
       savedFilePath: string;
       folderPath: string;
       folderName: string;
+      categoryFolder: string;
       formDataPath: string;
     }; 
     error?: string 

@@ -155,15 +155,31 @@ export function setupIpcHandlers(): void {
       // Ensure form data is clean and serializable
       const cleanFormData = JSON.parse(JSON.stringify(formData));
       
+      // Load template metadata for better organization
+      const templatePath = path.join(process.cwd(), 'templates', 'core', `${templateId}.json`);
+      let templateMetadata: { name?: string; type?: string } = {};
+      
+      try {
+        const templateContent = await fs.readFile(templatePath, 'utf-8');
+        const template = JSON.parse(templateContent);
+        templateMetadata = {
+          name: template.name,
+          type: template.type
+        };
+      } catch (error) {
+        console.warn('IPC: Could not load template metadata:', error);
+      }
+      
       // Create organized folder structure for this document
       const baseOutputDir = path.join(process.cwd(), 'output');
-      const documentPaths = createDocumentPaths(baseOutputDir, templateId);
+      const documentPaths = createDocumentPaths(baseOutputDir, templateId, templateMetadata);
       const yamlContent = createYamlFromFormData(cleanFormData, templateId);
       
       console.log('IPC: Creating document folder:', documentPaths.folderName);
+      console.log('IPC: Category folder:', documentPaths.categoryFolder);
       console.log('IPC: Generated YAML content:', yamlContent);
       
-      // Create the document folder structure
+      // Create the document folder structure (including category folder)
       await fs.mkdir(documentPaths.folderPath, { recursive: true });
       
       // Save form data as YAML in the folder
@@ -220,6 +236,7 @@ export function setupIpcHandlers(): void {
           savedFilePath: finalDocumentPath, // Path to the document file
           folderPath: documentPaths.folderPath, // Path to the folder containing both files
           folderName: documentPaths.folderName, // Name of the generated folder
+          categoryFolder: documentPaths.categoryFolder, // Category folder (Letters, Agreements, etc.)
           formDataPath: documentPaths.formDataPath // Path to the form data YAML file
         }
       };

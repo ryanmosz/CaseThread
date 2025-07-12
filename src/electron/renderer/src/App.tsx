@@ -238,9 +238,11 @@ const App: React.FC = () => {
           
           // Show success toast with folder path
           const folderName = result.data?.folderName || 'document-folder';
+          const categoryFolder = result.data?.categoryFolder || '';
+          const folderPath = categoryFolder ? `output/${categoryFolder}/${folderName}` : `output/${folderName}`;
           addToast({
             title: `${state.selectedTemplate?.name || 'Document'} generated successfully!`,
-            description: `Saved to folder: output/${folderName}`,
+            description: `Saved to: ${folderPath}`,
             color: "success",
             timeout: 7000,
           });
