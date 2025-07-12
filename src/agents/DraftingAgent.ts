@@ -12,7 +12,6 @@ import {
 import { generateDocument } from '../services/openai';
 import { loadExplanation } from '../services/template';
 import { logger } from '../utils/logger';
-import { config } from '../config';
 
 export class DraftingAgent extends BaseAgent {
   readonly name = 'DraftingAgent';

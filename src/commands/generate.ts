@@ -11,7 +11,6 @@ import { SpinnerMessages } from '../types';
 import { handleError, createError } from '../utils/error-handler';
 import { ErrorCode } from '../types/errors';
 import { Orchestrator } from '../agents/Orchestrator';
-import { config } from '../config';
 
 interface GenerateOptions {
   output: string;
