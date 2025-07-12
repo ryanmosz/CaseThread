@@ -11,13 +11,11 @@ import { SpinnerMessages } from '../types';
 import { handleError, createError } from '../utils/error-handler';
 import { ErrorCode } from '../types/errors';
 import { Orchestrator } from '../agents/Orchestrator';
-import { ParallelOrchestrator } from '../agents/ParallelOrchestrator';
 import { config } from '../config';
 
 interface GenerateOptions {
   output: string;
   debug?: boolean;
-  parallel?: boolean;
 }
 
 // Simple wrapper to match the expected interface
@@ -83,7 +81,6 @@ export const generateCommand = new Command('generate')
   .argument('<input-path>', 'Path to YAML input file')
   .option('-o, --output <path>', 'Output directory for generated document', '.')
   .option('-d, --debug', 'Enable debug logging')
-  .option('-p, --parallel', 'Enable parallel drafting (experimental)')
   .action(async (documentType: string, inputPath: string, options: GenerateOptions) => {
     // Check for command-level debug flag
     if (options.debug && logger.level !== 'debug') {
@@ -140,9 +137,7 @@ export const generateCommand = new Command('generate')
       // Use orchestrator to run the complete pipeline
       spinner.updateMessage('🚀 Running multi-agent pipeline...');
 
-      const orchestrator = options.parallel || config.parallel.ENABLED_BY_DEFAULT
-        ? new ParallelOrchestrator()
-        : new Orchestrator();
+      const orchestrator = new Orchestrator();
       const jobResult = await orchestrator.runJob({
         documentType,
         inputPath,

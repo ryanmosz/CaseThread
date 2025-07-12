@@ -46,16 +46,11 @@ export class DraftingAgent extends BaseAgent {
       taskExplanation += `\n\nADDITIONAL INSTRUCTIONS:\nGenerate ONLY the following sections (in this exact order) and nothing else: ${orderedTitles}. Do NOT include any other document parts, cover pages, or duplicate sections.`;
     }
 
-    // Generate document (partial or full) using OpenAI service
-    const modelOverride = input.sectionIds && input.sectionIds.length > 0
-      ? config.parallel.WORKER_MODEL
-      : undefined;
-
+    // Generate document using OpenAI service
     const draftMarkdown = await generateDocument(
       workingTemplate,
       taskExplanation,
-      input.matterContext.yamlData,
-      modelOverride
+      input.matterContext.yamlData
     );
 
     // Analyze the generated document
