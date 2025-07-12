@@ -26,7 +26,9 @@ export interface PipelineState {
   structuredContext?: StructuredContext;
   generatedDocument?: string;
   refinedDocument?: string;
+  initialScanResults?: InitialScanResults;
   qualityAnalysis?: QualityAnalysis;
+  consistencyResults?: ConsistencyResults;
   finalDocument?: string;
   
   // Model usage tracking
@@ -109,6 +111,53 @@ export interface StrategicGuidance {
 // =====================================
 // Quality Analysis Types
 // =====================================
+
+export interface InitialScanResults {
+  scanComplete: boolean;
+  overallScore: number;
+  issues: ScanIssue[];
+  sectionsPresent: string[];
+  missingRequirements: string[];
+  specialMarkersFound: string[];
+  readyForLegalAnalysis: boolean;
+  summary: string;
+}
+
+export interface ScanIssue {
+  category: 'completeness' | 'formatting' | 'markers' | 'data';
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  issue: string;
+  location: string;
+  recommendation: string;
+}
+
+export interface ConsistencyResults {
+  consistencyComplete: boolean;
+  overallConsistencyScore: number;
+  consistencyIssues: ConsistencyIssue[];
+  consistencyMetrics: ConsistencyMetrics;
+  readyForStrategicReview: boolean;
+  summary: string;
+}
+
+export interface ConsistencyIssue {
+  area: 'party_names' | 'dates' | 'terminology' | 'cross_reference' | 'formatting' | 'data' | 'markers';
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  issue: string;
+  locations: string[];
+  recommendation: string;
+  impact: string;
+}
+
+export interface ConsistencyMetrics {
+  partyNameConsistency: number;
+  dateConsistency: number;
+  terminologyConsistency: number;
+  crossReferenceAccuracy: number;
+  formattingConsistency: number;
+  dataConsistency: number;
+  specialMarkersIntegrity: number;
+}
 
 export interface QualityScore {
   iteration: number;

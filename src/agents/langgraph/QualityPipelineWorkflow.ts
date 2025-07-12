@@ -231,102 +231,58 @@ export async function executeQualityPipeline(
   }
 
   try {
-    // Execute LangGraph workflow nodes in sequence
-    logger.info('🔧 Executing LangGraph workflow nodes...');
+    // Execute streamlined LangGraph workflow nodes
+    logger.info('🚀 Executing Streamlined Quality Pipeline (3 API calls)...');
     
-    // Node 1: Context Assembly (GPT-4)
-    logger.info('🔧 Node 1: Context Assembly');
-    const contextState = await contextAssemblyNode(state);
+    // Node 1: Document Generation (o3)
+    logger.info('📝 Node 1: Document Generation');
+    const generationState = await documentGenerationNode(state);
     
-    // Node 2: Document Generation (o3)
-    logger.info('📝 Node 2: Document Generation');
-    const generationState = await documentGenerationNode(contextState);
+    // Node 2: Basic Refinement & Validation (GPT-4)
+    logger.info('✨ Node 2: Basic Refinement & Validation');
+    const refinementState = await basicRefinementNode(generationState);
     
-    // Node 3: Initial Scanning (GPT-4)
-    logger.info('🔍 Node 3: Initial Scanning');
-    const scanningState = await initialScanningNode(generationState);
+    // Node 3: Comprehensive Legal Analysis & Strategic Review (o3)
+    logger.info('⚖️🎖️ Node 3: Comprehensive Legal Analysis & Strategic Review');
+    const analysisState = await legalAnalysisNode(refinementState);
     
-    // Node 4: Legal Analysis (o3)
-    logger.info('⚖️ Node 4: Legal Analysis');
-    const analysisState = await legalAnalysisNode(scanningState);
+    // Final Gate Check (90% threshold)
+    logger.info('🚪 Final Gate Check (90% threshold)');
+    const passedFinalGate = analysisState.qualityScore >= 90;
     
-    // Node 5: Scoring & Feedback (GPT-4)
-    logger.info('📊 Node 5: Scoring & Feedback');
-    const scoringState = await scoringFeedbackNode(analysisState);
-    
-    // Quality Gate Check
-    logger.info('🚪 Quality Gate Check');
-    const qualityGateResult = qualityGateRouter(scoringState);
-    
-    let currentState = {
-      ...scoringState,
-      passedQualityGate: qualityGateResult === 'pass'
-    };
-    
-    // If quality gate fails and we haven't reached max iterations, do refinement
-    if (qualityGateResult === 'fail' && currentState.currentIteration < currentState.maxIterations) {
-      logger.info('🔄 Quality gate failed - performing refinement');
-      currentState.currentIteration++;
-      
-      // Node 6: Refinement Generator (GPT-4)
-      const refinementState = await refinementGeneratorNode(currentState);
-      
-      // Node 7: Targeted Refinement (GPT-4)
-      const targetedState = await targetedRefinementNode(refinementState);
-      
-      // Re-run document generation with refinements
-      const refinedGenerationState = await documentGenerationNode(targetedState);
-      
-      // Re-run quality analysis
-      const refinedAnalysisState = await legalAnalysisNode(refinedGenerationState);
-      const refinedScoringState = await scoringFeedbackNode(refinedAnalysisState);
-      
-      currentState = refinedScoringState;
-    }
-    
-    // Node 8: Consistency Check (GPT-4)
-    logger.info('🔍 Node 8: Consistency Check');
-    const consistencyState = await consistencyCheckNode(currentState);
-    
-    // Node 9: Strategic Review (o3)
-    logger.info('🎯 Node 9: Strategic Review');
-    const strategicState = await strategicReviewNode(consistencyState);
-    
-    // Final Gate Check
-    logger.info('🚪 Final Gate Check');
-    const finalGateResult = finalGateRouter(strategicState);
-    
-    let finalState = {
-      ...strategicState,
-      passedFinalGate: finalGateResult === 'approve'
+    let finalState: PipelineState = {
+      ...analysisState,
+      passedFinalGate,
+      completionStatus: passedFinalGate ? 'final_approved' as const : 'quality_approved' as const
     };
     
     // If final gate fails and we haven't reached max iterations, do final refinement
-    if (finalGateResult === 'refine' && finalState.currentIteration < finalState.maxIterations) {
+    if (!passedFinalGate && finalState.currentIteration < finalState.maxIterations) {
       logger.info('🔄 Final gate failed - performing final refinement');
       finalState.currentIteration++;
       
-      // Node 10: Final Refinement (GPT-4)
+      // Node 4: Final Refinement (GPT-4) - Only if needed
+      logger.info('🏁 Node 4: Final Refinement');
       const finalRefinementState = await finalRefinementNode(finalState);
       finalState = finalRefinementState;
     }
     
-    // Node 11: Client Readiness (GPT-4)
-    logger.info('🤝 Node 11: Client Readiness');
+    // Node 5: Client Readiness (no API call)
+    logger.info('🤝 Node 5: Client Readiness');
     const clientReadyState = await clientReadinessNode(finalState);
     
     // Update completion status and end time
     clientReadyState.endTime = new Date();
-    clientReadyState.completionStatus = clientReadyState.passedFinalGate ? 'final_approved' : 'quality_approved';
     const executionTime = Date.now() - startTime;
 
-    logger.info('✅ Quality Pipeline execution completed successfully', {
+    logger.info('✅ Streamlined Quality Pipeline execution completed successfully', {
       executionTime: `${executionTime}ms`,
       finalQualityScore: clientReadyState.qualityScore,
       iterations: clientReadyState.currentIteration,
       status: clientReadyState.completionStatus,
-      passedQualityGate: clientReadyState.passedQualityGate,
-      passedFinalGate: clientReadyState.passedFinalGate
+      passedFinalGate: clientReadyState.passedFinalGate,
+      apiCalls: clientReadyState.passedFinalGate ? 3 : 4,
+      costOptimization: '62% fewer API calls than original pipeline'
     });
 
     return clientReadyState;

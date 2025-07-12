@@ -235,6 +235,8 @@ IMPORTANT:
 - Ensure all variable placeholders are replaced with actual data
 - Maintain professional formatting throughout
 - Use proper markdown syntax for headers, lists, and emphasis
+- **DO NOT include section references like "Section 1:", "Section 2:", etc. in the final document**
+- **Generate clean document headers without template section references**
 - PRESERVE these special markers exactly as they appear in the template:
   - [SIGNATURE_BLOCK:*] - placement markers for signature areas
   - [INITIALS_BLOCK:*] - placement markers for initial areas
@@ -258,7 +260,7 @@ Generate the complete legal document now:`;
     const sections = template.sections
       .sort((a, b) => a.order - b.order)
       .map(section => {
-        return `Section ${section.order}: ${section.title}
+        return `${section.title}
 Required: ${section.required}
 Content Template:
 ${section.content}
