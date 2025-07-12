@@ -530,31 +530,20 @@ const App: React.FC = () => {
             {/* Right Pane - Tabbed Interface */}
             <div className="w-96 bg-card border-l border-dashed border-divider flex flex-col">
               <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
-                <Tabs
-                  selectedKey={state.selectedTab}
-                  onSelectionChange={(key) => handleTabSelect(key as string)}
-                  variant="underlined"
-                  className="w-full"
-                >
-                  <Tab key="templates" title="Templates">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                          <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                          </svg>
-                        </div>
-                      </div>
-                      <div>
-                        <h2 className="font-semibold text-sm text-foreground">Templates</h2>
-                        <p className="text-xs text-foreground/60">Generate new documents</p>
-                      </div>
-                    </div>
-                  </Tab>
-                  <Tab key="ai-assistant" title="AI Assistant">
-                    {/* Removed duplicate AI Assistant heading - the tab title is sufficient */}
-                  </Tab>
-                </Tabs>
+                <div className="flex justify-center">
+                  <Tabs
+                    selectedKey={state.selectedTab}
+                    onSelectionChange={(key) => handleTabSelect(key as string)}
+                    variant="underlined"
+                  >
+                    <Tab key="templates" title="Templates">
+            
+                    </Tab>
+                    <Tab key="ai-assistant" title="AI Assistant">
+                      {/* Removed duplicate AI Assistant heading - the tab title is sufficient */}
+                    </Tab>
+                  </Tabs>
+                </div>
               </div>
               <div className="flex-1 overflow-hidden">
                 {state.selectedTab === 'templates' && (
