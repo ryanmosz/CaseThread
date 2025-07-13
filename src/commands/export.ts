@@ -5,6 +5,7 @@ import { createSpinner } from '../utils/spinner';
 import { logger } from '../utils/logger';
 import { handleError, createError, CLIError } from '../utils/error-handler';
 import { PDFExportService, PDFExportOptions } from '../services/pdf-export';
+import { PDFServiceFactory } from '../services/pdf/PDFServiceFactory';
 import { ErrorCode } from '../types/errors';
 
 interface ExportOptions {
@@ -190,8 +191,8 @@ export const exportCommand = new Command('export')
       logger.debug(`Detected document type: ${documentType}`);
       spinner.updateMessage(`Document type: ${documentType}`);
       
-      // Create PDF export service
-      const pdfService = new PDFExportService();
+      // Create PDF export service with CLI progress reporter
+      const pdfService = PDFServiceFactory.forCLI();
       
       // Build export options
       const exportOptions: PDFExportOptions = {

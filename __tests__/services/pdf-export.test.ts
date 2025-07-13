@@ -31,7 +31,7 @@ describe('PDFExportService', () => {
     // Clear all mocks
     jest.clearAllMocks();
 
-    // Create service instance
+    // Create service instance with null progress reporter for tests
     service = new PDFExportService();
 
     // Setup mock implementations
@@ -492,6 +492,154 @@ Content for section 3.
       // Verify drawHorizontalLine was called
       expect(mockGenerator.drawHorizontalLine).toHaveBeenCalledTimes(1);
       expect(mockGenerator.drawHorizontalLine).toHaveBeenCalledWith();
+    });
+  });
+
+  describe('exportToBuffer', () => {
+    const sampleText = `PROVISIONAL PATENT APPLICATION
+For: Test Invention
+
+This is a test document.
+
+[SIGNATURE_BLOCK:inventor]
+_________________________________
+John Doe
+Inventor`;
+
+    it('should export text to PDF buffer successfully', async () => {
+      // Mock BufferOutput
+      const mockBufferOutput = {
+        write: jest.fn().mockResolvedValue(undefined),
+        end: jest.fn().mockResolvedValue(Buffer.from('mock pdf content')),
+        getType: jest.fn().mockReturnValue('buffer')
+      };
+
+      jest.mock('../../src/services/pdf/outputs', () => ({
+        BufferOutput: jest.fn().mockImplementation(() => mockBufferOutput)
+      }));
+
+      const result = await service.exportToBuffer(sampleText, 'provisional-patent-application');
+
+      // Verify result structure
+      expect(result).toMatchObject({
+        buffer: expect.any(Buffer),
+        pageCount: 1,
+        metadata: {
+          documentType: 'provisional-patent-application',
+          generatedAt: expect.any(Date),
+          fileSize: expect.any(Number),
+          exportType: 'buffer'
+        }
+      });
+
+      // Verify all components were initialized
+      const { LegalPDFGenerator } = require('../../src/services/pdf/LegalPDFGenerator');
+      expect(LegalPDFGenerator).toHaveBeenCalledWith(
+        expect.any(Object), // BufferOutput instance
+        expect.objectContaining({
+          documentType: 'provisional-patent-application'
+        })
+      );
+
+      // Verify PDF generation flow
+      expect(mockParser.parseDocument).toHaveBeenCalledWith(sampleText);
+      expect(mockFormatter.getFormattingRules).toHaveBeenCalledWith('provisional-patent-application');
+      expect(mockLayoutEngine.layoutDocument).toHaveBeenCalled();
+      expect(mockGenerator.start).toHaveBeenCalled();
+      expect(mockGenerator.finalize).toHaveBeenCalled();
+    });
+
+    it('should apply formatting overrides to buffer export', async () => {
+      const options: PDFExportOptions = {
+        lineSpacing: 'single',
+        fontSize: 14,
+        margins: { top: 90, bottom: 90, left: 90, right: 90 }
+      };
+
+      const result = await service.exportToBuffer(sampleText, 'nda-ip-specific', options);
+
+      expect(mockConfig.updateConfig).toHaveBeenCalledWith({
+        overrides: {
+          'nda-ip-specific': {
+            lineSpacing: 'single',
+            fontSize: 14,
+            margins: { top: 90, bottom: 90, left: 90, right: 90 }
+          }
+        }
+      });
+
+      expect(result.metadata.exportType).toBe('buffer');
+    });
+
+    it('should handle progress callbacks for buffer export', async () => {
+      const progressCallback = jest.fn();
+      const options: PDFExportOptions = {
+        onProgress: progressCallback
+      };
+
+      await service.exportToBuffer(sampleText, 'patent-license-agreement', options);
+
+      // Verify progress callbacks were made
+      expect(progressCallback).toHaveBeenCalledWith('Initializing PDF components', undefined);
+      expect(progressCallback).toHaveBeenCalledWith('Loading document formatting rules', 'patent-license-agreement');
+      expect(progressCallback).toHaveBeenCalledWith('Parsing signature blocks', undefined);
+      expect(progressCallback).toHaveBeenCalledWith('Preparing document layout', undefined);
+      expect(progressCallback).toHaveBeenCalledWith('Calculating page breaks', undefined);
+      expect(progressCallback).toHaveBeenCalledWith('Starting PDF generation', undefined);
+      expect(progressCallback).toHaveBeenCalledWith('PDF export completed', undefined);
+    });
+
+    it('should handle multi-page buffer exports', async () => {
+      // Mock multi-page layout
+      mockLayoutEngine.layoutDocument.mockReturnValueOnce({
+        pages: [
+          {
+            blocks: [
+              { type: 'heading', content: 'Page 1 Heading', height: 20, breakable: false },
+              { type: 'text', content: 'Page 1 content', height: 15, breakable: true }
+            ],
+            remainingHeight: 100,
+            pageNumber: 1
+          },
+          {
+            blocks: [
+              { type: 'text', content: 'Page 2 content', height: 15, breakable: true },
+              { type: 'signature', content: mockParser.parseDocument().signatureBlocks[0], height: 100, breakable: false }
+            ],
+            remainingHeight: 500,
+            pageNumber: 2
+          }
+        ],
+        totalPages: 2,
+        hasOverflow: false
+      });
+
+      mockGenerator.getCurrentPage.mockReturnValue(2);
+
+      const result = await service.exportToBuffer(sampleText, 'office-action-response');
+
+      expect(result.pageCount).toBe(2);
+      expect(mockGenerator.newPage).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle errors in buffer export', async () => {
+      mockGenerator.start.mockRejectedValueOnce(new Error('PDF generation failed'));
+
+      await expect(service.exportToBuffer(sampleText, 'nda-ip-specific'))
+        .rejects.toThrow('PDF export to buffer failed: PDF generation failed');
+    });
+
+    it('should not require file path for buffer export', async () => {
+      const result = await service.exportToBuffer(sampleText, 'cease-and-desist-letter');
+
+      // Verify no file path in result
+      expect(result.filePath).toBeUndefined();
+      expect(result.buffer).toBeDefined();
+      
+      // Verify LegalPDFGenerator was called with BufferOutput, not file path
+      const { LegalPDFGenerator } = require('../../src/services/pdf/LegalPDFGenerator');
+      const firstArg = LegalPDFGenerator.mock.calls[LegalPDFGenerator.mock.calls.length - 1][0];
+      expect(typeof firstArg).not.toBe('string');
     });
   });
 

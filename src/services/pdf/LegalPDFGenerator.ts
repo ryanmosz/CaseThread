@@ -1,13 +1,14 @@
 import PDFDocument from 'pdfkit';
-import * as fs from 'fs';
 import { 
   PDFGenerationOptions, 
   PageConfig,
   TextOptions,
-  PageNumberFormat
+  PageNumberFormat,
+  PDFOutput
 } from '../../types/pdf';
 import { createChildLogger, Logger } from '../../utils/logger';
 import { TextSegment } from './MarkdownParser';
+import { FileOutput } from './outputs';
 
 /**
  * Generates PDF documents with legal formatting standards
@@ -17,23 +18,32 @@ export class LegalPDFGenerator {
   private logger: Logger;
   private pageConfig: PageConfig;
   private currentPage: number;
-  private outputPath: string;
+  private output: PDFOutput;
+  private outputPath?: string; // Optional for backward compatibility
   private pagesWithContent: Set<number> = new Set();
   private pagesWithPageNumbers: Set<number> = new Set();
 
   /**
    * Initialize a new PDF generator
-   * @param outputPath - Path where the PDF will be saved
+   * @param outputOrPath - PDFOutput instance or file path (for backward compatibility)
    * @param options - Document generation options
    * @param pageConfig - Optional page configuration overrides
    */
   constructor(
-    outputPath: string,
+    outputOrPath: PDFOutput | string,
     options: PDFGenerationOptions,
     pageConfig?: Partial<PageConfig>
   ) {
     this.logger = createChildLogger({ service: 'LegalPDFGenerator' });
-    this.outputPath = outputPath;
+    
+    // Handle backward compatibility
+    if (typeof outputOrPath === 'string') {
+      this.outputPath = outputOrPath;
+      this.output = new FileOutput(outputOrPath);
+    } else {
+      this.output = outputOrPath;
+    }
+    
     this.currentPage = 1;
     
     // Default page configuration for legal documents
@@ -69,7 +79,8 @@ export class LegalPDFGenerator {
     });
 
     this.logger.debug('PDF document initialized', {
-      outputPath,
+      outputType: this.output.getType(),
+      outputPath: this.outputPath,
       pageConfig: this.pageConfig,
       documentType: options.documentType
     });
@@ -150,13 +161,11 @@ export class LegalPDFGenerator {
 
   /**
    * Get output path
-   * @returns Output file path
+   * @returns Output file path (undefined for non-file outputs)
    */
-  public getOutputPath(): string {
+  public getOutputPath(): string | undefined {
     return this.outputPath;
   }
-
-  private stream: fs.WriteStream | null = null;
 
   /**
    * Start document generation - must be called before writing content
@@ -165,23 +174,26 @@ export class LegalPDFGenerator {
   public async start(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        // Create write stream
-        this.stream = fs.createWriteStream(this.outputPath);
-        
-        // Handle stream errors
-        this.stream.on('error', (error) => {
-          this.logger.error('Stream error', { error: error.message });
-          reject(error);
+        // Set up data handler to write chunks to output
+        this.doc.on('data', async (chunk) => {
+          try {
+            await this.output.write(chunk);
+          } catch (error) {
+            this.logger.error('Output write error', { error: (error as Error).message });
+            reject(error);
+          }
         });
-        
-        // Pipe document to file
-        this.doc.pipe(this.stream);
         
         // Set default font
         this.doc.font('Times-Roman');
         this.doc.fontSize(12);
         
-        this.logger.debug('Document stream started', { outputPath: this.outputPath });
+        this.documentStarted = true;
+        
+        this.logger.debug('Document generation started', { 
+          outputType: this.output.getType(),
+          outputPath: this.outputPath 
+        });
         resolve();
       } catch (error) {
         this.logger.error('Failed to start document', { error: (error as Error).message });
@@ -190,6 +202,8 @@ export class LegalPDFGenerator {
     });
   }
 
+  private documentStarted = false;
+
   /**
    * Finalize and close the document
    * @returns Promise that resolves when document is completely written
@@ -197,26 +211,35 @@ export class LegalPDFGenerator {
   public async finalize(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
+        // Check if document was started
+        if (!this.documentStarted) {
+          this.logger.warn('Finalize called without start');
+          reject(new Error('Document not started. Call start() before finalize()'));
+          return;
+        }
+        
         // Page numbers are now handled per-page in pdf-export.ts
         // Removed the call to addPageNumbers() here to prevent duplicate numbering
         
-        // Wait for stream to finish
-        if (this.stream) {
-          this.stream.on('finish', () => {
+        // Set up completion handler
+        this.doc.on('end', async () => {
+          try {
+            // End the output (for file output this closes the stream, for buffer it's a no-op)
+            await this.output.end();
             this.logger.info('PDF document created successfully', {
+              outputType: this.output.getType(),
               path: this.outputPath,
               pages: this.currentPage
             });
             resolve();
-          });
-          
-          // Finalize the document
-          this.doc.end();
-        } else {
-          // No stream to wait for
-          this.logger.warn('Finalize called without start');
-          resolve();
-        }
+          } catch (error) {
+            this.logger.error('Failed to end output', { error: (error as Error).message });
+            reject(error);
+          }
+        });
+        
+        // Finalize the document
+        this.doc.end();
       } catch (error) {
         this.logger.error('Failed to finalize document', { error: (error as Error).message });
         reject(error);

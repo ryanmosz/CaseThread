@@ -5,7 +5,7 @@ import { DocumentFormatter } from './pdf/DocumentFormatter';
 import { SignatureBlockParser } from './pdf/SignatureBlockParser';
 import { PDFLayoutEngine } from './pdf/PDFLayoutEngine';
 import { MarkdownParser } from './pdf/MarkdownParser';
-import { FormattingConfiguration } from '../config/pdf-formatting';
+import { BufferOutput } from './pdf/outputs';
 import { 
   DocumentType, 
   DocumentFormattingRules, 
@@ -18,8 +18,20 @@ import {
   ListItemData,
   LayoutResult,
   BlockMeasurement,
-  PageMeasurements
+  PageMeasurements,
+  PDFExportResult
 } from '../types/pdf';
+import { ProgressReporter } from '../types/progress';
+import { NullProgressReporter } from '../utils/progress';
+import { 
+  IPDFExportService, 
+  IDocumentFormatter, 
+  ISignatureParser, 
+  IMarkdownParser,
+  LayoutEngineFactory,
+  PDFGeneratorFactory
+} from '../types/services';
+import { FileOutput } from './pdf/outputs';
 
 /**
  * Options for PDF export with overrides
@@ -45,13 +57,42 @@ export interface PDFExportOptions {
 /**
  * Service that orchestrates PDF generation using all components
  */
-export class PDFExportService {
+export class PDFExportService implements IPDFExportService {
   private logger: Logger;
-  private markdownParser: MarkdownParser;
   
-  constructor() {
-    this.logger = createChildLogger({ service: 'PDFExportService' });
-    this.markdownParser = new MarkdownParser();
+  // Injected dependencies with backward compatibility defaults
+  private documentFormatter: IDocumentFormatter;
+  private signatureParser: ISignatureParser;
+  private markdownParser: IMarkdownParser;
+  private layoutEngineFactory: LayoutEngineFactory;
+  private pdfGeneratorFactory: PDFGeneratorFactory;
+  private progressReporter: ProgressReporter;
+  
+  constructor(
+    documentFormatter?: IDocumentFormatter,
+    signatureParser?: ISignatureParser,
+    markdownParser?: IMarkdownParser,
+    layoutEngineFactory?: LayoutEngineFactory,
+    pdfGeneratorFactory?: PDFGeneratorFactory,
+    progressReporter: ProgressReporter = new NullProgressReporter(),
+    logger?: Logger
+  ) {
+    // Use provided dependencies or create defaults for backward compatibility
+    this.documentFormatter = documentFormatter || new DocumentFormatter();
+    this.signatureParser = signatureParser || new SignatureBlockParser();
+    this.markdownParser = markdownParser || new MarkdownParser();
+    
+    // Default factories if not provided
+    this.layoutEngineFactory = layoutEngineFactory || ((generator, formatter, parser) => 
+      new PDFLayoutEngine(generator as LegalPDFGenerator, formatter as DocumentFormatter, parser as SignatureBlockParser)
+    );
+    
+    this.pdfGeneratorFactory = pdfGeneratorFactory || ((output, options) => 
+      new LegalPDFGenerator(output, options)
+    );
+    
+    this.progressReporter = progressReporter;
+    this.logger = logger || createChildLogger({ service: 'PDFExportService' });
   }
 
   /**
@@ -70,9 +111,14 @@ export class PDFExportService {
     });
 
     const reportProgress = (step: string, detail?: string) => {
+      // Use injected reporter
+      this.progressReporter.report(step, detail);
+      
+      // Keep backward compatibility with options.onProgress
       if (options.onProgress) {
         options.onProgress(step, detail);
       }
+      
       this.logger.debug(`Progress: ${step}`, { detail });
     };
 
@@ -86,11 +132,19 @@ export class PDFExportService {
         subject: options.metadata?.subject || `Legal Document - ${documentType}`,
         keywords: options.metadata?.keywords || [documentType, 'legal', 'document']
       };
-      const generator = new LegalPDFGenerator(outputPath, generatorOptions);
-      const config = new FormattingConfiguration();
-      const formatter = new DocumentFormatter(config.getConfig());
-      const parser = new SignatureBlockParser();
-      const layoutEngine = new PDFLayoutEngine(generator, formatter, parser);
+      
+      // Create output and generator using injected factory
+      const fileOutput = new FileOutput(outputPath);
+      const generator = this.pdfGeneratorFactory(fileOutput, generatorOptions);
+      
+      // Use injected formatter
+      const formatter = this.documentFormatter;
+      
+      // Use injected parser
+      const parser = this.signatureParser;
+      
+      // Create layout engine using injected factory
+      const layoutEngine = this.layoutEngineFactory(generator as LegalPDFGenerator, formatter, parser);
 
       // Step 2: Apply formatting overrides if provided
       if (options.lineSpacing || options.fontSize || options.margins) {
@@ -100,12 +154,14 @@ export class PDFExportService {
         if (options.fontSize) overrides.fontSize = options.fontSize;
         if (options.margins) overrides.margins = options.margins;
         
-        // Update config with overrides for this document type
-        config.updateConfig({
-          overrides: {
-            [documentType]: overrides
-          }
-        });
+        // Update formatter configuration with overrides
+        if (formatter instanceof DocumentFormatter) {
+          formatter.updateConfiguration({
+            overrides: {
+              [documentType]: overrides
+            }
+          });
+        }
         this.logger.debug('Applied formatting overrides', { documentType, overrides });
       }
 
@@ -156,8 +212,8 @@ export class PDFExportService {
       // First pass: Measure all content to get accurate page breaks
       reportProgress('Measuring content for accurate pagination');
       const pageBreaks = await this.measureContentForPageBreaks(
-        generator,
-        formatter,
+        generator as LegalPDFGenerator,
+        formatter as DocumentFormatter,
         layoutResult,
         documentType as DocumentType,
         rules,
@@ -183,8 +239,8 @@ export class PDFExportService {
 
         // Render blocks on this page with known breaks
         await this.renderPageWithMeasurements(
-          generator, 
-          formatter, 
+          generator as LegalPDFGenerator, 
+          formatter as DocumentFormatter, 
           page, 
           documentType as DocumentType, 
           rules, 
@@ -217,6 +273,179 @@ export class PDFExportService {
     } catch (error) {
       this.logger.error('PDF export failed', error);
       throw new Error(`PDF export failed: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Export text document to PDF buffer for GUI integration
+   */
+  async exportToBuffer(
+    text: string,
+    documentType: string,
+    options: PDFExportOptions = {}
+  ): Promise<PDFExportResult> {
+    const startTime = Date.now();
+    
+    this.logger.info('Starting PDF export to buffer', { 
+      documentType,
+      optionsProvided: Object.keys(options).length > 0 
+    });
+
+    const reportProgress = (step: string, detail?: string) => {
+      // Use injected reporter
+      this.progressReporter.report(step, detail);
+      
+      // Keep backward compatibility with options.onProgress
+      if (options.onProgress) {
+        options.onProgress(step, detail);
+      }
+      
+      this.logger.debug(`Progress: ${step}`, { detail });
+    };
+
+    try {
+      // Step 1: Initialize components with buffer output
+      reportProgress('Initializing PDF components');
+      const bufferOutput = new BufferOutput();
+      const generatorOptions: PDFGenerationOptions = {
+        documentType,
+        title: options.metadata?.title || `${documentType} Document`,
+        author: options.metadata?.author || 'CaseThread',
+        subject: options.metadata?.subject || `Legal Document - ${documentType}`,
+        keywords: options.metadata?.keywords || [documentType, 'legal', 'document']
+      };
+      
+      // Create generator using injected factory
+      const generator = this.pdfGeneratorFactory(bufferOutput, generatorOptions);
+      
+      // Use injected services
+      const formatter = this.documentFormatter;
+      const parser = this.signatureParser;
+      
+      // Create layout engine using injected factory
+      const layoutEngine = this.layoutEngineFactory(generator as LegalPDFGenerator, formatter, parser);
+
+      // Step 2: Apply formatting overrides if provided
+      if (options.lineSpacing || options.fontSize || options.margins) {
+        reportProgress('Applying custom formatting');
+        const overrides: Partial<DocumentFormattingRules> = {};
+        if (options.lineSpacing) overrides.lineSpacing = options.lineSpacing;
+        if (options.fontSize) overrides.fontSize = options.fontSize;
+        if (options.margins) overrides.margins = options.margins;
+        
+        // Update formatter configuration with overrides
+        if (formatter instanceof DocumentFormatter) {
+          formatter.updateConfiguration({
+            overrides: {
+              [documentType]: overrides
+            }
+          });
+        }
+        this.logger.debug('Applied formatting overrides', { documentType, overrides });
+      }
+
+      // Step 3: Get document-specific formatting rules
+      reportProgress('Loading document formatting rules', documentType);
+      const rules = formatter.getFormattingRules(documentType as DocumentType);
+      this.logger.debug('Using formatting rules', { documentType, rules });
+
+      // Step 4: Parse document for signature blocks
+      reportProgress('Parsing signature blocks');
+      const parsedDoc = parser.parseDocument(text);
+      this.logger.info('Document parsed', {
+        lineCount: parsedDoc.content.length,
+        signatureBlockCount: parsedDoc.signatureBlocks.length,
+        hasSignatures: parsedDoc.hasSignatures
+      });
+
+      // Step 5: Prepare layout blocks
+      reportProgress('Preparing document layout');
+      const layoutBlocks = this.prepareLayoutBlocks(parsedDoc, rules, options.parseMarkdown !== false);
+
+      // Step 6: Calculate layout with page breaks
+      reportProgress('Calculating page breaks');
+      const layoutResult = layoutEngine.layoutDocument(
+        layoutBlocks, 
+        documentType as DocumentType
+      );
+      reportProgress('Layout complete', `${layoutResult.totalPages} pages`);
+
+      // Step 7: Start PDF generation
+      reportProgress('Starting PDF generation');
+      await generator.start();
+
+      // Step 8: Two-pass rendering
+      reportProgress('Measuring content for accurate pagination');
+      const pageBreaks = await this.measureContentForPageBreaks(
+        generator as LegalPDFGenerator,
+        formatter as DocumentFormatter,
+        layoutResult,
+        documentType as DocumentType,
+        rules,
+        options.parseMarkdown !== false
+      );
+      
+      // Step 9: Render pages
+      for (let i = 0; i < layoutResult.pages.length; i++) {
+        const page = layoutResult.pages[i];
+        reportProgress('Rendering page', `${i + 1} of ${layoutResult.totalPages}`);
+        
+        if (i > 0) {
+          generator.newPage();
+        }
+
+        await this.renderPageWithMeasurements(
+          generator as LegalPDFGenerator, 
+          formatter as DocumentFormatter, 
+          page, 
+          documentType as DocumentType, 
+          rules, 
+          options.parseMarkdown !== false,
+          pageBreaks[i]
+        );
+      }
+
+      // Step 10: Finalize PDF
+      reportProgress('Finalizing PDF document');
+      await generator.finalize();
+      
+      // Step 11: Get buffer from output
+      // The buffer is finalized when the generator ends
+      const pdfBuffer = await bufferOutput.end() as Buffer;
+      const finalPageCount = generator.getCurrentPage();
+      
+      reportProgress('PDF export completed');
+      this.logger.info('PDF export to buffer completed successfully', { 
+        documentType,
+        pageCount: finalPageCount,
+        bufferSize: pdfBuffer.length
+      });
+
+      // Calculate content stats
+      const wordCount = parsedDoc.content.join(' ').split(/\s+/).filter(w => w.length > 0).length;
+      const estimatedReadingTime = Math.ceil(wordCount / 200); // 200 words per minute
+
+      // Return structured result
+      return {
+        buffer: pdfBuffer,
+        pageCount: finalPageCount,
+        metadata: {
+          documentType,
+          generatedAt: new Date(),
+          fileSize: pdfBuffer.length,
+          exportType: 'buffer',
+          generator: 'CaseThread PDF Generator',
+          formatVersion: '1.0'
+        },
+        processingTime: Date.now() - startTime,
+        signatureBlockCount: parsedDoc.signatureBlocks.length,
+        hasTableOfContents: false, // TODO: Add TOC support in future
+        estimatedReadingTime
+      };
+
+    } catch (error) {
+      this.logger.error('PDF export to buffer failed', error);
+      throw new Error(`PDF export to buffer failed: ${(error as Error).message}`);
     }
   }
 

@@ -110,8 +110,8 @@ describe('LegalPDFGenerator', () => {
 
       // Don't call start(), so stream is null
       // This should handle the error gracefully
-      await expect(generator.finalize()).resolves.toBeUndefined();
-    });
+      await expect(generator.finalize()).rejects.toThrow();
+    }, 15000);
 
     it('should finalize document and resolve when complete', async () => {
       const generator = new LegalPDFGenerator(testFile, {

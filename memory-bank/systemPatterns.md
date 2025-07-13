@@ -1,317 +1,98 @@
-# CaseThread Multi-Model Pipeline - System Patterns
+# System Patterns
 
 ## Architecture Overview
+CaseThread follows a multi-agent architecture with specialized agents for different phases of document generation. The system uses PDFKit for PDF generation and ChromaDB for legal precedent retrieval.
 
-### Multi-Model Agent Pipeline
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Quality-First Document Generation                  │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ [Agent 1: Contextual Document Writer]                                      │
-│                                                                             │
-│ Context Assembly (GPT-4) → Document Generation (o3) → Basic Refinement (GPT-4) │
-│                                     ↓                                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ [Agent 2: Quality Gate Analyzer]                                           │
-│                                                                             │
-│ Initial Scanning (GPT-4) → Legal Analysis (o3) → Scoring & Feedback (GPT-4) │
-│                                     ↓                                        │
-│                         [80% Quality Gate Decision]                         │
-│                                     ↓                                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ [Agent 3: Final Reviewer]                                                  │
-│                                                                             │
-│ Consistency Check (GPT-4) → Strategic Review (o3) → Client Ready (GPT-4)    │
-│                                     ↓                                        │
-│                         [90% Quality Gate Decision]                         │
-│                                     ↓                                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ [Context Integration System]                                               │
-│                                                                             │
-│ ChromaDB Precedents ←→ Attorney Patterns ←→ Client Preferences ←→ Quality Learning │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+## Multi-Agent System
+- **ContextBuilderAgent**: Retrieves and assembles relevant legal precedents
+- **DraftingAgent**: Generates document content using templates and context
+- **OverseerAgent**: Reviews and refines generated documents
+- **Orchestrator**: Coordinates agent interactions
+
+## PDF Generation Infrastructure
+- **PDFExportService**: Main service for PDF generation
+- **LegalPDFGenerator**: Handles low-level PDF creation using PDFKit
+- **DocumentFormatter**: Applies document-specific formatting rules
+- **MarkdownParser**: Processes Markdown syntax in documents
+- **SignatureBlockParser**: Extracts and formats signature blocks
+- **PDFLayoutEngine**: Manages page layout and breaks
 
 ## Key Design Patterns
 
-### 1. Strategic Model Selection Pattern
-- **High Intelligence Tasks (o3)**: Complex legal reasoning, strategic analysis
-- **Medium Intelligence Tasks (GPT-4)**: Organization, basic analysis, feedback
-- **Cost Optimization**: 40-50% reduction compared to all-o3 approach
+### Output Abstraction (Task 5.2)
+- **PDFOutput Interface**: Abstracts file vs buffer output
+- **FileOutput**: Writes PDF to file system
+- **BufferOutput**: Accumulates PDF in memory
+- **Backward Compatibility**: File path strings auto-convert to FileOutput
 
-### 2. Quality Gate Pattern
-- **Progressive Quality Checks**: Each agent has specific quality thresholds
-- **Iterative Refinement**: Failed quality gates trigger targeted improvement
-- **Feedback Loops**: Specific, actionable feedback for each refinement cycle
+### Progress Reporting (Task 5.3)
+- **ProgressReporter Interface**: Abstracts progress updates
+- **ConsoleProgressReporter**: Uses ora spinners for CLI
+- **CallbackProgressReporter**: Emits events for GUI
+- **NullProgressReporter**: Silent operation for tests
+- **Event Types**: start, progress, complete, error, warning
 
-### 3. Context Integration Pattern
-- **ChromaDB Utilization**: Legal precedents actively enhance document generation
-- **Attorney Pattern Learning**: Successful approaches learned and applied
-- **Client Preference Adaptation**: Customization based on client requirements
+### Factory Pattern (Task 5.3)
+- **PDFServiceFactory**: Creates configured services
+- **forCLI()**: Console reporter with spinners
+- **forGUI()**: Callback reporter for UI updates
+- **forTesting()**: Null reporter for silent operation
+- **createPipeline()**: Complete PDF generation setup
 
-### 4. Multi-Agent Orchestration Pattern
-- **QualityOrchestrator**: Manages 3-agent pipeline flow
-- **Parallel Processing**: Independent quality checks and context assembly
-- **Error Recovery**: Graceful handling of quality gate failures
+## Testing Patterns
 
-### 5. Learning System Pattern
-- **Pattern Recognition**: Successful document generation strategies
-- **Continuous Improvement**: Quality metrics improve over time
-- **Preference Learning**: Attorney and client-specific customization
-
-## Agent Architecture
-
-### Core Agent Components
-
-#### 1. Agent 1: Contextual Document Writer
+### Mock Management
 ```typescript
-interface ContextualDocumentWriter {
-  contextAssembly: {
-    model: 'gpt-4';
-    function: 'organizeContext';
-    input: ContextBundle;
-    output: StructuredContext;
-  };
-  
-  documentGeneration: {
-    model: 'o3';
-    function: 'generateDocument';
-    input: StructuredContext + Template + MatterContext;
-    output: GeneratedDocument;
-  };
-  
-  basicRefinement: {
-    model: 'gpt-4';
-    function: 'refineDocument';
-    input: GeneratedDocument + SimpleFeedback;
-    output: RefinedDocument;
-  };
-}
+jest.mock('ora');
+const mockSpinner = {
+  start: jest.fn().mockReturnThis(),
+  succeed: jest.fn().mockReturnThis(),
+  // Chain-able methods
+};
 ```
 
-#### 2. Agent 2: Quality Gate Analyzer
+### Async Testing
 ```typescript
-interface QualityGateAnalyzer {
-  initialScanning: {
-    model: 'gpt-4';
-    function: 'scanDocument';
-    input: GeneratedDocument;
-    output: BasicQualityReport;
-  };
-  
-  legalAnalysis: {
-    model: 'o3';
-    function: 'analyzeLegalQuality';
-    input: GeneratedDocument + Template;
-    output: LegalQualityAnalysis;
-  };
-  
-  scoringFeedback: {
-    model: 'gpt-4';
-    function: 'generateFeedback';
-    input: LegalQualityAnalysis + BasicQualityReport;
-    output: QualityScore + ActionableFeedback;
-  };
-}
+// Test duration tracking
+await new Promise(resolve => setTimeout(resolve, 100));
+// Assert timing measurements
 ```
 
-#### 3. Agent 3: Final Reviewer
+### Error Boundaries
 ```typescript
-interface FinalReviewer {
-  consistencyCheck: {
-    model: 'gpt-4';
-    function: 'checkConsistency';
-    input: QualityApprovedDocument;
-    output: ConsistencyReport;
-  };
-  
-  strategicReview: {
-    model: 'o3';
-    function: 'strategicAnalysis';
-    input: QualityApprovedDocument + ClientContext;
-    output: StrategicAssessment;
-  };
-  
-  clientReadiness: {
-    model: 'gpt-4';
-    function: 'finalPolish';
-    input: StrategicAssessment + ConsistencyReport;
-    output: ClientReadyDocument;
-  };
-}
+// Test callback errors don't crash reporter
+const errorCallback = jest.fn(() => { throw new Error(); });
+expect(() => reporter.report('Test')).not.toThrow();
 ```
 
-## Data Flow Architecture
-
-### 1. Context Assembly Flow
-```
-ChromaDB Query → Precedent Retrieval → Attorney Pattern Matching → Client Preference Loading → Structured Context Bundle
-```
-
-### 2. Quality Pipeline Flow
-```
-User Request → Agent 1 (Write) → Agent 2 (Analyze) → [Quality Gate] → Agent 3 (Review) → [Final Gate] → Delivery
-```
-
-### 3. Refinement Loop Flow
-```
-Quality Failure → Specific Feedback → Targeted Refinement → Quality Re-analysis → Gate Decision
-```
-
-## Integration Patterns
-
-### Quality Orchestrator
+### Factory Testing
 ```typescript
-interface QualityOrchestrator {
-  executeQualityPipeline: (request: DocumentRequest) => Promise<QualityDocument>;
-  handleQualityGate: (score: QualityScore, threshold: number) => QualityDecision;
-  manageRefinementLoop: (feedback: QualityFeedback) => RefinementStrategy;
-  trackQualityMetrics: (session: DocumentSession) => QualityMetrics;
-}
+// Test correct reporter creation
+const service = PDFServiceFactory.forCLI();
+expect(ConsoleProgressReporter).toHaveBeenCalled();
 ```
 
-### Context Integration Bridge
-```typescript
-interface ContextIntegrationBridge {
-  assembleContext: (request: DocumentRequest) => Promise<ContextBundle>;
-  enhanceWithPrecedents: (context: ContextBundle) => EnhancedContext;
-  applyAttorneyPatterns: (context: EnhancedContext) => PatternEnhancedContext;
-  adaptClientPreferences: (context: PatternEnhancedContext) => ClientAdaptedContext;
-}
-```
+## Template System
+- JSON-based template definitions
+- Dynamic field population via YAML
+- Signature block markers ({{SIGNATURE:id}})
+- Support for 8 IP document types
 
-## State Management Patterns
+## Data Flow Patterns
+1. User provides YAML data and document type
+2. Template loaded and fields populated
+3. Agents process and enhance content
+4. PDF generator creates formatted output
+5. Progress reported throughout pipeline
 
-### Quality Pipeline State
-```typescript
-interface QualityPipelineState {
-  currentAgent: 'writer' | 'analyzer' | 'reviewer';
-  qualityScore: number;
-  iterationCount: number;
-  refinementHistory: RefinementAttempt[];
-  contextUtilization: ContextMetrics;
-}
-```
+## Error Handling
+- Graceful degradation for missing data
+- Detailed error logging with context
+- Recovery strategies for partial failures
+- User-friendly error messages
 
-### Learning System State
-```typescript
-interface LearningSystemState {
-  attorneyPatterns: Map<string, AttorneyPattern>;
-  clientPreferences: Map<string, ClientPreference>;
-  qualityImprovement: QualityTrend;
-  successfulStrategies: StrategyPattern[];
-}
-```
-
-## Error Handling Patterns
-
-### 1. Quality Gate Failure Recovery
-- **Immediate Feedback**: Specific, actionable improvement instructions
-- **Progressive Refinement**: Focused improvement on identified weaknesses
-- **Escalation**: Maximum 3 iterations before human review
-
-### 2. Context Integration Failure
-- **Graceful Degradation**: Fallback to basic template generation
-- **Partial Context**: Use available context even if incomplete
-- **Error Logging**: Comprehensive logging for debugging
-
-### 3. Model Availability Fallback
-- **o3 Unavailable**: Fallback to GPT-4 with quality warning
-- **GPT-4 Unavailable**: Fallback to existing single-agent system
-- **Total Failure**: Graceful error message with retry options
-
-## Performance Patterns
-
-### Strategic Caching
-```typescript
-interface StrategicCache {
-  contextCache: Map<string, ContextBundle>;
-  attorneyPatternCache: Map<string, AttorneyPattern>;
-  qualityMetricsCache: Map<string, QualityMetrics>;
-  templateCache: Map<string, Template>;
-}
-```
-
-### Parallel Processing
-```typescript
-interface ParallelProcessor {
-  contextAssembly: Promise<ContextBundle>;
-  templateValidation: Promise<ValidationResult>;
-  precedentSearch: Promise<PrecedentResult>;
-  qualityMetricsPreparation: Promise<QualityMetrics>;
-}
-```
-
-## Quality Metrics Patterns
-
-### 5-Criteria Scoring System
-```typescript
-interface QualityMetrics {
-  legalAccuracy: { score: number; weight: 0.25 };
-  completeness: { score: number; weight: 0.25 };
-  consistency: { score: number; weight: 0.20 };
-  professionalTone: { score: number; weight: 0.15 };
-  riskMitigation: { score: number; weight: 0.15 };
-  overallScore: number;
-}
-```
-
-### Learning Pattern Recognition
-```typescript
-interface LearningPattern {
-  patternType: 'attorney' | 'client' | 'quality';
-  frequency: number;
-  successRate: number;
-  applicableScenarios: string[];
-  qualityImpact: number;
-}
-```
-
-## Security Patterns
-
-### Model Access Control
-- **API Key Management**: Secure storage and rotation
-- **Rate Limiting**: Prevent abuse and cost overruns
-- **Input Validation**: Sanitize all user inputs
-- **Output Filtering**: Remove sensitive information
-
-### Context Security
-- **Data Encryption**: ChromaDB data encrypted at rest
-- **Access Control**: Role-based access to client data
-- **Audit Logging**: Complete audit trail for document generation
-- **Privacy Protection**: Client confidentiality maintained
-
-## Backwards Compatibility Patterns
-
-### Dual Mode Operation
-```typescript
-interface DualModeOrchestrator {
-  speedMode: () => StandardOrchestrator;
-  qualityMode: () => QualityOrchestrator;
-  modeSelection: (flags: CLIFlags) => OrchestratorType;
-}
-```
-
-### Preserved Interfaces
-- **Existing CLI**: All current commands remain functional
-- **Template System**: No changes to template structure
-- **Mock Data**: Existing test data continues to work
-- **Docker Deployment**: Container setup unchanged
-
-## Cost Optimization Patterns
-
-### Model Selection Strategy
-```typescript
-interface ModelSelectionStrategy {
-  taskComplexity: (task: Task) => ComplexityLevel;
-  modelRecommendation: (complexity: ComplexityLevel) => ModelType;
-  costEstimation: (pipeline: AgentPipeline) => CostEstimate;
-  optimizationSuggestions: (usage: UsageMetrics) => OptimizationPlan;
-}
-```
-
-### Resource Management
-- **Smart Caching**: Reduce redundant API calls
-- **Batch Processing**: Optimize concurrent operations
-- **Context Reuse**: Leverage previous context where applicable
-- **Quality Threshold Optimization**: Balance quality vs cost 
+## Performance Considerations
+- 6-second average document generation
+- Parallel agent processing where possible
+- Efficient memory usage with streaming
+- Cached template and precedent data 

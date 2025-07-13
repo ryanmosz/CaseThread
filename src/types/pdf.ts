@@ -207,3 +207,190 @@ export interface PageMeasurements {
   totalHeight: number;
   hasSignatureBlock: boolean;
 } 
+
+/**
+ * Interface for PDF output targets (file, buffer, stream)
+ */
+export interface PDFOutput {
+  /**
+   * Write a chunk of data to the output
+   */
+  write(chunk: Buffer): Promise<void>;
+  
+  /**
+   * Finalize the output and return any accumulated data
+   * For file outputs, this returns void
+   * For buffer outputs, this returns the complete PDF buffer
+   */
+  end(): Promise<Buffer | void>;
+  
+  /**
+   * Get the output type for logging/debugging
+   */
+  getType(): 'file' | 'buffer' | 'stream';
+}
+
+/**
+ * Metadata about PDF generation
+ */
+export interface PDFMetadata {
+  /**
+   * Type of legal document
+   */
+  documentType: string;
+  
+  /**
+   * When the PDF was generated
+   */
+  generatedAt: Date;
+  
+  /**
+   * Size of the PDF in bytes
+   */
+  fileSize: number;
+  
+  /**
+   * Export type used
+   */
+  exportType: 'file' | 'buffer';
+  
+  /**
+   * Generator name and version
+   */
+  generator: string;
+  
+  /**
+   * PDF format version
+   */
+  formatVersion: string;
+  
+  /**
+   * Compression level used (if any)
+   */
+  compressionLevel?: number;
+  
+  /**
+   * Encryption details (if any)
+   */
+  encryption?: PDFEncryption;
+}
+
+/**
+ * PDF encryption details
+ */
+export interface PDFEncryption {
+  /**
+   * Encryption algorithm used
+   */
+  algorithm: string;
+  
+  /**
+   * User permissions
+   */
+  permissions: {
+    print: boolean;
+    copy: boolean;
+    modify: boolean;
+    annotate: boolean;
+  };
+}
+
+/**
+ * Result of PDF export operations
+ */
+export interface PDFExportResult {
+  /**
+   * The PDF data as a buffer (only present for buffer exports)
+   */
+  buffer?: Buffer;
+  
+  /**
+   * The file path (only present for file exports)
+   */
+  filePath?: string;
+  
+  /**
+   * Number of pages in the generated PDF
+   */
+  pageCount: number;
+  
+  /**
+   * Metadata about the generation
+   */
+  metadata: PDFMetadata;
+  
+  /**
+   * Warnings generated during export
+   */
+  warnings?: string[];
+  
+  /**
+   * Time taken to generate PDF (in milliseconds)
+   */
+  processingTime: number;
+  
+  /**
+   * Memory usage during generation (in bytes)
+   */
+  memoryUsage?: number;
+  
+  /**
+   * Number of signature blocks in the document
+   */
+  signatureBlockCount: number;
+  
+  /**
+   * Whether the document has a table of contents
+   */
+  hasTableOfContents: boolean;
+  
+  /**
+   * Estimated reading time in minutes
+   */
+  estimatedReadingTime: number;
+  
+  /**
+   * Statistics about the document content
+   */
+  contentStats?: {
+    wordCount: number;
+    characterCount: number;
+    paragraphCount: number;
+    headingCount: number;
+    listCount: number;
+    tableCount: number;
+  };
+}
+
+/**
+ * Enhanced options for PDF export service
+ */
+export interface PDFExportOptionsEnhanced {
+  /**
+   * Output target - if not specified, defaults to file for backward compatibility
+   */
+  output?: PDFOutput;
+  
+  /**
+   * Progress reporter for UI updates
+   */
+  progressReporter?: (step: string, detail?: string) => void;
+  
+  /**
+   * All existing options from PDFExportOptions
+   */
+  pageNumbers?: boolean;
+  margins?: Margins;
+  lineSpacing?: 'single' | 'one-half' | 'double';
+  fontSize?: number;
+  paperSize?: 'letter' | 'legal' | 'a4';
+  header?: string;
+  watermark?: string;
+  metadata?: {
+    title?: string;
+    author?: string;
+    subject?: string;
+    keywords?: string[];
+  };
+  parseMarkdown?: boolean;
+} 
