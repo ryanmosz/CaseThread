@@ -90,7 +90,7 @@ export function usePDFGeneration(): UsePDFGenerationReturn {
       }
 
       // Clean up listener
-      window.electron.off('pdf:generation:progress', progressHandler);
+      window.electron.removeListener('pdf:generation:progress', progressHandler);
     } catch (err) {
       console.error('[PDFGeneration] PDF generation exception', err);
       const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred';
