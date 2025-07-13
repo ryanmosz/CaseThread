@@ -280,7 +280,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   } = usePDFGeneration();
   
   // PDF Export Hook
-  const { exportPDF, isExporting } = usePDFExport();
+  const { exportPDF, isExporting, error: exportError } = usePDFExport();
 
   // Auto-generation effect
   useEffect(() => {
@@ -436,6 +436,18 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
       });
     }
   }, [pdfError]);
+
+  // Show export error in toast
+  useEffect(() => {
+    if (exportError) {
+      console.error('[EnhancedDocumentViewer] PDF export error:', exportError);
+      addToast({
+        title: 'PDF Export Failed',
+        description: exportError,
+        type: 'error'
+      });
+    }
+  }, [exportError]);
   
   // Show PDF success in toast and switch to PDF view
   useEffect(() => {
@@ -776,7 +788,12 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
               isDisabled={!pdfBuffer || isExporting}
               onClick={() => {
                 if (pdfBuffer && documentName) {
-                  exportPDF(pdfBuffer, documentName.replace(/\.[^/.]+$/, '') + '.pdf');
+                  const docType = detectDocumentType(documentName);
+                  exportPDF(
+                    pdfBuffer, 
+                    documentName.replace(/\.[^/.]+$/, '') + '.pdf',
+                    docType
+                  );
                 }
               }}
               startContent={!isExporting && <DownloadIcon />}
@@ -826,7 +843,12 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
                   key="pdf"
                   onClick={() => {
                     if (pdfBuffer && documentName) {
-                      exportPDF(pdfBuffer, documentName.replace(/\.[^/.]+$/, '') + '.pdf');
+                      const docType = detectDocumentType(documentName);
+                      exportPDF(
+                        pdfBuffer, 
+                        documentName.replace(/\.[^/.]+$/, '') + '.pdf',
+                        docType
+                      );
                     }
                   }}
                   isDisabled={!pdfBuffer || isExporting}
