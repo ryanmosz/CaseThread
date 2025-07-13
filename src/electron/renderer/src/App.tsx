@@ -69,6 +69,7 @@ interface AppState {
   error: string | null;
   selectedTab: string;
   suggestedContent: string | null;
+  isTemplateModalOpen: boolean;
 }
 
 const AppContent: React.FC = () => {
@@ -81,6 +82,7 @@ const AppContent: React.FC = () => {
     error: null,
     selectedTab: 'templates',
     suggestedContent: null,
+    isTemplateModalOpen: false,
   });
 
   const backgroundGeneration = useBackgroundGeneration();
@@ -164,7 +166,11 @@ const AppContent: React.FC = () => {
   };
 
   const handleTemplateSelect = (template: Template) => {
-    setState(prev => ({ ...prev, selectedTemplate: template }));
+    setState(prev => ({ ...prev, selectedTemplate: template, isTemplateModalOpen: true }));
+  };
+
+  const handleTemplateModalClose = () => {
+    setState(prev => ({ ...prev, isTemplateModalOpen: false }));
   };
 
   const refreshDocumentTree = async () => {
@@ -673,6 +679,8 @@ const AppContent: React.FC = () => {
                     selectedTemplate={state.selectedTemplate}
                     onTemplateSelect={handleTemplateSelect}
                     onGenerateDocument={handleGenerateDocument}
+                    isModalOpen={state.isTemplateModalOpen}
+                    onModalClose={handleTemplateModalClose}
                   />
                 )}
                 {state.selectedTab === 'ai-assistant' && (
@@ -701,7 +709,7 @@ const AppContent: React.FC = () => {
             </div>
           </footer>
         </div>
-        <BackgroundGenerationStatus />
+        <BackgroundGenerationStatus isModalOpen={state.isTemplateModalOpen} />
       </ErrorBoundary>
   );
 };

@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardBody, Progress, Button } from '@heroui/react';
 import { useBackgroundGeneration } from '../contexts/BackgroundGenerationContext';
 
-export const BackgroundGenerationStatus: React.FC = () => {
+interface BackgroundGenerationStatusProps {
+  isModalOpen?: boolean;
+}
+
+export const BackgroundGenerationStatus: React.FC<BackgroundGenerationStatusProps> = ({ 
+  isModalOpen = false 
+}) => {
   const { state, cancelGeneration } = useBackgroundGeneration();
   const [elapsedTime, setElapsedTime] = useState(0);
 
@@ -33,6 +39,58 @@ export const BackgroundGenerationStatus: React.FC = () => {
   const estimatedTotal = 240; // 4 minutes in seconds
   const progressPercentage = Math.min((elapsedTime / estimatedTotal) * 100, 95); // Cap at 95% until completion
 
+  // Prominent version when no modal is open
+  if (!isModalOpen) {
+    return (
+      <Card className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] shadow-2xl border-2 border-primary/30 bg-background/98 backdrop-blur-lg z-50 animate-in slide-in-from-bottom-4 duration-300">
+        <CardBody className="p-8">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <h3 className="text-xl font-bold text-foreground mb-2">
+              Enhanced Quality Generation
+            </h3>
+            <p className="text-base text-foreground/80 mb-1">
+              {state.templateName}
+            </p>
+            <p className="text-sm text-foreground/60">
+              {formatTime(elapsedTime)} elapsed • Est. 3-4 min total
+            </p>
+          </div>
+
+          <Progress
+            value={progressPercentage}
+            className="mb-4"
+            color="primary"
+            size="md"
+          />
+
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-sm text-foreground/70">
+              Running in background...
+            </span>
+            <span className="text-sm font-medium text-primary">
+              {Math.round(progressPercentage)}%
+            </span>
+          </div>
+
+          <div className="text-center">
+            <Button
+              size="sm"
+              variant="light"
+              onClick={cancelGeneration}
+              className="text-foreground/60 hover:text-foreground/80"
+            >
+              Cancel Generation
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  // Compact version when modal is open
   return (
     <Card className="fixed bottom-4 right-4 w-96 shadow-lg border border-primary/20 bg-background/95 backdrop-blur-sm z-50">
       <CardBody className="p-4">

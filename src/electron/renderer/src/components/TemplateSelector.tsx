@@ -3,7 +3,6 @@ import {
   Button, 
   Card, 
   CardBody, 
-  useDisclosure,
   Chip
 } from '@heroui/react';
 import { Template } from '../../../../shared/types';
@@ -14,15 +13,18 @@ interface TemplateSelectorProps {
   selectedTemplate: Template | null;
   onTemplateSelect: (template: Template) => void;
   onGenerateDocument: (formData: any, options?: { useMultiagent?: boolean }) => void;
+  isModalOpen: boolean;
+  onModalClose: () => void;
 }
 
 const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   templates,
   selectedTemplate,
   onTemplateSelect,
-  onGenerateDocument
+  onGenerateDocument,
+  isModalOpen,
+  onModalClose
 }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Inject custom scrollbar styles
@@ -53,14 +55,13 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   const handleTemplateClick = (template: Template) => {
     onTemplateSelect(template);
-    onOpen();
   };
 
   const handleFormSubmit = async (formData: any, options?: { useMultiagent?: boolean }) => {
     setIsGenerating(true);
     try {
       await onGenerateDocument(formData, options);
-      onClose();
+      onModalClose();
     } catch (error) {
       console.error('Generation failed:', error);
     } finally {
@@ -210,9 +211,9 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
       {selectedTemplate && (
         <EnhancedTemplateForm
           template={selectedTemplate}
-          isOpen={isOpen}
+          isOpen={isModalOpen}
           onSubmit={handleFormSubmit}
-          onCancel={onClose}
+          onCancel={onModalClose}
           isGenerating={isGenerating}
         />
       )}
