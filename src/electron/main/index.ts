@@ -7,6 +7,7 @@ import { PDFGenerationHandler } from './ipc/pdf-generation-handler.js';
 import { ProgressHandlers } from './ipc/progress-handlers.js';
 import { ProgressManager } from './ipc/progress-manager.js';
 import { PDFExportHandler } from './ipc/pdf-export-handler.js';
+import { SecureIPCHandler } from './ipc/secure-handler.js';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 // Load environment variables from .env file
@@ -101,7 +102,6 @@ class WindowManager {
       ProgressManager.getInstance().cleanup();
       
       console.log('Cleaning up secure IPC handler...');
-      const { SecureIPCHandler } = require('./ipc/secure-handler');
       SecureIPCHandler.cleanup();
     });
   }
