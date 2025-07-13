@@ -2,9 +2,11 @@
 
 ## Current Status (December 13, 2024)
 
-### Active Work: Task 6.0 - GUI Integration with PDF Service
+### Active Work: Task 6.0 - GUI Integration with PDF Service (DEMO-READY)
 
 **Progress: 18/33 subtasks complete (55%)**
+
+**Latest Update**: Successfully merged dev G's AI Assistant improvements (3:23 PM commit)
 
 #### Sections Complete:
 - ✅ 6.0.1 Design and Planning (4/4)
@@ -19,6 +21,13 @@
 - 6.0.8 Testing (0/4)
 - 6.0.9 Documentation and Cleanup (0/3)
 
+### Recent Integration from Dev G (July 13):
+- **AI Assistant Improvements**:
+  - Made AI Assistant more conservative (95%+ text preservation)
+  - Focus on grammar and spelling fixes
+  - Reduced temperature from 0.3 to 0.1 for more predictable output
+  - Added frequency and presence penalties to discourage creative variations
+
 ### Recent Fixes Applied:
 
 1. **PDF.js Worker Loading Issue:**
@@ -29,18 +38,16 @@
 
 2. **TypeScript Compilation Error:**
    - Fixed keywords field handling in PDFServiceFactory (string not array)
-   - Fixed metadata property access in LegalPDFGenerator (nested structure)
+   - Fixed metadata property access in LegalPDFGenerator
 
-3. **Content Security Policy (CSP) Blob URL Issue:**
-   - Updated HTML meta tag CSP to include `connect-src 'self' blob:`
-   - Fixed PDF.js being blocked from loading blob URLs
-   - Added `unsafe-eval` to script-src (required by PDF.js)
+3. **Content Security Policy (CSP) Fix:**
+   - Updated CSP in index.html to allow blob URLs
+   - Added connect-src 'self' blob: directive
+   - Fixed "Refused to connect to blob:" error
 
-4. **PDF Export Functionality Fixed:**
-   - Updated usePDFExport hook to pass correct PDFExportRequest structure
-   - Added requestId, documentType, and proper buffer type (Uint8Array)
-   - Fixed export button to detect and pass document type
-   - Added silent export method for programmatic saves
+4. **PDF Export Functionality:**
+   - Fixed usePDFExport hook to pass correct PDFExportRequest structure
+   - Added requestId generation and proper type conversion
    - Export to filesystem now fully functional
 
 ### What's Working Now:
