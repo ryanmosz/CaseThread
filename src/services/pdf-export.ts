@@ -126,11 +126,14 @@ export class PDFExportService implements IPDFExportService {
       // Step 1: Initialize components
       reportProgress('Initializing PDF components');
       const generatorOptions: PDFGenerationOptions = {
+        content: text,
         documentType,
-        title: options.metadata?.title || `${documentType} Document`,
-        author: options.metadata?.author || 'CaseThread CLI',
-        subject: options.metadata?.subject || `Legal Document - ${documentType}`,
-        keywords: options.metadata?.keywords || [documentType, 'legal', 'document']
+        metadata: {
+          title: options.metadata?.title || `${documentType} Document`,
+          author: options.metadata?.author || 'CaseThread CLI',
+          subject: options.metadata?.subject || `Legal Document - ${documentType}`,
+          keywords: options.metadata?.keywords?.join(', ') || [documentType, 'legal', 'document'].join(', ')
+        }
       };
       
       // Create output and generator using injected factory
@@ -308,11 +311,14 @@ export class PDFExportService implements IPDFExportService {
       reportProgress('Initializing PDF components');
       const bufferOutput = new BufferOutput();
       const generatorOptions: PDFGenerationOptions = {
+        content: text,
         documentType,
-        title: options.metadata?.title || `${documentType} Document`,
-        author: options.metadata?.author || 'CaseThread',
-        subject: options.metadata?.subject || `Legal Document - ${documentType}`,
-        keywords: options.metadata?.keywords || [documentType, 'legal', 'document']
+        metadata: {
+          title: options.metadata?.title || `${documentType} Document`,
+          author: options.metadata?.author || 'CaseThread',
+          subject: options.metadata?.subject || `Legal Document - ${documentType}`,
+          keywords: options.metadata?.keywords?.join(', ') || [documentType, 'legal', 'document'].join(', ')
+        }
       };
       
       // Create generator using injected factory
