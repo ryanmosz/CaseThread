@@ -46,22 +46,27 @@ export function usePDFGeneration(): UsePDFGenerationReturn {
 
       window.electron.on('pdf:generation:progress', progressHandler);
 
-      // Ensure we're sending only serializable data
-      const serializedOptions: PDFGenerationOptions = {
-        ...options,
+      // Create request with all required fields for security validator
+      const request = {
         requestId,
-        // Remove any non-serializable properties
-        metadata: options.metadata ? {
-          title: options.metadata.title || '',
-          subject: options.metadata.subject || '',
-          author: options.metadata.author || '',
-          keywords: options.metadata.keywords || '',
-          creator: options.metadata.creator || ''
-        } : undefined
+        content: options.content,
+        documentType: options.documentType,
+        documentId: options.metadata?.title || `doc-${Date.now()}`, // Use title or generate ID
+        options: {
+          includeMetadata: true,
+          validateSignatures: true,
+          // Add any other generation options
+          metadata: options.metadata ? {
+            title: options.metadata.title || '',
+            subject: options.metadata.subject || '',
+            author: options.metadata.author || '',
+            keywords: options.metadata.keywords?.split(', ') || [],
+          } : undefined
+        }
       };
 
-      console.log('[PDFGeneration] Calling IPC with options:', serializedOptions);
-      const result = await window.electron.pdf.generate(serializedOptions);
+      console.log('[PDFGeneration] Calling IPC with request:', request);
+      const result = await window.electron.pdf.generate(request);
 
       if (result.success && result.data) {
         console.log('[PDFGeneration] PDF generated successfully', {

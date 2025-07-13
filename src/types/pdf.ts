@@ -2,11 +2,16 @@
  * Options for PDF document generation
  */
 export interface PDFGenerationOptions {
+  content: string;
   documentType: string;
-  title?: string;
-  author?: string;
-  subject?: string;
-  keywords?: string[];
+  metadata?: {
+    title?: string;
+    author?: string;
+    subject?: string;
+    keywords?: string;
+    creator?: string;
+  };
+  requestId?: string;
 }
 
 /**
