@@ -668,23 +668,23 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
       {/* Header */}
       <div className="border-b-dashed-custom border-gray-500 dark:border-gray-400 bg-background/50 backdrop-blur-sm p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
+            <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <div>
-                <h3 className="font-semibold text-sm text-foreground">
-                  {documentName || 'Generated Document'}
-                </h3>
-                {generatedAt && (
-                  <p className="text-xs text-foreground/60">
-                    Generated {new Date(generatedAt).toLocaleString()}
-                  </p>
-                )}
-              </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-sm text-foreground truncate" title={documentName || 'Generated Document'}>
+                {documentName || 'Generated Document'}
+              </h3>
+              {generatedAt && (
+                <p className="text-xs text-foreground/60 truncate">
+                  Generated {new Date(generatedAt).toLocaleString()}
+                </p>
+              )}
             </div>
           </div>
 
