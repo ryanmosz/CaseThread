@@ -19,7 +19,8 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalFooter
+  ModalFooter,
+  addToast
 } from '@heroui/react';
 import DiffViewer from './DiffViewer';
 import { PDFViewer } from './PDFViewer';
@@ -427,9 +428,28 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   // Show PDF error in toast
   useEffect(() => {
     if (pdfError) {
-      // Removed addToast as per new_code
+      console.error('[EnhancedDocumentViewer] PDF generation error:', pdfError);
+      addToast({
+        title: 'PDF Generation Failed',
+        description: pdfError,
+        type: 'error'
+      });
     }
   }, [pdfError]);
+  
+  // Show PDF success in toast and switch to PDF view
+  useEffect(() => {
+    if (blobUrl && metadata) {
+      console.log('[EnhancedDocumentViewer] PDF generated successfully');
+      addToast({
+        title: 'PDF Generated',
+        description: `Successfully generated ${metadata.pageCount || 0} page PDF`,
+        type: 'success'
+      });
+      // Automatically switch to PDF view
+      setViewMode('pdf');
+    }
+  }, [blobUrl, metadata]);
 
   // Handle suggested content acceptance
   const handleAcceptSuggestedContent = useCallback(async (newContent: string) => {
@@ -541,21 +561,46 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
 
   // PDF Generation handler
   const handleGeneratePDF = useCallback(() => {
-    if (editedContent && documentName) {
-      const docType = detectDocumentType(documentName);
-      
-      generatePDF({
-        content: editedContent,
-        documentType: docType,
-        metadata: {
-          title: documentName.replace(/\.[^/.]+$/, ''),
-          author: 'CaseThread',
-          subject: `Legal Document - ${docType}`,
-          keywords: `legal, ${docType}`,
-          creator: 'CaseThread PDF Generator'
-        }
+    console.log('[EnhancedDocumentViewer] Generate PDF clicked', {
+      hasEditedContent: !!editedContent,
+      editedContentLength: editedContent?.length || 0,
+      documentName: documentName || 'undefined'
+    });
+    
+    if (!editedContent) {
+      console.error('[EnhancedDocumentViewer] Cannot generate PDF: No content available');
+      addToast({
+        title: 'No Content',
+        description: 'No content to generate PDF from',
+        type: 'error'
       });
+      return;
     }
+    
+    if (!documentName) {
+      console.error('[EnhancedDocumentViewer] Cannot generate PDF: No document name');
+      addToast({
+        title: 'No Document',
+        description: 'No document selected',
+        type: 'error'
+      });
+      return;
+    }
+    
+    const docType = detectDocumentType(documentName);
+    console.log('[EnhancedDocumentViewer] Generating PDF for document type:', docType);
+    
+    generatePDF({
+      content: editedContent,
+      documentType: docType,
+      metadata: {
+        title: documentName.replace(/\.[^/.]+$/, ''),
+        author: 'CaseThread',
+        subject: `Legal Document - ${docType}`,
+        keywords: `legal, ${docType}`,
+        creator: 'CaseThread PDF Generator'
+      }
+    });
   }, [editedContent, documentName, generatePDF]);
 
   if (isLoading) {
