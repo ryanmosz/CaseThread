@@ -214,7 +214,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     // This will use the existing OpenAI integration through IPC
     try {
       const prompt = buildAssistantPrompt(userInput, documentContent, context);
-      const result = await window.electronAPI.callAIAssistant(prompt);
+      const result = await window.electron.callAIAssistant(prompt);
       
       if (result.success && result.data) {
         return result.data;

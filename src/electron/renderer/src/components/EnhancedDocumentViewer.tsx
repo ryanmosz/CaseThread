@@ -377,7 +377,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
       
       // Run both the save operation and the minimum delay
       const [result] = await Promise.all([
-        window.electronAPI.writeFile(documentPath, editedContent),
+        window.electron.writeFile(documentPath, editedContent),
         minDelay
       ]);
       
@@ -468,7 +468,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
         
         // Run both the save operation and the minimum delay
         const [result] = await Promise.all([
-          window.electronAPI.writeFile(documentPath, newContent),
+          window.electron.writeFile(documentPath, newContent),
           minDelay
         ]);
         
@@ -530,7 +530,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   // Handle export functions
   const handleExport = async (format: 'markdown' | 'text') => {
     try {
-      const result = await window.electronAPI.showSaveDialog({
+      const result = await window.electron.showSaveDialog({
         defaultPath: `${documentName || 'document'}.${format === 'markdown' ? 'md' : 'txt'}`,
         filters: [
           { name: format === 'markdown' ? 'Markdown' : 'Text', extensions: [format === 'markdown' ? 'md' : 'txt'] }
@@ -538,7 +538,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
       });
 
       if (result.success && result.data?.filePath) {
-        await window.electronAPI.writeFile(result.data.filePath, editedContent);
+        await window.electron.writeFile(result.data.filePath, editedContent);
       }
     } catch (error) {
       console.error('Export error:', error);

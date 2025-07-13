@@ -98,14 +98,14 @@ const AppContent: React.FC = () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      // Check if electronAPI is available
-      if (!window.electronAPI) {
+      // Check if electron API is available
+      if (!window.electron) {
         throw new Error('Application not properly initialized. Please restart the application.');
       }
 
       // Load templates with better error handling
       console.log('Loading templates...');
-      const templatesResult = await window.electronAPI.loadTemplates();
+      const templatesResult = await window.electron.loadTemplates();
       console.log('Templates result:', templatesResult);
       
       if (!templatesResult.success) {
@@ -121,15 +121,15 @@ const AppContent: React.FC = () => {
 
       // Load output directory tree with fallback
       console.log('Loading output directory...');
-      const outputResult = await window.electronAPI.readDirectory('./output');
+      const outputResult = await window.electron.readDirectory('./output');
       console.log('Output directory result:', outputResult);
       
       // Create output directory if it doesn't exist
       if (!outputResult.success && outputResult.error?.includes('ENOENT')) {
         console.log('Creating output directory...');
-        await window.electronAPI.writeFile('./output/.gitkeep', '');
+        await window.electron.writeFile('./output/.gitkeep', '');
         // Try loading again after creating directory
-        const retryResult = await window.electronAPI.readDirectory('./output');
+        const retryResult = await window.electron.readDirectory('./output');
         if (retryResult.success) {
           outputResult.success = true;
           outputResult.data = retryResult.data;
@@ -178,7 +178,7 @@ const AppContent: React.FC = () => {
   const refreshDocumentTree = async () => {
     try {
       console.log('Refreshing document tree...');
-      const outputResult = await window.electronAPI.readDirectory('./output');
+      const outputResult = await window.electron.readDirectory('./output');
       if (outputResult.success) {
         setState(prev => ({
           ...prev,
@@ -205,7 +205,7 @@ const AppContent: React.FC = () => {
       // Ensure form data is clean and serializable
       const cleanFormData = JSON.parse(JSON.stringify(formData));
       
-      const result = await window.electronAPI.generateDocument(
+      const result = await window.electron.generateDocument(
         templateId,
         cleanFormData,
         options
@@ -285,7 +285,7 @@ const AppContent: React.FC = () => {
     }
 
     try {
-      const result = await window.electronAPI.readFile(filePath);
+      const result = await window.electron.readFile(filePath);
       if (result.success && result.data) {
         setState(prev => ({ 
           ...prev, 
@@ -367,7 +367,7 @@ const AppContent: React.FC = () => {
       
       console.log('App: Calling generateDocument with:', { templateId, cleanFormData });
       
-      const result = await window.electronAPI.generateDocument(
+      const result = await window.electron.generateDocument(
         templateId,
         cleanFormData,
         options

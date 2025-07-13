@@ -162,11 +162,11 @@ const electronAPI: ElectronAPI = {
 };
 
 // Expose the API to the renderer process
-contextBridge.exposeInMainWorld('electronAPI', electronAPI);
+contextBridge.exposeInMainWorld('electron', electronAPI);
 
 // Type declaration for global usage in renderer
 declare global {
   interface Window {
-    electronAPI: ElectronAPI;
+    electron: ElectronAPI;
   }
 } 
