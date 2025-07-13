@@ -2,34 +2,36 @@
 
 ## 🎯 CURRENT TASK CONTEXT
 <!-- UPDATE THIS SECTION FOR EACH NEW TASK -->
-**Current Task**: Task 2.0 - Create Core PDF Generation Service with Legal Formatting  
-**Branch**: feature/pdf-generation
-**Progress**: Task 2.5 complete (24/35 total sub-tasks done - 69%)  
+**Current Task**: Task 6.0 - GUI Integration with PDF Service  
+**Branch**: feature/r-g-integration
+**Progress**: Planning complete (33 subtasks defined), Ready for implementation  
 
 ### Task Resources
-- **PRD**: `docs/tasks/prd-parent-task-2.0.md`
-- **Checklist**: `docs/tasks/tasks-parent-2.0-checklist.md` (7 main tasks, 35 sub-tasks)
-- **Details**: `docs/tasks/tasks-parent-2.X-detailed.md` (2.1 through 2.7)
+- **PRD**: `docs/tasks/prd-parent-task-6.0.md`
+- **Checklist**: `docs/tasks/tasks-parent-6.0-checklist.md` (9 main tasks, 33 sub-tasks)
+- **Details**: `docs/tasks/tasks-parent-6.0.X.Y-detailed.md` (5 implementation examples)
+- **Summary**: `docs/tasks/task-6.0-planning-complete.md`
 - **Status Doc**: `AGENT-HANDOFF.md` (review at start, update at end)
 
 ### Task-Specific Requirements
-- **PDF Library**: PDFKit (already in package.json) - do NOT suggest alternatives
-- **Legal Formatting**: Times New Roman 12pt, 1" margins (1.5" for office actions)
-- **Line Spacing**: Document-type specific (double/1.5/single)
-- **Signature Blocks**: Parse markers, prevent page splits
-- **Testing**: Generate actual PDFs to verify formatting, not just unit tests
-- **CLI Command**: `casethread export <input> <output> [options]`
+- **Integration Goal**: Enable PDF generation directly from Electron GUI
+- **Key Components**: IPC handlers, PDF viewer, progress integration
+- **Progress UI**: Use existing BackgroundGenerationStatus component
+- **PDF Display**: Blob URLs in iframe or embed element
+- **State Management**: Handle PDF buffers and view mode transitions
+- **Testing**: Unit tests, IPC tests, and integration tests for all 8 document types
 
 ### Current Status
-- ✅ Task 2.1: PDFKit setup (4/4 sub-tasks complete)
-- ✅ Task 2.2: PDF architecture (5/5 sub-tasks complete)
-- ✅ Task 2.3: Formatting rules (5/5 sub-tasks complete)
-- ✅ Task 2.4: Signature parser (5/5 sub-tasks complete)
-- ✅ Task 2.5: Layout engine (5/5 sub-tasks complete)
-- 📋 Task 2.6: CLI command (0/5 sub-tasks - starting next)
-- 📋 Task 2.7: Testing (0/5 sub-tasks)
+- ✅ Task 5.0: PDF Service Modularization (Complete)
+- ✅ Task 6.0 Planning: Complete (PRD, checklist, and examples created)
+- ✅ Task 6.0.1: Design and Planning (Complete - 4/4 subtasks)
+- ✅ Task 6.0.2.1: Create PDF generation IPC handler (Complete)
+- ✅ Task 6.0.2.2: Implement progress reporting IPC channel (Complete)
+- ✅ Task 6.0.2.3: Add PDF export IPC handler (Complete)
+- ✅ All tests passing: 725/725 tests
+- 📋 7/33 subtasks complete (21%)
 
-**Next Sub-task**: 2.6.1 - Create export command structure
+**Next Sub-task**: 6.0.2.4 - Create IPC security validation
 
 <!-- END OF TASK-SPECIFIC SECTION -->
 
@@ -124,6 +126,17 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
      * How does the new test better reflect requirements?
      * Does the change maintain or improve quality?
    - Report any test modifications in your Testing Report
+
+## Testing Requirements
+
+### CRITICAL: Always Show Test Progress Bar
+When running tests, you MUST use commands that display the green progress bar:
+- **USE**: `npm test` - Shows progress bar for all tests
+- **USE**: `npm test -- <path>` - Shows progress bar for specific tests  
+- **AVOID**: Direct `jest` commands - May not show progress bar
+- **WHY**: Progress bar helps identify hung tests immediately, saving debugging time
+
+This is especially important when tests use async operations or timers.
 
 ## Core Guidelines
 

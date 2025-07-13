@@ -72,13 +72,19 @@ export class SecureIPCHandler {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
         
-        // Don't expose internal error details
-        const safeError = {
-          message: error instanceof Error ? error.message : 'Request failed',
-          code: 'IPC_ERROR',
+        // Create a proper serializable error object for IPC
+        const errorMessage = error instanceof Error ? error.message : 'Request failed';
+        const errorCode = (error as any).code || 'IPC_ERROR';
+        
+        // Create a plain object that can be properly serialized
+        const serializableError = {
+          message: errorMessage,
+          code: errorCode,
+          channel: channel,
         };
         
-        throw safeError;
+        // Throw a plain object that Electron can serialize
+        throw serializableError;
       }
     });
   }

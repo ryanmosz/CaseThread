@@ -394,3 +394,28 @@ export interface PDFExportOptionsEnhanced {
   };
   parseMarkdown?: boolean;
 } 
+
+// View mode for PDF viewer
+export type ViewModeType = 'text' | 'pdf';
+
+// Extended PDF metadata for display
+export interface PDFMetadataExtended {
+  pageCount: number;
+  fileSize: number;
+  documentType: string;
+  generatedAt: Date;
+  generationTime: number;
+  hasSignatureBlocks?: boolean;
+  formFields?: string[];
+  // Additional metadata
+  fontSize?: number;
+  lineSpacing?: string;
+  margins?: {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+  };
+  signatureBlockCount?: number;
+  warnings?: string[];
+} 

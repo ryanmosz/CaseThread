@@ -6,218 +6,133 @@
  */
 
 import winston from 'winston';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 
-const logDir = 'logs';
-const debugLogFile = path.join(logDir, 'debug.log');
-const errorLogFile = path.join(logDir, 'error.log');
+const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
-// Create custom format for debug logs
-const debugFormat = winston.format.printf(({ timestamp, level, message, ...meta }) => {
-  let log = `${timestamp} [${level.toUpperCase()}]: ${message}`;
-  
-  // Add metadata if present
-  if (Object.keys(meta).length > 0) {
-    log += '\n' + JSON.stringify(meta, null, 2);
-  }
-  
-  return log;
-});
-
-export const logger = winston.createLogger({
-  level: 'info', // Default level
-  format: winston.format.combine(
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [
-    // File transport for debug logs
-    new winston.transports.File({
-      filename: debugLogFile,
-      level: 'debug',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        debugFormat
-      )
-    }),
-    // File transport for errors
-    new winston.transports.File({
-      filename: errorLogFile,
-      level: 'error',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      )
-    }),
-    // Console transport (only shows in debug mode)
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-      silent: true // Will be enabled when debug flag is set
-    })
-  ]
-});
-
-// Helper to enable/disable console output
-export function enableConsoleLogging(enable: boolean): void {
-  const consoleTransport = logger.transports.find(
-    t => t instanceof winston.transports.Console
-  ) as winston.transports.ConsoleTransportInstance;
-  
-  if (consoleTransport) {
-    consoleTransport.silent = !enable;
-  }
+// Create logs directory if in development
+const logsDir = path.join(process.cwd(), 'logs', 'electron');
+if (isDevelopment && !fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
 }
 
-// Update logger level and console output when level changes
-const originalLevel = Object.getOwnPropertyDescriptor(logger, 'level');
-Object.defineProperty(logger, 'level', {
-  get() {
-    return originalLevel?.get?.call(this);
-  },
-  set(newLevel: string) {
-    originalLevel?.set?.call(this, newLevel);
-    // Enable console logging when in debug mode
-    enableConsoleLogging(newLevel === 'debug');
-  }
-});
-
-/**
- * Log levels available in the application
- */
-export const LOG_LEVELS = {
+// Define log levels
+const levels = {
   error: 0,
   warn: 1,
   info: 2,
-  debug: 3
-} as const;
+  debug: 3,
+};
 
-/**
- * Type for log levels
- */
-export type LogLevel = keyof typeof LOG_LEVELS;
+// Create custom format for console output
+const consoleFormat = winston.format.combine(
+  winston.format.colorize(),
+  winston.format.timestamp({ format: 'HH:mm:ss' }),
+  winston.format.printf(({ timestamp, level, message, service, ...meta }) => {
+    const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+    const serviceStr = service ? `[${service}] ` : '';
+    return `${timestamp} ${level}: ${serviceStr}${message}${metaStr}`;
+  })
+);
 
-/**
- * Log an error with optional error object
- * 
- * @param message - Error message
- * @param error - Optional error object
- * @param meta - Additional metadata
- * 
- * @example
- * ```typescript
- * logError('Failed to load template', error, { templateId: 'patent-assignment' });
- * ```
- */
-export function logError(message: string, error?: Error, meta?: Record<string, any>): void {
+// Create custom format for file output
+const fileFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+  winston.format.json()
+);
+
+// Base logger configuration
+const loggerConfig: winston.LoggerOptions = {
+  level: isDevelopment ? 'debug' : 'info',
+  levels,
+  format: fileFormat,
+  transports: []
+};
+
+// Only add file transports in main process (not renderer)
+if (isElectron && isDevelopment) {
+  // Check if we're in the main process by checking for the absence of window object
+  const isMainProcess = typeof window === 'undefined';
+  
+  if (isMainProcess) {
+    loggerConfig.transports = [
+      new winston.transports.File({
+        filename: path.join(logsDir, 'error.log'),
+        level: 'error'
+      }),
+      new winston.transports.File({
+        filename: path.join(logsDir, 'combined.log')
+      }),
+      new winston.transports.File({
+        filename: path.join(logsDir, 'main.log')
+      })
+    ];
+  }
+}
+
+// Always add console transport in development
+if (isDevelopment) {
+  (loggerConfig.transports as winston.transport[]).push(
+    new winston.transports.Console({
+      format: consoleFormat
+    })
+  );
+}
+
+// Create the logger
+export const logger = winston.createLogger(loggerConfig);
+
+// Export a type-safe logger interface
+export interface Logger {
+  error: (message: string, meta?: any) => void;
+  warn: (message: string, meta?: any) => void;
+  info: (message: string, meta?: any) => void;
+  debug: (message: string, meta?: any) => void;
+}
+
+// Helper to create child loggers with service context
+export const createChildLogger = (context: { service: string }): Logger => {
+  return {
+    error: (message: string, meta?: any) => logger.error(message, { ...context, ...meta }),
+    warn: (message: string, meta?: any) => logger.warn(message, { ...context, ...meta }),
+    info: (message: string, meta?: any) => logger.info(message, { ...context, ...meta }),
+    debug: (message: string, meta?: any) => logger.debug(message, { ...context, ...meta }),
+  };
+};
+
+// Log uncaught errors
+if (isDevelopment) {
+  process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', { error: error.message, stack: error.stack });
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Rejection:', { reason, promise });
+  });
+}
+
+// Backward compatibility functions
+export function logInfo(message: string, meta?: any): void {
+  logger.info(message, meta);
+}
+
+export function logDebug(message: string, meta?: any): void {
+  logger.debug(message, meta);
+}
+
+export function logError(message: string, error?: Error, meta?: any): void {
   const errorMeta = error ? {
     errorMessage: error.message,
     errorName: error.name,
     stack: error.stack,
     ...meta
   } : meta;
-
+  
   logger.error(message, errorMeta);
 }
 
-/**
- * Log a warning message
- * 
- * @param message - Warning message
- * @param meta - Additional metadata
- * 
- * @example
- * ```typescript
- * logWarning('Template version mismatch', { expected: '1.0.0', actual: '0.9.0' });
- * ```
- */
-export function logWarning(message: string, meta?: Record<string, any>): void {
+export function logWarning(message: string, meta?: any): void {
   logger.warn(message, meta);
-}
-
-/**
- * Log an info message
- * 
- * @param message - Info message
- * @param meta - Additional metadata
- * 
- * @example
- * ```typescript
- * logInfo('Document generation started', { type: 'patent-assignment', client: 'TechFlow' });
- * ```
- */
-export function logInfo(message: string, meta?: Record<string, any>): void {
-  logger.info(message, meta);
-}
-
-/**
- * Log a debug message
- * 
- * @param message - Debug message
- * @param meta - Additional metadata
- * 
- * @example
- * ```typescript
- * logDebug('Template loaded', { templateId: 'patent-assignment', sections: 5 });
- * ```
- */
-export function logDebug(message: string, meta?: Record<string, any>): void {
-  logger.debug(message, meta);
-}
-
-/**
- * Create a child logger with additional context
- * 
- * @param context - Context to add to all log messages
- * @returns Child logger instance
- * 
- * @example
- * ```typescript
- * const templateLogger = createChildLogger({ service: 'template-loader' });
- * templateLogger.info('Loading template'); // Will include service: 'template-loader'
- * ```
- */
-export function createChildLogger(context: Record<string, any>): winston.Logger {
-  return logger.child(context);
-}
-
-/**
- * Measure and log the duration of an operation
- * 
- * @param operation - Name of the operation
- * @param fn - Function to measure
- * @returns Result of the function
- * 
- * @example
- * ```typescript
- * const result = await measureDuration('template-loading', async () => {
- *   return await loadTemplate('patent-assignment');
- * });
- * ```
- */
-export async function measureDuration<T>(
-  operation: string,
-  fn: () => T | Promise<T>
-): Promise<T> {
-  const startTime = Date.now();
-  
-  try {
-    const result = await fn();
-    const duration = Date.now() - startTime;
-    
-    logDebug(`Operation completed: ${operation}`, { duration: `${duration}ms` });
-    
-    return result;
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    
-    logError(`Operation failed: ${operation}`, error as Error, { duration: `${duration}ms` });
-    throw error;
-  }
-}
-
-// Export Winston types for external use
-export type Logger = winston.Logger; 
+} 

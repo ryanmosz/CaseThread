@@ -3,6 +3,11 @@ import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { setupIpcHandlers } from './ipc-handlers.js';
 import { createApplicationMenu } from './menu.js';
+import { PDFGenerationHandler } from './ipc/pdf-generation-handler.js';
+import { ProgressHandlers } from './ipc/progress-handlers.js';
+import { ProgressManager } from './ipc/progress-manager.js';
+import { PDFExportHandler } from './ipc/pdf-export-handler.js';
+import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 // Load environment variables from .env file
 try {
@@ -26,11 +31,41 @@ class WindowManager {
     this.setupApp();
   }
 
+  /**
+   * Install React DevTools extension for development
+   */
+  private async installDevTools(): Promise<void> {
+    if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
+      try {
+        const name = await installExtension(REACT_DEVELOPER_TOOLS);
+        console.log(`✅ Added Extension: ${name}`);
+      } catch (err) {
+        console.error('❌ Failed to install React DevTools:', err);
+      }
+    }
+  }
+
   private setupApp(): void {
     // This method will be called when Electron has finished initialization
     app.whenReady().then(async () => {
+      // Install React DevTools in development mode
+      await this.installDevTools();
+      
       // Setup IPC handlers FIRST, before creating the window
       setupIpcHandlers();
+      
+      // Initialize PDF generation handler
+      PDFGenerationHandler.getInstance();
+      console.log('PDF generation handler initialized');
+      
+      // Initialize progress handlers
+      ProgressHandlers.getInstance();
+      console.log('Progress handlers initialized');
+      
+      // Initialize PDF export handler
+      PDFExportHandler.getInstance();
+      console.log('PDF export handler initialized');
+      
       await this.createMainWindow();
       this.setupMenu();
 
@@ -55,6 +90,19 @@ class WindowManager {
         shell.openExternal(url);
         return { action: 'deny' };
       });
+    });
+
+    // Cleanup on app quit
+    app.on('before-quit', () => {
+      console.log('Cleaning up PDF generation handler...');
+      PDFGenerationHandler.getInstance().cleanup();
+      
+      console.log('Cleaning up progress manager...');
+      ProgressManager.getInstance().cleanup();
+      
+      console.log('Cleaning up secure IPC handler...');
+      const { SecureIPCHandler } = require('./ipc/secure-handler');
+      SecureIPCHandler.cleanup();
     });
   }
 

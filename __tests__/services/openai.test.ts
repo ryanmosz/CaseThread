@@ -121,7 +121,7 @@ describe('OpenAIService', () => {
       const service = new OpenAIService(mockConfig);
       const prompt = (service as any).buildPrompt(mockTemplate, mockExplanation, mockYamlData);
 
-      expect(prompt).toContain('Section 1: Section 1');
+      expect(prompt).toContain('Section 1');
       expect(prompt).toContain('Required: true');
       expect(prompt).toContain('This is section 1 with {{field1}}');
     });

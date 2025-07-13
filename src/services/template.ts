@@ -8,6 +8,7 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { Template, TemplateLoadError } from '../types';
+import { ITemplateLoader } from '../types/services';
 import { logger } from '../utils/logger';
 
 /**
@@ -265,5 +266,41 @@ export function shouldIncludeSection(
       return Number(fieldValue) < Number(value);
     default:
       return true;
+  }
+} 
+
+/**
+ * TemplateService class that implements ITemplateLoader interface
+ */
+export class TemplateService implements ITemplateLoader {
+  /**
+   * Load a template by document type
+   */
+  async loadTemplate(documentType: string): Promise<Template> {
+    return loadTemplate(documentType);
+  }
+
+  /**
+   * Load an explanation by document type
+   */
+  async loadExplanation(documentType: string): Promise<string> {
+    return loadExplanation(documentType);
+  }
+
+  /**
+   * List all available templates
+   */
+  listTemplates(): string[] {
+    // Return the list of supported document types
+    return [
+      'provisional-patent-application',
+      'trademark-application', 
+      'office-action-response',
+      'nda-ip-specific',
+      'patent-assignment-agreement',
+      'patent-license-agreement',
+      'technology-transfer-agreement',
+      'cease-and-desist-letter'
+    ];
   }
 } 

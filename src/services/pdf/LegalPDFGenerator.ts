@@ -62,6 +62,8 @@ export class LegalPDFGenerator {
 
     // Initialize PDFKit document
     this.doc = new PDFDocument({
+      autoFirstPage: false, // Prevent automatic page creation
+      compress: false, // Disable compression to avoid font loading issues
       size: this.pageConfig.size,
       margins: this.pageConfig.margins,
       info: {
@@ -184,9 +186,12 @@ export class LegalPDFGenerator {
           }
         });
         
-        // Set default font
+        // Set font BEFORE adding any pages to avoid font file loading
         this.doc.font('Times-Roman');
         this.doc.fontSize(12);
+        
+        // Now add the first page
+        this.doc.addPage();
         
         this.documentStarted = true;
         

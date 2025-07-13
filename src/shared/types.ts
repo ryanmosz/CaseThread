@@ -98,6 +98,39 @@ export interface ElectronAPI {
   
   // AI Assistant operations
   callAIAssistant: (prompt: string) => Promise<{ success: boolean; data?: string; error?: string }>;
+  
+  // PDF operations
+  pdf: {
+    generate: (request: any) => Promise<any>;
+    cancel: (request: any) => Promise<void>;
+    export: (request: any) => Promise<any>;
+    exportSilent: (request: any) => Promise<any>;
+    subscribeProgress: (requestId: string) => Promise<{ success: boolean; error?: string }>;
+    unsubscribeProgress: (requestId: string) => Promise<{ success: boolean; error?: string }>;
+    getActiveProgress: () => Promise<{ subscriptions: string[]; count: number }>;
+    // Event listeners for PDF operations
+    onProgress: (callback: (data: any) => void) => any;
+    offProgress: (callback: any) => void;
+    onComplete: (callback: (data: any) => void) => any;
+    offComplete: (callback: any) => void;
+    onError: (callback: (data: any) => void) => any;
+    offError: (callback: any) => void;
+  };
+  
+  // Event listeners
+  on: (channel: string, callback: (...args: any[]) => void) => void;
+  removeListener: (channel: string, callback: (...args: any[]) => void) => void;
+  removeAllListeners: (channel: string) => void;
+  onPDFProgress: (callback: (event: any, data: any) => void) => void;
+  offPDFProgress: (callback: (event: any, data: any) => void) => void;
+  onPDFComplete: (callback: (event: any, data: any) => void) => void;
+  offPDFComplete: (callback: (event: any, data: any) => void) => void;
+  onPDFError: (callback: (event: any, data: any) => void) => void;
+  offPDFError: (callback: (event: any, data: any) => void) => void;
+  
+  // Legacy methods for backward compatibility
+  generatePDF: (request: any) => Promise<any>;
+  cancelPDFGeneration: (request: any) => Promise<void>;
 }
 
 // Types are exported for use in both main and renderer processes

@@ -277,6 +277,22 @@ docs/testing/
 ---
 **Note**: Always run `npm test` first when picking up work to understand current state.
 
+
+## Testing Standards
+
+### CRITICAL: Test Execution Requirements
+When running tests during development:
+- **ALWAYS** use `npm test` or `npm test -- <path>` to show the green progress bar
+- **NEVER** use direct `jest` commands as they may not show progress
+- The progress bar is essential for identifying hung tests quickly
+- This is especially important for async tests that may have cleanup issues
+
+### Test Coverage Requirements
+- All new features must have unit tests
+- IPC handlers must have security validation tests
+- UI components must have interaction tests
+- Integration tests for complete workflows
+
 ## Parent Task to Plan:
 <!-- UPDATE THIS SECTION FOR EACH NEW PARENT TASK -->
 Task 6.0 - GUI Integration

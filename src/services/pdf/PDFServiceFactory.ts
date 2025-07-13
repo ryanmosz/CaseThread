@@ -1,20 +1,14 @@
-import { PDFExportService, PDFExportOptions } from '../pdf-export';
+import { PDFExportOptions } from '../pdf-export';
+import { IPDFExportService, ServiceConfiguration } from '../../types/services';
+import { ProgressReporter } from '../../types/progress';
+import { PDFOutput, PDFGenerationOptions } from '../../types/pdf';
+import { ConsoleProgressReporter } from '../../utils/progress/ConsoleProgressReporter';
+import { CallbackProgressReporter, ProgressCallback } from '../../utils/progress/CallbackProgressReporter';
+import { NullProgressReporter } from '../../utils/progress/NullProgressReporter';
 import { LegalPDFGenerator } from './LegalPDFGenerator';
 import { FileOutput, BufferOutput } from './outputs';
-import { 
-  PDFOutput, 
-  PDFGenerationOptions
-} from '../../types/pdf';
-import { ProgressReporter } from '../../types/progress';
-import { 
-  ConsoleProgressReporter, 
-  CallbackProgressReporter, 
-  NullProgressReporter,
-  ProgressCallback
-} from '../../utils/progress';
 import { createChildLogger } from '../../utils/logger';
 import { ServiceContainer } from '../ServiceContainer';
-import { IPDFExportService, ServiceConfiguration } from '../../types/services';
 
 /**
  * Options for creating a PDF pipeline
@@ -124,7 +118,7 @@ export class PDFServiceFactory {
    * Create a complete PDF pipeline for easy use
    */
   static createPipeline(options?: PDFPipelineOptions): {
-    service: PDFExportService;
+    service: IPDFExportService;
     progressReporter: ProgressReporter;
     generateToFile: (text: string, outputPath: string, documentType: string) => Promise<void>;
     generateToBuffer: (text: string, documentType: string) => Promise<Buffer>;
@@ -151,7 +145,7 @@ export class PDFServiceFactory {
       async generateToBuffer(text: string, documentType: string): Promise<Buffer> {
         const result = await service.exportToBuffer(text, documentType, options?.defaultOptions);
         if (!result.buffer) {
-          throw new Error('Buffer generation failed');
+          throw new Error('Failed to generate PDF buffer');
         }
         return result.buffer;
       }

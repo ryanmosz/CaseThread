@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import { createSpinner } from '../utils/spinner';
 import { logger } from '../utils/logger';
 import { handleError, createError, CLIError } from '../utils/error-handler';
-import { PDFExportService, PDFExportOptions } from '../services/pdf-export';
+import { PDFExportOptions } from '../services/pdf-export';
 import { PDFServiceFactory } from '../services/pdf/PDFServiceFactory';
 import { ErrorCode } from '../types/errors';
 

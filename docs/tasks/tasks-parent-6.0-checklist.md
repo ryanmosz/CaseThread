@@ -48,10 +48,10 @@
   - [x] 6.0.2.4 [Create IPC security validation] (Details: tasks-parent-6.0.2.4-detailed.md)
 
 - [ ] 6.0.3 UI Components
-  - [ ] 6.0.3.1 [Add PDF generation button to toolbar] (Details: tasks-parent-6.0.3.1-detailed.md)
-  - [ ] 6.0.3.2 [Implement view mode toggle] (Details: tasks-parent-6.0.3.2-detailed.md)
-  - [ ] 6.0.3.3 [Create PDF metadata display] (Details: tasks-parent-6.0.3.3-detailed.md)
-  - [ ] 6.0.3.4 [Add export PDF button] (Details: tasks-parent-6.0.3.4-detailed.md)
+  - [x] 6.0.3.1 [Add PDF generation button to toolbar] (Details: tasks-parent-6.0.3.1-detailed.md)
+  - [x] 6.0.3.2 [Implement view mode toggle] (Details: tasks-parent-6.0.3.2-detailed.md)
+  - [x] 6.0.3.3 [Create PDF metadata display] (Details: tasks-parent-6.0.3.3-detailed.md)
+  - [x] 6.0.3.4 [Add export PDF button] (Details: tasks-parent-6.0.3.4-detailed.md)
 
 - [ ] 6.0.4 PDF Display Implementation
   - [ ] 6.0.4.1 [Implement PDF viewer component] (Details: tasks-parent-6.0.4.1-detailed.md)

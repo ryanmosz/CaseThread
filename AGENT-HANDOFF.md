@@ -1,32 +1,96 @@
 # AGENT-HANDOFF.md - CaseThread CLI Project State
 
-## Last Updated: 2025-07-12T21:45:00Z
+## Last Updated: 2024-01-16T14:30:00Z
 
 ### Current Task Status
-- **Previous Task Completed**: ✅ Task 5.0 - PDF Service Modularization (100% Complete)
-- **Next Task**: Task 6.0 - GUI Integration
+- **Previous Task Completed**: ✅ Task 6.0.3.1 - Add PDF generation button to toolbar (troubleshooting complete)
+- **Current Task**: Task 6.0.3.1 - PDF generation button (resolved API mismatch issue)
 - **Branch**: feature/r-g-integration
 - **Integration Status**: ✅ PDF Service fully modularized and ready for GUI integration
-- **New Documentation**:
-  - GUI PDF Workflow Plan: `docs/planning/gui-pdf-workflow-plan.md`
-  - API Reference: `docs/api/pdf-service-api.md`
-  - Integration Guide: `docs/guides/pdf-integration-guide.md`
-  - Migration Guide: `docs/guides/pdf-migration-guide.md`
-  - Architecture Overview: `docs/architecture/pdf-service-architecture.md`
-  - Check @pdf-modularization-handoff.md for the complete file list
+- **Test Status**: ✅ All 765 tests passing
+- **Overall Progress**: 7/33 subtasks complete (21%)
+- **Documentation Status**:
+  - Task 6.0 PRD: ✅ Complete
+  - Task 6.0 Checklist: ✅ Complete (33 subtasks defined)
+  - Detailed Implementation Guides: 8 created (6.0.1.1-6.0.1.4, 6.0.2.1-6.0.2.3)
+  - Design Documents: 4 created (integration, mockups, state, IPC)
+  - Design Complete Summary: `docs/tasks/task-6.0.1-design-complete.md`
   
-- **Task 5 Progress** (100% Complete): 
-  - ✅ 5.1: Architecture Analysis - Documented all coupling points
-  - ✅ 5.2: Core Service Extraction - Buffer support added
-  - ✅ 5.3: Enhanced API - Progress reporting implemented
-  - ✅ 5.4: Dependency Injection - All services injectable
-  - ✅ 5.5: Integration Documentation - Comprehensive guides created
+### Task 6.0.1 Progress (Design and Planning) - ✅ COMPLETE
+- **Approach**: Complete all 4 design subtasks before implementation
+- **Completed**:
+  - ✅ 6.0.1.1: Design PDF viewer integration approach
+    - Created comprehensive design document at `docs/design/pdf-viewer-integration-design.md`
+    - Selected iframe approach for MVP
+    - Defined state management structure
+    - Planned memory management strategy
+  - ✅ 6.0.1.2: Create UI/UX mockups for PDF features
+    - Created comprehensive mockup documentation at `docs/design/pdf-features-mockups.md`
+    - Designed enhanced toolbar with PDF generation, view toggle, and export buttons
+    - Created ASCII art mockups for all UI states (text, PDF, loading, error, success)
+    - Developed interactive Storybook prototype at `src/electron/renderer/src/stories/PDFFeatures.stories.tsx`
+    - Defined design tokens, animations, and accessibility specifications
+  - ✅ 6.0.1.3: Plan state management for PDF data
+    - Created comprehensive state management plan at `docs/design/pdf-state-management-plan.md`
+    - Designed PDFState interface with generation, data, view, and export sub-states
+    - Planned React Context + useReducer implementation for predictable state updates
+    - Developed PDFMemoryManager class for efficient blob URL lifecycle management
+    - Integrated with existing BackgroundGenerationContext for progress tracking
+    - Defined error handling strategy with recoverable error codes
+  - ✅ 6.0.1.4: Define IPC communication protocol
+    - Created comprehensive IPC protocol document at `docs/design/pdf-ipc-protocol.md`
+    - Defined secure channel structure with type-safe message formats
+    - Designed preload script API with input validation
+    - Implemented main process handler architecture with progress tracking
+    - Established memory monitoring and warning system
+    - Created error handling protocol with recovery strategies
+
+### Recent Work - Task 6.0.3.1 Troubleshooting
+- **Issue**: PDF generation button showed success message but no PDF was displayed
+- **Root Cause**: API mismatch between usePDFGeneration hook and ElectronAPI
+  - Hook used `window.electronAPI.generatePDF()` but actual method was `window.electronAPI.pdf.generate()`
+  - Hook used non-existent event listener methods
+- **Fix Applied**:
+  - Updated hook to use correct API methods
+  - Added temporary PDF display using blob URL in new window
+  - Updated preload script for backward compatibility
+  - Fixed TypeScript types and imports
+- **Result**: PDF generation now works - opens PDF in new browser window
+- **Note**: Proper PDF display within app will be implemented in Task 6.0.4
+
+### Task 6.0.2 Progress (IPC Infrastructure) - In Progress (3/4)
+- **Completed**:
+  - ✅ 6.0.2.1: Create PDF generation IPC handler
+    - Implemented `PDFGenerationHandler` class at `src/electron/main/ipc/pdf-generation-handler.ts`
+    - Created type-safe IPC interfaces at `src/types/pdf-ipc.ts`
+    - Implemented request validation for all document types
+    - Added progress event conversion from ProgressEvent to IPC format
+    - Integrated with main process initialization and cleanup
+    - Created comprehensive test suite (22 tests) at `__tests__/electron/main/ipc/pdf-generation-handler.test.ts`
+    - Fixed type compatibility between PDFServiceFactory and ProgressCallback
+  - ✅ 6.0.2.2: Implement progress reporting IPC channel
+    - Created ProgressManager with batched updates (100ms intervals)
+    - Implemented ProgressHandlers for subscription management
+    - Integrated with PDFGenerationHandler for centralized control
+    - Created usePDFProgress React hook for component integration
+    - Updated preload script with PDF operations API
+    - Added comprehensive test coverage (16 tests)
+  - ✅ 6.0.2.3: Add PDF export IPC handler
+    - Implemented `PDFExportHandler` class at `src/electron/main/ipc/pdf-export-handler.ts`
+    - Created both interactive (with dialog) and silent export modes
+    - Added comprehensive validation (buffer size, PDF header, file paths)
+    - Implemented filename sanitization for cross-platform compatibility
+    - Created `usePDFExport` React hook at `src/electron/renderer/src/hooks/usePDFExport.ts`
+    - Added file system error handling (permissions, disk space, invalid paths)
+    - Created comprehensive test suite (15 tests) at `__tests__/electron/main/ipc/pdf-export-handler.test.ts`
+- **Next Step**: Task 6.0.2.4 - Create IPC security validation
 
 ### Next Steps for Task 6.0
-1. Use `docs/devops/plan-parent.md` to create Task 6.0 plan
-2. Review `docs/planning/gui-pdf-workflow-plan.md` for implementation details
-3. Reference `docs/handoff/pdf-modularization-handoff.md` for file list
-4. Focus on 3-pane GUI integration with PDF preview and export
+1. ✅ Design and Planning phase complete (6.0.1)
+2. Begin implementation with Task 6.0.2 - IPC Infrastructure
+3. First subtask: 6.0.2.1 - Create PDF generation IPC handler
+4. Follow designs in `docs/design/` for implementation
+5. Use existing detailed guides in `docs/tasks/tasks-parent-6.0.X.Y-detailed.md`
 
 ### Recent Changes - R+G Integration (2025-07-12)
 

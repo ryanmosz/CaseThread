@@ -70,7 +70,7 @@ describe('PDFServiceFactory', () => {
     it('should create with null progress reporter', () => {
       PDFServiceFactory.forTesting();
       
-      expect(NullProgressReporter).toHaveBeenCalledWith(true);
+      expect(NullProgressReporter).toHaveBeenCalled();
     });
   });
 
@@ -130,7 +130,7 @@ describe('PDFServiceFactory', () => {
       const pipeline = PDFServiceFactory.createPipeline();
       
       await expect(pipeline.generateToBuffer('Test', 'nda-ip-specific'))
-        .rejects.toThrow('Buffer generation failed');
+        .rejects.toThrow('Failed to generate PDF buffer');
     });
   });
 

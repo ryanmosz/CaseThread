@@ -2,7 +2,9 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   Card, 
   CardBody, 
-  Button, 
+  CardHeader,
+  Button,
+  ButtonGroup,
   Spinner, 
   Chip,
   Progress,
@@ -13,9 +15,61 @@ import {
   DropdownItem,
   Textarea,
   Divider,
-  addToast
+  addToast,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from '@heroui/react';
 import DiffViewer from './DiffViewer';
+import { usePDFGeneration } from '../hooks/usePDFGeneration';
+import { usePDFExport } from '../hooks/usePDFExport';
+import { DocumentType } from '../../../../types';
+import { ViewModeType, PDFMetadataExtended } from '../../../../types/pdf';
+
+// PDF Icon Component
+const PDFIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+      d="M9 17h6M9 13h6M9 9h4" />
+  </svg>
+);
+
+// View mode icons
+const TextIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+);
+
+const ViewIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+
+// Export icon
+const DownloadIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+// Info icon
+const InfoIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
 
 // Simple Error Boundary for diff viewer
 class ErrorBoundary extends React.Component<
@@ -58,6 +112,136 @@ interface EnhancedDocumentViewerProps {
   onSuggestedContentRejected?: () => void;
 }
 
+// Metadata panel component
+const PDFMetadataPanel = ({ 
+  metadata, 
+  isOpen, 
+  onClose 
+}: { 
+  metadata: PDFMetadataExtended; 
+  isOpen: boolean;
+  onClose: () => void;
+}) => {
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const formatDuration = (ms: number): string => {
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  };
+
+  const copyMetadata = () => {
+    const metadataText = `
+PDF Metadata
+============
+Document Type: ${metadata.documentType}
+Generated: ${new Date(metadata.generatedAt).toLocaleString()}
+Generation Time: ${formatDuration(metadata.generationTime)}
+File Size: ${formatFileSize(metadata.fileSize)}
+Page Count: ${metadata.pageCount}
+Signature Blocks: ${metadata.hasSignatureBlocks ? `Yes (${metadata.signatureBlockCount || 0})` : 'No'}
+${metadata.fontSize ? `Font Size: ${metadata.fontSize}pt` : ''}
+${metadata.lineSpacing ? `Line Spacing: ${metadata.lineSpacing}` : ''}
+${metadata.warnings?.length ? `\nWarnings:\n${metadata.warnings.join('\n')}` : ''}
+    `.trim();
+
+    navigator.clipboard.writeText(metadataText);
+    addToast({
+      title: 'Metadata Copied',
+      description: 'PDF metadata copied to clipboard',
+      color: 'success'
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <Card className="absolute top-16 right-4 w-80 z-50 shadow-lg">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <h4 className="text-sm font-semibold">PDF Information</h4>
+        <Button
+          size="sm"
+          variant="light"
+          isIconOnly
+          onClick={onClose}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </Button>
+      </CardHeader>
+      <CardBody className="space-y-3">
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-foreground/60">Document Type:</span>
+            <span className="font-medium capitalize">
+              {metadata.documentType.replace(/-/g, ' ')}
+            </span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="text-foreground/60">File Size:</span>
+            <span className="font-medium">{formatFileSize(metadata.fileSize)}</span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="text-foreground/60">Page Count:</span>
+            <span className="font-medium">{metadata.pageCount} pages</span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="text-foreground/60">Generated:</span>
+            <span className="font-medium">
+              {new Date(metadata.generatedAt).toLocaleTimeString()}
+            </span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="text-foreground/60">Generation Time:</span>
+            <span className="font-medium">{formatDuration(metadata.generationTime)}</span>
+          </div>
+          
+          {metadata.hasSignatureBlocks && (
+            <div className="flex justify-between">
+              <span className="text-foreground/60">Signature Blocks:</span>
+              <span className="font-medium">{metadata.signatureBlockCount || 'Yes'}</span>
+            </div>
+          )}
+        </div>
+
+        {metadata.warnings && metadata.warnings.length > 0 && (
+          <div className="mt-3 p-2 bg-warning/10 rounded-md">
+            <p className="text-xs font-medium text-warning mb-1">Warnings:</p>
+            <ul className="text-xs text-foreground/60 space-y-1">
+              {metadata.warnings.map((warning, index) => (
+                <li key={index}>• {warning}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <Button
+          size="sm"
+          variant="flat"
+          className="w-full mt-3"
+          onClick={copyMetadata}
+          startContent={
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          }
+        >
+          Copy Metadata
+        </Button>
+      </CardBody>
+    </Card>
+  );
+};
+
 const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   content,
   isLoading,
@@ -79,6 +263,26 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
   
+  // New state for PDF features
+  const [viewMode, setViewMode] = useState<ViewModeType>('text');
+  const [showMetadata, setShowMetadata] = useState(false);
+  
+  // PDF Generation Hook
+  const { 
+    generatePDF, 
+    isGenerating, 
+    progress, 
+    error: pdfError, 
+    pdfBlobUrl,
+    pdfBuffer,
+    pdfMetadata,
+    cancelGeneration,
+    clearPDF
+  } = usePDFGeneration();
+  
+  // PDF Export Hook
+  const { exportPDF, isExporting } = usePDFExport(addToast);
+
   // Update editedContent when content prop changes
   useEffect(() => {
     setEditedContent(content || '');
@@ -164,36 +368,34 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
     }
   }, [documentPath, editedContent, hasUnsavedChanges, onContentSaved]);
 
-  // Keyboard shortcuts
+  // Clean up blob URL when component unmounts
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key === 's') {
-        event.preventDefault();
-        handleSave();
+    return () => {
+      if (pdfBlobUrl) {
+        clearPDF();
       }
     };
+  }, []);
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave]);
-
-  // Handle export functions
-  const handleExport = async (format: 'markdown' | 'text') => {
-    try {
-      const result = await window.electronAPI.showSaveDialog({
-        defaultPath: `${documentName || 'document'}.${format === 'markdown' ? 'md' : 'txt'}`,
-        filters: [
-          { name: format === 'markdown' ? 'Markdown' : 'Text', extensions: [format === 'markdown' ? 'md' : 'txt'] }
-        ]
-      });
-
-      if (result.success && result.data?.filePath) {
-        await window.electronAPI.writeFile(result.data.filePath, editedContent);
-      }
-    } catch (error) {
-      console.error('Export error:', error);
+  // Reset view mode and clear PDF when document changes
+  useEffect(() => {
+    if (pdfBlobUrl) {
+      clearPDF();
     }
-  };
+    setViewMode('text');
+    setShowMetadata(false);
+  }, [documentPath]);
+
+  // Show PDF error in toast
+  useEffect(() => {
+    if (pdfError) {
+      addToast({
+        title: 'PDF Generation Failed',
+        description: pdfError,
+        color: 'danger'
+      });
+    }
+  }, [pdfError]);
 
   // Handle suggested content acceptance
   const handleAcceptSuggestedContent = useCallback(async (newContent: string) => {
@@ -281,13 +483,49 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   const isMarkdownFile = documentPath?.endsWith('.md') || false;
   const isFormData = documentPath?.endsWith('form-data.yaml') || false;
 
+  // Handle export functions
+  const handleExport = async (format: 'markdown' | 'text') => {
+    try {
+      const result = await window.electronAPI.showSaveDialog({
+        defaultPath: `${documentName || 'document'}.${format === 'markdown' ? 'md' : 'txt'}`,
+        filters: [
+          { name: format === 'markdown' ? 'Markdown' : 'Text', extensions: [format === 'markdown' ? 'md' : 'txt'] }
+        ]
+      });
+
+      if (result.success && result.data?.filePath) {
+        await window.electronAPI.writeFile(result.data.filePath, editedContent);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+    }
+  };
+
+  // Document type detection for PDF generation
+  const detectDocumentType = (docName: string): DocumentType => {
+    const name = docName.toLowerCase();
+    if (name.includes('patent-assignment')) return 'patent-assignment-agreement';
+    if (name.includes('cease-and-desist')) return 'cease-and-desist-letter';
+    if (name.includes('nda')) return 'nda-ip-specific';
+    if (name.includes('patent-license')) return 'patent-license-agreement';
+    if (name.includes('provisional-patent')) return 'provisional-patent-application';
+    if (name.includes('trademark')) return 'trademark-application';
+    if (name.includes('office-action')) return 'office-action-response';
+    if (name.includes('technology-transfer')) return 'technology-transfer-agreement';
+    return 'patent-assignment-agreement'; // default
+  };
+
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
         <Spinner size="lg" />
         <div className="ml-4">
           <p className="text-sm text-foreground/80">{generationStage}</p>
-          <Progress value={generationProgress} className="max-w-md mt-2" />
+          <Progress 
+            value={generationProgress} 
+            className="max-w-md mt-2" 
+            aria-label="Document generation progress"
+          />
         </div>
       </div>
     );
@@ -385,9 +623,74 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
                   )
                 }
               >
-                {isSaving ? 'Saving...' : 'Ctrl+S'}
+                {isSaving ? 'Saving...' : 'Save'}
               </Button>
             )}
+
+            {/* View Mode Toggle */}
+            <ButtonGroup>
+              <Button
+                variant={viewMode === 'text' ? 'solid' : 'flat'}
+                size="sm"
+                color={viewMode === 'text' ? 'primary' : 'default'}
+                onClick={() => setViewMode('text')}
+                startContent={<TextIcon />}
+                isDisabled={!content}
+              >
+                Text
+              </Button>
+              <Button
+                variant={viewMode === 'pdf' ? 'solid' : 'flat'}
+                size="sm"
+                color={viewMode === 'pdf' ? 'primary' : 'default'}
+                onClick={() => setViewMode('pdf')}
+                startContent={<ViewIcon />}
+                isDisabled={!pdfBlobUrl}
+              >
+                PDF
+              </Button>
+            </ButtonGroup>
+
+            {/* Generate PDF Button */}
+            <Button
+              variant="flat"
+              size="sm"
+              color="primary"
+              isLoading={isGenerating}
+              isDisabled={!editedContent || isGenerating}
+              onClick={generatePDF}
+              startContent={!isGenerating && <PDFIcon />}
+            >
+              {isGenerating ? 
+                (progress ? `${progress.percentage}%` : 'Generating...') : 
+                'Generate PDF'
+              }
+            </Button>
+
+            {/* PDF Info Button - show when PDF metadata is available */}
+            {pdfMetadata && (
+              <Button
+                variant="flat"
+                size="sm"
+                onClick={() => setShowMetadata(!showMetadata)}
+                startContent={<InfoIcon />}
+              >
+                Info
+              </Button>
+            )}
+
+            {/* Export PDF Button */}
+            <Button
+              variant="flat"
+              size="sm"
+              color="primary"
+              isLoading={isExporting}
+              isDisabled={!pdfBuffer || isExporting}
+              onClick={exportPDF}
+              startContent={!isExporting && <DownloadIcon />}
+            >
+              {isExporting ? 'Exporting...' : 'Export PDF'}
+            </Button>
 
             {/* Export Dropdown */}
             <Dropdown>
@@ -427,6 +730,14 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
                 >
                   Save as Text
                 </DropdownItem>
+                <DropdownItem
+                  key="pdf"
+                  onClick={exportPDF}
+                  isDisabled={!pdfBuffer || isExporting}
+                  startContent={<DownloadIcon />}
+                >
+                  Export as PDF
+                </DropdownItem>
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -437,54 +748,132 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
 
       {/* Document Content */}
       <div className="flex-1 overflow-hidden">
-        {showDiff && suggestedContent && content ? (
-          <ErrorBoundary fallback={
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-danger mb-4">Unable to display document diff</p>
-                <Button
-                  variant="flat"
-                  size="sm"
-                  onClick={handleRejectSuggestedContent}
-                >
-                  Close Diff View
-                </Button>
-              </div>
-            </div>
-          }>
-            <DiffViewer
-              originalText={content}
-              modifiedText={suggestedContent}
-              title="AI Assistant Suggestions"
-              onApplyChanges={handleAcceptSuggestedContent}
-              onClose={handleRejectSuggestedContent}
-            />
-          </ErrorBoundary>
-        ) : (
-          <ScrollShadow className="h-full overflow-auto">
-            <div className="p-6">
-              {isFormData ? (
-                <div className="bg-background/50 border border-divider rounded-lg p-4">
-                  <pre className="text-xs text-foreground/80 whitespace-pre-wrap">
-                    {content}
-                  </pre>
+        {viewMode === 'text' ? (
+          // Text/Markdown view
+          showDiff && suggestedContent && content ? (
+            <ErrorBoundary fallback={
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-foreground/60 mb-2">Error rendering diff view</p>
+                  <Button size="sm" variant="flat" onClick={() => setShowDiff(false)}>
+                    Return to normal view
+                  </Button>
                 </div>
-              ) : (
-                <Textarea
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  className="w-full h-full min-h-[500px] font-mono text-sm resize-none !overflow-hidden"
-                  variant="bordered"
-                  minRows={20}
-                  maxRows={999}
-                  placeholder={isMarkdownFile ? "Start typing to edit this document..." : "Document content"}
-                  isReadOnly={!isMarkdownFile}
-                />
-              )}
-            </div>
-          </ScrollShadow>
+              </div>
+            }>
+              <DiffViewer
+                original={content}
+                modified={suggestedContent}
+                onAccept={handleAcceptSuggestedContent}
+                onReject={handleRejectSuggestedContent}
+                onToggle={() => setShowDiff(!showDiff)}
+              />
+            </ErrorBoundary>
+          ) : (
+            <ScrollShadow className="h-full overflow-auto">
+              <div className="p-6">
+                {isFormData ? (
+                  // YAML/JSON viewer for form data files
+                  <Card className="border-none shadow-none">
+                    <CardBody>
+                      <pre className="text-sm font-mono bg-default-100 p-4 rounded-lg overflow-auto">
+                        {editedContent}
+                      </pre>
+                    </CardBody>
+                  </Card>
+                ) : (
+                  // Editable textarea for markdown files
+                  <Textarea
+                    className="font-mono"
+                    minRows={30}
+                    maxRows={100}
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    placeholder="Start typing..."
+                    variant="bordered"
+                    isReadOnly={!isMarkdownFile}
+                  />
+                )}
+                
+                {documentInfo && (
+                  <div className="flex items-center space-x-6 mt-4 pt-4 border-t">
+                    <Chip variant="flat" size="sm">
+                      {documentInfo.wordCount} words
+                    </Chip>
+                    <Chip variant="flat" size="sm">
+                      {documentInfo.sections} sections
+                    </Chip>
+                  </div>
+                )}
+              </div>
+            </ScrollShadow>
+          )
+        ) : (
+          // PDF view
+          <div className="h-full w-full">
+            {pdfBlobUrl ? (
+              <iframe
+                src={pdfBlobUrl}
+                className="w-full h-full border-0"
+                title="PDF Preview"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-foreground/60">No PDF generated yet</p>
+              </div>
+            )}
+          </div>
         )}
       </div>
+      
+      {/* PDF Generation Progress Modal */}
+      {isGenerating && progress && (
+        <Modal 
+          isOpen={isGenerating} 
+          onClose={cancelGeneration}
+          size="sm"
+        >
+          <ModalContent>
+            <ModalHeader>Generating PDF</ModalHeader>
+            <ModalBody>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-foreground/60 mb-2">{progress.step}</p>
+                  {progress.detail && (
+                    <p className="text-xs text-foreground/40">{progress.detail}</p>
+                  )}
+                </div>
+                
+                <Progress 
+                  value={progress.percentage} 
+                  color="primary"
+                  aria-label="PDF generation progress"
+                />
+                
+                {progress.estimatedTimeRemaining !== undefined && (
+                  <p className="text-xs text-foreground/40 text-center">
+                    Estimated time remaining: {progress.estimatedTimeRemaining}s
+                  </p>
+                )}
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="danger" variant="light" onPress={cancelGeneration}>
+                Cancel
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* PDF Metadata Panel */}
+      {pdfMetadata && (
+        <PDFMetadataPanel
+          metadata={pdfMetadata}
+          isOpen={showMetadata}
+          onClose={() => setShowMetadata(false)}
+        />
+      )}
     </div>
   );
 };

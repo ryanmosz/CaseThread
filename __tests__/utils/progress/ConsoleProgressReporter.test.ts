@@ -98,9 +98,12 @@ describe('ConsoleProgressReporter', () => {
 
   describe('completeTask', () => {
     it('should succeed the spinner with completion message', () => {
+      // Create reporter without duration tracking for this test
+      const reporterNoDuration = new ConsoleProgressReporter({ trackDuration: false });
+      
       // Need to have an active spinner first
-      reporter.startTask('PDF Generation');
-      reporter.completeTask('PDF Generation');
+      reporterNoDuration.startTask('PDF Generation');
+      reporterNoDuration.completeTask('PDF Generation');
       
       expect(mockSpinner.succeed).toHaveBeenCalledWith('PDF Generation completed');
     });
