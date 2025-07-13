@@ -767,18 +767,6 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
               }
             </Button>
 
-            {/* PDF Info Button - show when PDF metadata is available */}
-            {metadata && (
-              <Button
-                variant="flat"
-                size="sm"
-                onClick={() => setShowMetadata(!showMetadata)}
-                startContent={<InfoIcon />}
-              >
-                Info
-              </Button>
-            )}
-
             {/* Export PDF Button */}
             <Button
               variant="flat"
@@ -800,64 +788,6 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
             >
               {isExporting ? 'Exporting...' : 'Export PDF'}
             </Button>
-
-            {/* Export Dropdown */}
-            <Dropdown>
-              <DropdownTrigger>
-                <Button 
-                  variant="flat" 
-                  size="sm"
-                  startContent={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  }
-                >
-                  Export
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                <DropdownItem
-                  key="markdown"
-                  onClick={() => handleExport('markdown')}
-                  startContent={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  }
-                >
-                  Save as Markdown
-                </DropdownItem>
-                <DropdownItem
-                  key="text"
-                  onClick={() => handleExport('text')}
-                  startContent={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  }
-                >
-                  Save as Text
-                </DropdownItem>
-                <DropdownItem
-                  key="pdf"
-                  onClick={() => {
-                    if (pdfBuffer && documentName) {
-                      const docType = detectDocumentType(documentName);
-                      exportPDF(
-                        pdfBuffer, 
-                        documentName.replace(/\.[^/.]+$/, '') + '.pdf',
-                        docType
-                      );
-                    }
-                  }}
-                  isDisabled={!pdfBuffer || isExporting}
-                  startContent={<DownloadIcon />}
-                >
-                  Export as PDF
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
           </div>
         </div>
 
