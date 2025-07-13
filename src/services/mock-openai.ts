@@ -130,7 +130,7 @@ export class MockOpenAIService {
       .sort((a, b) => a.order - b.order)
       .map(section => {
         const content = this.fillTemplate(section.content, yamlData);
-        return `## ${section.title}\n\n${content}`;
+        return content;
       })
       .join('\n\n');
 

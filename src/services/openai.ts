@@ -229,7 +229,8 @@ INSTRUCTIONS:
 4. Fill in all placeholders with the provided data
 5. Ensure all sections are complete and properly formatted
 6. Include appropriate legal disclaimers and standard clauses
-7. Return ONLY the final document without any additional commentary${contextBundle ? '\n8. Incorporate relevant precedents and writing style from the provided context' : ''}
+7. Return ONLY the final document without any additional commentary
+8. Do NOT include section titles or headers in the output - the content should flow naturally${contextBundle ? '\n9. Incorporate relevant precedents and writing style from the provided context' : ''}
 
 TEMPLATE STRUCTURE:
 ${templateStructure}

@@ -353,7 +353,9 @@ export function setupIpcHandlers(): void {
           }
         ],
         max_tokens: 4000,
-        temperature: 0.3,
+        temperature: 0.1, // Reduced from 0.3 for more conservative output
+        frequency_penalty: 0.5, // Added to discourage creative variations
+        presence_penalty: 0.5, // Added to encourage using existing text
         stream: false
       });
       
