@@ -77,7 +77,7 @@ jspm_packages/
 
 # Output directories
 dist/
-*.output/
+# *.output/
 generated-documents/
 
 # Test output directories
@@ -102,6 +102,6 @@ docs/testing/test-results/
 scratch.md
 
 # Generated output files
-output/
-output*/
+# output/
+# output*/
 *.generated.md
