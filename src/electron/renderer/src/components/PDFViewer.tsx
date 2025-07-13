@@ -15,8 +15,18 @@ import {
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// Configure PDF.js worker for react-pdf v7
+// Try to use the ESM worker first, fallback to minified version
+try {
+  // For Vite, use dynamic import URL
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.js',
+    import.meta.url,
+  ).toString();
+} catch (e) {
+  // Fallback to public directory
+  pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+}
 
 interface PDFViewerProps {
   url: string;
@@ -29,16 +39,21 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, onClose }) => {
   const [scale, setScale] = useState<number>(1);
   const [rotation, setRotation] = useState<number>(0);
   const [pageWidth, setPageWidth] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   
+  // Log the blob URL when component mounts or URL changes
+  useEffect(() => {
+    console.log('[PDFViewer] Component mounted with URL:', url);
+    console.log('[PDFViewer] URL type:', typeof url);
+    console.log('[PDFViewer] URL starts with blob:', url?.startsWith('blob:'));
+  }, [url]);
+  
   // Handle document load success
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setIsLoading(false);
     console.log('PDF loaded with', numPages, 'pages');
   };
   
@@ -46,7 +61,6 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, onClose }) => {
   const onDocumentLoadError = (error: Error) => {
     console.error('PDF load error:', error);
     setError(error.message);
-    setIsLoading(false);
   };
   
   // Calculate page width based on container
@@ -292,32 +306,26 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, onClose }) => {
       {/* PDF Document */}
       <div className="flex-1 overflow-auto">
         <div className="flex justify-center p-4" ref={pageRef}>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-96">
-              <Spinner size="lg" />
-            </div>
-          ) : (
-            <Document
-              file={url}
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={onDocumentLoadError}
-              loading={
-                <div className="flex items-center justify-center h-96">
-                  <Spinner size="lg" />
-                </div>
-              }
-            >
-              <Page
-                pageNumber={currentPage}
-                scale={scale}
-                rotate={rotation}
-                width={pageWidth || undefined}
-                renderTextLayer={true}
-                renderAnnotationLayer={true}
-                className="shadow-lg border bg-white"
-              />
-            </Document>
-          )}
+          <Document
+            file={url}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={onDocumentLoadError}
+            loading={
+              <div className="flex items-center justify-center h-96">
+                <Spinner size="lg" />
+              </div>
+            }
+          >
+            <Page
+              pageNumber={currentPage}
+              scale={scale}
+              rotate={rotation}
+              width={pageWidth || undefined}
+              renderTextLayer={true}
+              renderAnnotationLayer={true}
+              className="shadow-lg border bg-white"
+            />
+          </Document>
         </div>
       </div>
 

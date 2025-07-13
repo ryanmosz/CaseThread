@@ -58,10 +58,13 @@ export class PDFServiceFactory {
     
     const generationOptions: PDFGenerationOptions = {
       documentType,
-      title: options?.title || `${documentType} Document`,
-      author: options?.author || 'CaseThread',
-      subject: options?.subject || `Legal Document - ${documentType}`,
-      keywords: options?.keywords || [documentType, 'legal', 'document'],
+      content: '', // This will be set by the PDF export service
+      metadata: {
+        title: options?.metadata?.title || `${documentType} Document`,
+        author: options?.metadata?.author || 'CaseThread',
+        subject: options?.metadata?.subject || `Legal Document - ${documentType}`,
+        keywords: options?.metadata?.keywords || `${documentType}, legal, document`,
+      },
       ...options
     };
     

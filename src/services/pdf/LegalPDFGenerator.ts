@@ -67,10 +67,10 @@ export class LegalPDFGenerator {
       size: this.pageConfig.size,
       margins: this.pageConfig.margins,
       info: {
-        Title: options.title || 'Legal Document',
-        Author: options.author || 'CaseThread',
-        Subject: options.subject || options.documentType,
-        Keywords: options.keywords?.join(', ') || options.documentType
+        Title: options.metadata?.title || 'Legal Document',
+        Author: options.metadata?.author || 'CaseThread',
+        Subject: options.metadata?.subject || options.documentType,
+        Keywords: options.metadata?.keywords || options.documentType
       }
     });
 

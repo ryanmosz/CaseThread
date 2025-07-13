@@ -171,8 +171,9 @@ class WindowManager {
               "default-src 'self'; " +
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
               "font-src 'self' https://fonts.gstatic.com; " +
-              "img-src 'self' data: https:; " +
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline';"
+              "img-src 'self' data: https: blob:; " +
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
+              "connect-src 'self' blob:;"
             ]
           }
         });
