@@ -12,6 +12,7 @@ const IPC_CHANNELS = {
   LEARN_FROM_PATH: 'cli:learnFromPath',
   SHOW_SAVE_DIALOG: 'dialog:showSaveDialog',
   SHOW_OPEN_DIALOG: 'dialog:showOpenDialog',
+  CALL_AI_ASSISTANT: 'ai:callAssistant',
 } as const;
 
 // Create the API object
@@ -34,8 +35,8 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.invoke(IPC_CHANNELS.LOAD_TEMPLATE_SCHEMA, templateId),
   
   // CLI operations
-  generateDocument: (templateId: string, formData: any) =>
-    ipcRenderer.invoke(IPC_CHANNELS.GENERATE_DOCUMENT, { templateId, formData }),
+  generateDocument: (templateId: string, formData: any, options?: { useMultiagent?: boolean }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.GENERATE_DOCUMENT, { templateId, formData, options }),
   
   learnFromPath: (dirPath: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.LEARN_FROM_PATH, dirPath),
@@ -46,6 +47,10 @@ const electronAPI: ElectronAPI = {
   
   showOpenDialog: (options = {}) =>
     ipcRenderer.invoke(IPC_CHANNELS.SHOW_OPEN_DIALOG, options),
+  
+  // AI Assistant operations
+  callAIAssistant: (prompt: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.CALL_AI_ASSISTANT, prompt),
 };
 
 // Expose the API to the renderer process

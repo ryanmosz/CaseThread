@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardBody, Button, Spinner, addToast } from '@heroui/react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardBody, Button, Spinner, addToast, Tabs, Tab } from '@heroui/react';
 import { ThemeProvider } from './components/ThemeProvider';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import DocumentBrowser from './components/DocumentBrowser';
 import EnhancedDocumentViewer from './components/EnhancedDocumentViewer';
 import TemplateSelector from './components/TemplateSelector';
+import AIAssistant from './components/AIAssistant';
+import { BackgroundGenerationProvider, useBackgroundGeneration } from './contexts/BackgroundGenerationContext';
+import { BackgroundGenerationStatus } from './components/BackgroundGenerationStatus';
 import { Template, DirectoryEntry } from '../../../shared/types';
 
 // Error Boundary Component
@@ -64,9 +67,12 @@ interface AppState {
   documentTree: DirectoryEntry[];
   isLoading: boolean;
   error: string | null;
+  selectedTab: string;
+  suggestedContent: string | null;
+  isTemplateModalOpen: boolean;
 }
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [state, setState] = useState<AppState>({
     templates: [],
     selectedTemplate: null,
@@ -74,7 +80,12 @@ const App: React.FC = () => {
     documentTree: [],
     isLoading: true,
     error: null,
+    selectedTab: 'templates',
+    suggestedContent: null,
+    isTemplateModalOpen: false,
   });
+
+  const backgroundGeneration = useBackgroundGeneration();
 
   // Load initial data
   useEffect(() => {
@@ -155,7 +166,11 @@ const App: React.FC = () => {
   };
 
   const handleTemplateSelect = (template: Template) => {
-    setState(prev => ({ ...prev, selectedTemplate: template }));
+    setState(prev => ({ ...prev, selectedTemplate: template, isTemplateModalOpen: true }));
+  };
+
+  const handleTemplateModalClose = () => {
+    setState(prev => ({ ...prev, isTemplateModalOpen: false }));
   };
 
   const refreshDocumentTree = async () => {
@@ -173,7 +188,100 @@ const App: React.FC = () => {
     }
   };
 
+  const generateDocumentInBackground = async (formData: any, options?: { useMultiagent?: boolean }) => {
+    if (!state.selectedTemplate) return;
+    
+    try {
+      console.log('Background: Starting quality pipeline generation');
+      
+      // Ensure template ID is serializable
+      const templateId = state.selectedTemplate.id;
+      if (!templateId || typeof templateId !== 'string') {
+        throw new Error('Invalid template selected');
+      }
+      
+      // Ensure form data is clean and serializable
+      const cleanFormData = JSON.parse(JSON.stringify(formData));
+      
+      const result = await window.electronAPI.generateDocument(
+        templateId,
+        cleanFormData,
+        options
+      );
+
+      console.log('Background: Generation result:', result);
+
+      if (result.success && result.data) {
+        const documentContent = result.data.documentContent || result.data.output || '';
+        
+        if (documentContent.trim()) {
+          setState(prev => ({
+            ...prev,
+            selectedDocument: {
+              content: documentContent,
+              path: result.data?.savedFilePath || `output/${result.data?.folderName || 'document-folder'}/document.md`,
+              name: `${state.selectedTemplate?.name || 'Document'} - Generated`,
+            },
+          }));
+          
+          // Show success toast
+          const folderName = result.data?.folderName || 'document-folder';
+          const categoryFolder = result.data?.categoryFolder || '';
+          const folderPath = categoryFolder ? `output/${categoryFolder}/${folderName}` : `output/${folderName}`;
+          addToast({
+            title: `Enhanced Quality Generation Complete!`,
+            description: `${state.selectedTemplate?.name} saved to: ${folderPath}`,
+            color: "success",
+            timeout: 10000,
+          });
+          
+          // Refresh document tree to show the new file
+          await refreshDocumentTree();
+          
+          console.log('Background: Document generation successful');
+        } else {
+          throw new Error('Generated document is empty');
+        }
+      } else {
+        throw new Error(result.error || 'Background generation failed');
+      }
+      
+      // Mark generation as complete
+      backgroundGeneration.completeGeneration();
+      
+    } catch (error) {
+      console.error('Background: Generation error:', error);
+      
+      let userFriendlyError = 'Background generation failed';
+      if (error instanceof Error) {
+        userFriendlyError = error.message;
+      }
+      
+      // Show error toast
+      addToast({
+        title: "Background Generation Failed",
+        description: userFriendlyError,
+        color: "danger",
+        timeout: 8000,
+      });
+      
+      // Mark generation as complete (even on error)
+      backgroundGeneration.completeGeneration();
+    }
+  };
+
   const handleDocumentSelect = async (filePath: string) => {
+    // Prevent document switching if there are pending AI suggestions
+    if (state.suggestedContent) {
+      addToast({
+        title: "Pending AI Changes",
+        description: "Please accept or reject the current AI suggestions before switching documents.",
+        color: "warning",
+        timeout: 5000,
+      });
+      return;
+    }
+
     try {
       const result = await window.electronAPI.readFile(filePath);
       if (result.success && result.data) {
@@ -191,8 +299,54 @@ const App: React.FC = () => {
     }
   };
 
-  const handleGenerateDocument = async (formData: any) => {
+  const handleGenerateDocument = async (formData: any, options?: { useMultiagent?: boolean }) => {
     if (!state.selectedTemplate) return;
+
+    // Prevent document generation if there are pending AI suggestions
+    if (state.suggestedContent) {
+      addToast({
+        title: "Pending AI Changes",
+        description: "Please accept or reject the current AI suggestions before generating a new document.",
+        color: "warning",
+        timeout: 5000,
+      });
+      return;
+    }
+
+    // Prevent multiple generations while one is running
+    if (backgroundGeneration.state.isGenerating) {
+      addToast({
+        title: "Generation In Progress",
+        description: "Please wait for the current generation to complete before starting a new one.",
+        color: "warning",
+        timeout: 5000,
+      });
+      return;
+    }
+
+    // Handle background generation for multiagent (quality pipeline)
+    if (options?.useMultiagent) {
+      console.log('App: Starting background generation with quality pipeline');
+      
+      // Start background generation tracking
+      backgroundGeneration.startGeneration(
+        state.selectedTemplate.id,
+        state.selectedTemplate.name || 'Document'
+      );
+      
+      // Show start toast
+      addToast({
+        title: "Enhanced Quality Generation Started",
+        description: `${state.selectedTemplate.name} is being generated in the background. This will take 3-4 minutes.`,
+        color: "primary",
+        timeout: 8000,
+      });
+      
+      // Start background generation - don't await it
+      generateDocumentInBackground(formData, options);
+      
+      return; // Don't block the UI
+    }
 
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -213,7 +367,8 @@ const App: React.FC = () => {
       
       const result = await window.electronAPI.generateDocument(
         templateId,
-        cleanFormData
+        cleanFormData,
+        options
       );
 
       console.log('App: Generation result:', result);
@@ -226,21 +381,23 @@ const App: React.FC = () => {
         console.log('App: Document preview:', documentContent.substring(0, 200));
         
         if (documentContent.trim()) {
-                      setState(prev => ({
-              ...prev,
-              selectedDocument: {
-                content: documentContent,
-                path: `output/${result.data?.folderName || 'document-folder'}`,
-                name: `${state.selectedTemplate?.name || 'Document'} - Generated`,
-              },
-              isLoading: false,
-            }));
+          setState(prev => ({
+            ...prev,
+            selectedDocument: {
+              content: documentContent,
+              path: result.data?.savedFilePath || `output/${result.data?.folderName || 'document-folder'}/document.md`,
+              name: `${state.selectedTemplate?.name || 'Document'} - Generated`,
+            },
+            isLoading: false,
+          }));
           
           // Show success toast with folder path
           const folderName = result.data?.folderName || 'document-folder';
+          const categoryFolder = result.data?.categoryFolder || '';
+          const folderPath = categoryFolder ? `output/${categoryFolder}/${folderName}` : `output/${folderName}`;
           addToast({
             title: `${state.selectedTemplate?.name || 'Document'} generated successfully!`,
-            description: `Saved to folder: output/${folderName}`,
+            description: `Saved to: ${folderPath}`,
             color: "success",
             timeout: 7000,
           });
@@ -308,6 +465,61 @@ const App: React.FC = () => {
     }
   };
 
+  const handleContentSaved = (newContent: string) => {
+    // Update the selected document content in state
+    setState(prev => ({
+      ...prev,
+      selectedDocument: prev.selectedDocument ? {
+        ...prev.selectedDocument,
+        content: newContent,
+      } : null,
+    }));
+  };
+
+  const handleSuggestedContent = useCallback((suggestedContent: string) => {
+    // Debounce suggested content updates to prevent excessive re-renders
+    const timer = setTimeout(() => {
+      setState(prev => ({
+        ...prev,
+        suggestedContent
+      }));
+    }, 150); // 150ms delay to prevent excessive updates
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleAcceptSuggestedContent = () => {
+    if (state.suggestedContent) {
+      handleContentSaved(state.suggestedContent);
+      setState(prev => ({
+        ...prev,
+        suggestedContent: null
+      }));
+    }
+  };
+
+  const handleRejectSuggestedContent = () => {
+    setState(prev => ({
+      ...prev,
+      suggestedContent: null
+    }));
+  };
+
+  const handleTabSelect = (key: string) => {
+    // Prevent tab switching if there are pending AI suggestions
+    if (state.suggestedContent) {
+      addToast({
+        title: "Pending AI Changes",
+        description: "Please accept or reject the current AI suggestions before switching tabs.",
+        color: "warning",
+        timeout: 5000,
+      });
+      return;
+    }
+
+    setState(prev => ({ ...prev, selectedTab: key }));
+  };
+
   if (state.isLoading && state.templates.length === 0) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -338,11 +550,10 @@ const App: React.FC = () => {
   }
 
   return (
-    <ThemeProvider defaultTheme="light">
-      <ErrorBoundary>
-        <div className="h-screen flex flex-col bg-background">
+    <ErrorBoundary>
+      <div className="h-screen flex flex-col bg-background">
           {/* Header */}
-          <header className="bg-card border-b border-dashed border-divider/60 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
+          <header className="bg-card border-b-dashed-custom border-gray-500 dark:border-gray-400 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="relative">
@@ -375,7 +586,7 @@ const App: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-card border border-divider/60">
+                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-card border-2 border-gray-300 dark:border-gray-600">
                   <svg 
                     className="w-4 h-4 text-foreground/40" 
                     fill="none" 
@@ -403,8 +614,8 @@ const App: React.FC = () => {
           {/* Main Content - Three Pane Layout */}
           <main className="flex-1 flex overflow-hidden">
             {/* Left Pane - Document Browser */}
-            <div className="w-80 bg-card border-r border-dashed border-divider flex flex-col">
-              <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
+            <div className="w-80 bg-card border-r-dashed-custom border-gray-500 dark:border-gray-400 flex flex-col">
+              <div className="border-b-dashed-custom border-gray-500 dark:border-gray-400 bg-background/50 backdrop-blur-sm p-4">
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -436,39 +647,63 @@ const App: React.FC = () => {
                 documentName={state.selectedDocument?.name || ''}
                 documentPath={state.selectedDocument?.path || ''}
                 generatedAt={new Date().toISOString()}
+                onContentSaved={handleContentSaved}
+                suggestedContent={state.suggestedContent || undefined}
+                onSuggestedContentAccepted={handleAcceptSuggestedContent}
+                onSuggestedContentRejected={handleRejectSuggestedContent}
               />
             </div>
 
-            {/* Right Pane - Template Selector */}
-            <div className="w-80 bg-card border-l border-dashed border-divider flex flex-col">
-              <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-sm text-foreground">Templates</h2>
-                    <p className="text-xs text-foreground/60">Generate new documents</p>
-                  </div>
+            {/* Right Pane - Tabbed Interface */}
+                <div className="w-96 bg-card border-l-dashed-custom border-gray-500 dark:border-gray-400 flex flex-col h-full">
+                <div className="border-b-dashed-custom border-gray-500 dark:border-gray-400 bg-background/50 backdrop-blur-sm py-3.5">
+                <div className="flex items-center justify-center">
+                  <Tabs
+                    selectedKey={state.selectedTab}
+                    onSelectionChange={(key) => handleTabSelect(key as string)}
+                    variant="underlined"
+                    size="sm"
+                    classNames={{
+                      tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                      cursor: "w-full bg-primary h-0.5",
+                      tab: "max-w-fit px-0 h-10",
+                      tabContent: "group-data-[selected=true]:text-primary font-semibold text-sm text-foreground/60 group-data-[selected=true]:text-foreground"
+                    }}
+                  >
+                    <Tab key="templates" title="Templates">
+                    </Tab>
+                    <Tab key="ai-assistant" title="Rewrite with AI">
+                      {/* Removed duplicate AI Assistant heading - the tab title is sufficient */}
+                    </Tab>
+                  </Tabs>
                 </div>
               </div>
               <div className="flex-1 overflow-hidden">
-                <TemplateSelector
-                  templates={state.templates}
-                  selectedTemplate={state.selectedTemplate}
-                  onTemplateSelect={handleTemplateSelect}
-                  onGenerateDocument={handleGenerateDocument}
-                />
+                {state.selectedTab === 'templates' && (
+                  <TemplateSelector
+                    templates={state.templates}
+                    selectedTemplate={state.selectedTemplate}
+                    onTemplateSelect={handleTemplateSelect}
+                    onGenerateDocument={handleGenerateDocument}
+                    isModalOpen={state.isTemplateModalOpen}
+                    onModalClose={handleTemplateModalClose}
+                  />
+                )}
+                {state.selectedTab === 'ai-assistant' && (
+                  <AIAssistant
+                    documentContent={state.selectedDocument?.content || ''}
+                    documentName={state.selectedDocument?.name || ''}
+                    documentPath={state.selectedDocument?.path || ''}
+                    onDocumentUpdate={handleSuggestedContent}
+                    isVisible={true}
+                  />
+                )}
               </div>
             </div>
           </main>
 
           {/* Status Bar */}
-          <footer className="bg-card border-t border-divider px-6 py-2">
+          <footer className="bg-card border-t-2 border-gray-300 dark:border-gray-600 px-6 py-2">
             <div className="flex items-center justify-between text-sm text-foreground/60">
               <div>Ready</div>
               <div>
@@ -480,7 +715,17 @@ const App: React.FC = () => {
             </div>
           </footer>
         </div>
+        <BackgroundGenerationStatus isModalOpen={state.isTemplateModalOpen} />
       </ErrorBoundary>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ThemeProvider defaultTheme="light">
+      <BackgroundGenerationProvider>
+        <AppContent />
+      </BackgroundGenerationProvider>
     </ThemeProvider>
   );
 };

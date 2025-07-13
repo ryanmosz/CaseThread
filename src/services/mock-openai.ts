@@ -4,6 +4,7 @@
 
 import { OpenAIConfig, GenerationResult } from '../types/openai';
 import { Template, YamlData } from '../types';
+import { ContextBundle } from '../types/agents';
 import { logger } from '../utils/logger';
 
 export class MockOpenAIService {
@@ -46,7 +47,8 @@ export class MockOpenAIService {
   async generateDocument(
     template: Template,
     _explanation: string,
-    yamlData: YamlData
+    yamlData: YamlData,
+    contextBundle?: ContextBundle
   ): Promise<GenerationResult> {
     this.callCount++;
     
@@ -59,7 +61,7 @@ export class MockOpenAIService {
     }
 
     // Generate mock content
-    const content = this.customResponse || this.generateMockContent(template, yamlData);
+    const content = this.customResponse || this.generateMockContent(template, yamlData, contextBundle);
     
     // Calculate mock usage
     const usage = {
@@ -73,7 +75,9 @@ export class MockOpenAIService {
 
     logger.info('Mock document generated', {
       templateId: template.id,
-      callCount: this.callCount
+      callCount: this.callCount,
+      contextUsed: contextBundle ? true : false,
+      contextResults: contextBundle?.embeddings?.length || 0
     });
 
     return {
@@ -121,7 +125,7 @@ export class MockOpenAIService {
   /**
    * Generate realistic mock content based on template
    */
-  private generateMockContent(template: Template, yamlData: YamlData): string {
+  private generateMockContent(template: Template, yamlData: YamlData, contextBundle?: ContextBundle): string {
     const sections = template.sections
       .sort((a, b) => a.order - b.order)
       .map(section => {
@@ -129,6 +133,11 @@ export class MockOpenAIService {
         return `## ${section.title}\n\n${content}`;
       })
       .join('\n\n');
+
+    // Add context indication if available
+    const contextNote = contextBundle && contextBundle.embeddings.length > 0 
+      ? `\n\n*[Generated using ${contextBundle.embeddings.length} relevant precedents from firm database]*`
+      : '';
 
     return `# ${template.name}
 
@@ -155,7 +164,7 @@ Date: _________________________
 ---
 
 *This is a mock-generated document for testing purposes.*
-*Template: ${template.id} v${template.version}*`;
+*Template: ${template.id} v${template.version}*${contextNote}`;
   }
 
   /**

@@ -25,6 +25,9 @@ export const IPC_CHANNELS = {
   // Dialog operations
   SHOW_SAVE_DIALOG: 'dialog:showSaveDialog',
   SHOW_OPEN_DIALOG: 'dialog:showOpenDialog',
+  
+  // AI Assistant operations
+  CALL_AI_ASSISTANT: 'ai:callAssistant',
 } as const;
 
 // Recursively build directory tree structure
@@ -139,7 +142,7 @@ export function setupIpcHandlers(): void {
   });
 
   // CLI operation handlers
-  ipcMain.handle(IPC_CHANNELS.GENERATE_DOCUMENT, async (_, { templateId, formData }: { templateId: string; formData: any }) => {
+  ipcMain.handle(IPC_CHANNELS.GENERATE_DOCUMENT, async (_, { templateId, formData, options }: { templateId: string; formData: any; options?: { useMultiagent?: boolean } }) => {
     try {
       console.log('IPC: Generate document called with:', { templateId, formData });
       
@@ -155,15 +158,31 @@ export function setupIpcHandlers(): void {
       // Ensure form data is clean and serializable
       const cleanFormData = JSON.parse(JSON.stringify(formData));
       
+      // Load template metadata for better organization
+      const templatePath = path.join(process.cwd(), 'templates', 'core', `${templateId}.json`);
+      let templateMetadata: { name?: string; type?: string } = {};
+      
+      try {
+        const templateContent = await fs.readFile(templatePath, 'utf-8');
+        const template = JSON.parse(templateContent);
+        templateMetadata = {
+          name: template.name,
+          type: template.type
+        };
+      } catch (error) {
+        console.warn('IPC: Could not load template metadata:', error);
+      }
+      
       // Create organized folder structure for this document
       const baseOutputDir = path.join(process.cwd(), 'output');
-      const documentPaths = createDocumentPaths(baseOutputDir, templateId);
+      const documentPaths = createDocumentPaths(baseOutputDir, templateId, templateMetadata);
       const yamlContent = createYamlFromFormData(cleanFormData, templateId);
       
       console.log('IPC: Creating document folder:', documentPaths.folderName);
+      console.log('IPC: Category folder:', documentPaths.categoryFolder);
       console.log('IPC: Generated YAML content:', yamlContent);
       
-      // Create the document folder structure
+      // Create the document folder structure (including category folder)
       await fs.mkdir(documentPaths.folderPath, { recursive: true });
       
       // Save form data as YAML in the folder
@@ -171,12 +190,18 @@ export function setupIpcHandlers(): void {
       console.log('IPC: Form data saved to:', documentPaths.formDataPath);
 
       // Execute CLI command to generate document in the folder
-      const command = `npm run cli -- generate ${templateId} "${documentPaths.formDataPath}" --output "${documentPaths.folderPath}"`;
+      const qualityFlag = options?.useMultiagent ? ' --quality' : '';
+      const command = `npm run cli -- generate ${templateId} "${documentPaths.formDataPath}" --output "${documentPaths.folderPath}"${qualityFlag}`;
       console.log('IPC: Executing command:', command);
+      console.log('IPC: Using multiagent pipeline:', options?.useMultiagent || false);
+      
+      // Set timeout based on whether quality pipeline is being used
+      const timeoutMs = options?.useMultiagent ? 300000 : 60000; // 5 minutes for quality, 1 minute for normal
+      console.log('IPC: Using timeout:', timeoutMs / 1000, 'seconds');
       
       const { stdout, stderr } = await execAsync(command, {
         cwd: process.cwd(),
-        timeout: 60000, // 60 second timeout
+        timeout: timeoutMs,
       });
 
       console.log('IPC: Command completed:', { 
@@ -197,11 +222,18 @@ export function setupIpcHandlers(): void {
           const generatedDocPath = path.join(documentPaths.folderPath, documentFile);
           documentContent = await fs.readFile(generatedDocPath, 'utf-8');
           
-          // Move the generated document to the standard "document.md" name
-          await fs.rename(generatedDocPath, documentPaths.documentPath);
+          // Remove metadata comments for UI-generated documents to keep diff editor clean
+          documentContent = removeMetadataComments(documentContent);
+          
+          // Save the clean document content to the standard "document.md" name
+          await fs.writeFile(documentPaths.documentPath, documentContent, 'utf-8');
+          
+          // Remove the original CLI-generated file since we've created the clean version
+          await fs.unlink(generatedDocPath);
+          
           finalDocumentPath = documentPaths.documentPath;
           
-          console.log('IPC: Document content loaded, length:', documentContent.length);
+          console.log('IPC: Document content loaded and cleaned, length:', documentContent.length);
           console.log('IPC: Document organized and saved to:', finalDocumentPath);
         } else {
           console.warn('IPC: No generated document file found in output folder');
@@ -220,6 +252,7 @@ export function setupIpcHandlers(): void {
           savedFilePath: finalDocumentPath, // Path to the document file
           folderPath: documentPaths.folderPath, // Path to the folder containing both files
           folderName: documentPaths.folderName, // Name of the generated folder
+          categoryFolder: documentPaths.categoryFolder, // Category folder (Letters, Agreements, etc.)
           formDataPath: documentPaths.formDataPath // Path to the form data YAML file
         }
       };
@@ -288,6 +321,57 @@ export function setupIpcHandlers(): void {
     });
     return result;
   });
+
+  // AI Assistant handler
+  ipcMain.handle(IPC_CHANNELS.CALL_AI_ASSISTANT, async (_, prompt: string) => {
+    try {
+      // Import OpenAI directly for chat completion
+      const OpenAI = await import('openai');
+      
+      // Create OpenAI client
+      const apiKey = process.env.OPENAI_API_KEY || '';
+      
+      // Validate API key
+      if (!apiKey) {
+        throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY in your environment variables.');
+      }
+      
+      const openai = new OpenAI.default({
+        apiKey: apiKey,
+        timeout: 60000
+      });
+      
+                   // Create chat completion for AI assistant
+      // The prompt from the UI already contains the full system prompt + user request
+      // So we use it directly as the system message to preserve all context and limitations
+      const completion = await openai.chat.completions.create({
+        model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: prompt
+          }
+        ],
+        max_tokens: 4000,
+        temperature: 0.3,
+        stream: false
+      });
+      
+      const response = completion.choices[0]?.message?.content;
+      
+      if (!response) {
+        throw new Error('No response received from AI assistant');
+      }
+      
+      return { success: true, data: response };
+    } catch (error) {
+      console.error('AI Assistant error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
+    }
+  });
 }
 
 // Security: Validate file paths to prevent directory traversal
@@ -353,4 +437,11 @@ function createYamlFromFormData(formData: any, templateId: string): string {
   }
   
   return yamlLines.join('\n');
+} 
+
+// Function to remove metadata comments from a Markdown document
+function removeMetadataComments(content: string): string {
+  // Remove HTML-style metadata comments at the beginning of the document
+  // This regex matches the entire comment block including the <!-- and --> tags
+  return content.replace(/^<!--\s*\n(Generated by CaseThread CLI POC[\s\S]*?)\s*-->\s*\n+/, '');
 } 
