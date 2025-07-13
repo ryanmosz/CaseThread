@@ -376,7 +376,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   // Clean up blob URL when component unmounts
   useEffect(() => {
     return () => {
-      if (pdfBlobUrl) {
+      if (blobUrl) {
         clearPDF();
       }
     };
@@ -384,7 +384,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
 
   // Reset view mode and clear PDF when document changes
   useEffect(() => {
-    if (pdfBlobUrl) {
+    if (blobUrl) {
       clearPDF();
     }
     setViewMode('text');
@@ -650,7 +650,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
                 color={viewMode === 'pdf' ? 'primary' : 'default'}
                 onClick={() => setViewMode('pdf')}
                 startContent={<ViewIcon />}
-                isDisabled={!pdfBlobUrl}
+                isDisabled={!blobUrl}
               >
                 PDF
               </Button>
