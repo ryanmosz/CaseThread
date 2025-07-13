@@ -810,11 +810,22 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
               </div>
             }>
               <DiffViewer
-                original={content}
-                modified={suggestedContent}
-                onAccept={handleAcceptSuggestedContent}
-                onReject={handleRejectSuggestedContent}
-                onToggle={() => setShowDiff(!showDiff)}
+                originalText={content}
+                modifiedText={suggestedContent}
+                title="AI Suggested Changes"
+                onApplyChanges={async (newContent: string) => {
+                  setEditedContent(newContent);
+                  if (onSuggestedContentAccepted) {
+                    onSuggestedContentAccepted();
+                  }
+                  setShowDiff(false);
+                }}
+                onClose={() => {
+                  if (onSuggestedContentRejected) {
+                    onSuggestedContentRejected();
+                  }
+                  setShowDiff(false);
+                }}
               />
             </ErrorBoundary>
           ) : (
