@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 /**
- * Generates a timestamp string in format YYYY-MM-DD-HHMMSS
+ * Generates a timestamp string in format YYYY-MM-DD HH:MM:SS
  */
 export function generateTimestamp(): string {
   const now = new Date();
@@ -13,45 +13,89 @@ export function generateTimestamp(): string {
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
   
-  return `${year}-${month}-${day}-${hours}${minutes}${seconds}`;
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
- * Generates a folder name for document generation
- * Format: [YYYY-MM-DD-HHMMSS]-[document-type]
- * Example: 2024-01-15-143052-patent-assignment
+ * Maps template types to organized folder categories
  */
-export function generateDocumentFolderName(documentType: string): string {
-  const timestamp = generateTimestamp();
-  return `${timestamp}-${documentType}`;
+const TEMPLATE_TYPE_TO_FOLDER: Record<string, string> = {
+  'letter': 'Letters',
+  'application': 'Applications',
+  'response': 'Responses',
+  'agreement': 'Agreements',
+  'motion': 'Motions',
+  'brief': 'Briefs',
+  'memo': 'Memos',
+  'notice': 'Notices',
+  'petition': 'Petitions',
+  'contract': 'Contracts',
+  'default': 'Documents'
+};
+
+/**
+ * Gets the appropriate folder name for a template type
+ */
+export function getFolderForTemplateType(templateType: string): string {
+  return TEMPLATE_TYPE_TO_FOLDER[templateType] || TEMPLATE_TYPE_TO_FOLDER['default'];
 }
 
 /**
- * Generates a timestamp-based filename for the output document
+ * Generates a readable document folder name
+ * Format: [Document Name] - [YYYY-MM-DD HH:MM:SS]
+ * Example: Cease and Desist Letter (IP Infringement) - 2024-01-15 14:30:52
+ */
+export function generateDocumentFolderName(templateName: string): string {
+  const timestamp = generateTimestamp();
+  return `${templateName} - ${timestamp}`;
+}
+
+/**
+ * Generates a timestamp-based filename for the output document (legacy)
  * Format: [document-type]-[YYYY-MM-DD-HHMMSS].md
  * Example: patent-assignment-2024-01-15-143052.md
  */
 export function generateOutputFilename(documentType: string): string {
-  const timestamp = generateTimestamp();
+  const timestamp = generateTimestamp().replace(/[: ]/g, '-');
   return `${documentType}-${timestamp}.md`;
 }
 
 /**
  * Creates organized folder structure for document generation
- * Returns: { folderPath, documentPath, formDataPath }
+ * Returns: { categoryFolder, folderName, folderPath, documentPath, formDataPath }
  */
-export function createDocumentPaths(outputDir: string, documentType: string): {
+export function createDocumentPaths(
+  outputDir: string, 
+  templateId: string, 
+  templateMetadata?: {
+    name?: string;
+    type?: string;
+  }
+): {
+  categoryFolder: string;
   folderName: string;
   folderPath: string;
   documentPath: string;
   formDataPath: string;
 } {
-  const folderName = generateDocumentFolderName(documentType);
-  const folderPath = path.join(outputDir, folderName);
+  // Use template metadata if provided, otherwise fall back to ID
+  const templateName = templateMetadata?.name || templateId;
+  const templateType = templateMetadata?.type || 'default';
+  
+  // Get the category folder (Letters, Agreements, etc.)
+  const categoryFolder = getFolderForTemplateType(templateType);
+  
+  // Generate the document folder name
+  const folderName = generateDocumentFolderName(templateName);
+  
+  // Create the full path structure
+  const categoryPath = path.join(outputDir, categoryFolder);
+  const folderPath = path.join(categoryPath, folderName);
   const documentPath = path.join(folderPath, 'document.md');
   const formDataPath = path.join(folderPath, 'form-data.yaml');
   
   return {
+    categoryFolder,
     folderName,
     folderPath,
     documentPath,

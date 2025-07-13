@@ -13,17 +13,24 @@ jest.mock('../../src/services/template', () => ({
 }));
 
 // Mock generateDocument to produce markdown reflecting only the passed template sections
-const mockGenerateDocument = jest.fn(async (template: Template) => {
+const mockGenerateDocument = jest.fn(async (template: Template, _explanation: string, _yamlData: any, contextBundle?: ContextBundle) => {
   const lines: string[] = ['# Mock Document', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'];
   template.sections.forEach(sec => {
     lines.push(`## ${sec.title}`);
     lines.push(sec.content);
   });
+  
+  // Add context indication if available
+  if (contextBundle && contextBundle.embeddings.length > 0) {
+    lines.push(`\n*Generated with ${contextBundle.embeddings.length} context results*`);
+  }
+  
   return lines.join('\n');
 });
 
 jest.mock('../../src/services/openai', () => ({
-  generateDocument: (template: Template) => mockGenerateDocument(template)
+  generateDocument: (template: Template, explanation: string, yamlData: any, contextBundle?: ContextBundle) => 
+    mockGenerateDocument(template, explanation, yamlData, contextBundle)
 }));
 
 describe('DraftingAgent section filter', () => {
@@ -81,6 +88,13 @@ describe('DraftingAgent section filter', () => {
           expect.objectContaining({ id: 's1' }),
           expect.objectContaining({ id: 's3' })
         ])
+      }),
+      expect.any(String), // explanation
+      expect.any(Object), // yamlData
+      expect.objectContaining({ // contextBundle
+        embeddings: [],
+        sources: [],
+        totalTokens: 0
       })
     );
   });

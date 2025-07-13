@@ -1,7 +1,18 @@
 import { app, BrowserWindow, Menu, shell } from 'electron';
 import * as path from 'path';
+import * as dotenv from 'dotenv';
 import { setupIpcHandlers } from './ipc-handlers.js';
 import { createApplicationMenu } from './menu.js';
+
+// Load environment variables from .env file
+try {
+  dotenv.config();
+  console.log('Environment variables loaded successfully');
+  console.log('OPENAI_API_KEY configured:', process.env.OPENAI_API_KEY ? 'Yes' : 'No');
+  console.log('OPENAI_CHAT_MODEL:', process.env.OPENAI_CHAT_MODEL || 'Not set (will use default)');
+} catch (error) {
+  console.warn('Failed to load .env file:', error);
+}
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling
 if (require('electron-squirrel-startup')) {
