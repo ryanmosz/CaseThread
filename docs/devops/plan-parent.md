@@ -13,6 +13,8 @@
 - **GUI Workflow**: `docs/planning/gui-pdf-workflow-plan.md` - PDF workflow in 3-pane GUI
 - **Integration Analysis**: `docs/testing/test-output/g-branch-integration-analysis.md` - G's features available
 - **Handoff Docs**: `docs/handoff/pdf-modularization-handoff.md` - PDF service status
+- **PDF Service API**: `docs/api/pdf-service-api.md` - Complete API reference for PDF service
+- **CORRECT Task 6.0**: GUI Integration as described in `docs/tasks/complete/developer-r-tasks.md` lines 79-109 (NOT the signature blocks task)
 
 ### Developer Focus Areas
 - Integrating modular PDF service into Electron GUI
@@ -276,4 +278,23 @@ docs/testing/
 **Note**: Always run `npm test` first when picking up work to understand current state.
 
 ## Parent Task to Plan:
-[Insert specific parent task details here]
+<!-- UPDATE THIS SECTION FOR EACH NEW PARENT TASK -->
+Task 6.0 - GUI Integration
+
+### Starting Instructions for New Agent
+Please start Task 6.0 - GUI Integration following the plan-parent.md process.
+
+**Key Objectives:**
+1. Connect PDF service to GUI using `PDFServiceFactory.forGUI()` with callback progress
+2. Add PDF generation button to EnhancedDocumentViewer component
+3. Display PDF preview in viewer (consider PDF.js library or iframe approach)
+4. Use BackgroundGenerationStatus component for progress display
+5. Implement export-to-file functionality after preview approval
+
+**Important Notes:**
+- The PDF service is fully modularized and ready (Task 5 complete)
+- Use buffer generation (`exportToBuffer()`) for preview functionality
+- Focus on the GUI integration layer - do NOT refactor the PDF service
+- Reference `docs/planning/gui-pdf-workflow-plan.md` for the detailed workflow
+- Developer G's quality pipeline can enhance documents before PDF generation
+- All IPC communication must go through proper Electron channels
