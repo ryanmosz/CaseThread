@@ -23,10 +23,12 @@ import {
   ModalFooter
 } from '@heroui/react';
 import DiffViewer from './DiffViewer';
+import { PDFViewer } from './PDFViewer';
 import { usePDFGeneration } from '../hooks/usePDFGeneration';
 import { usePDFExport } from '../hooks/usePDFExport';
 import { DocumentType } from '../../../../types';
 import { ViewModeType, PDFMetadataExtended } from '../../../../types/pdf';
+import { BlobURLManager } from '../services/BlobURLManager';
 
 // PDF Icon Component
 const PDFIcon = () => (
@@ -267,15 +269,18 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   const [viewMode, setViewMode] = useState<ViewModeType>('text');
   const [showMetadata, setShowMetadata] = useState(false);
   
+  // Blob URL Manager instance
+  const blobURLManager = useMemo(() => BlobURLManager.getInstance(), []);
+  
   // PDF Generation Hook
   const { 
     generatePDF, 
     isGenerating, 
     progress, 
     error: pdfError, 
-    pdfBlobUrl,
-    pdfBuffer,
-    pdfMetadata,
+    currentBuffer,
+    blobUrl,
+    metadata,
     cancelGeneration,
     clearPDF
   } = usePDFGeneration();
@@ -668,7 +673,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
             </Button>
 
             {/* PDF Info Button - show when PDF metadata is available */}
-            {pdfMetadata && (
+            {metadata && (
               <Button
                 variant="flat"
                 size="sm"
@@ -685,8 +690,12 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
               size="sm"
               color="primary"
               isLoading={isExporting}
-              isDisabled={!pdfBuffer || isExporting}
-              onClick={exportPDF}
+              isDisabled={!currentBuffer || isExporting}
+              onClick={() => {
+                if (currentBuffer && documentName) {
+                  exportPDF(currentBuffer, documentName.replace(/\.[^/.]+$/, '') + '.pdf');
+                }
+              }}
               startContent={!isExporting && <DownloadIcon />}
             >
               {isExporting ? 'Exporting...' : 'Export PDF'}
@@ -732,8 +741,12 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
                 </DropdownItem>
                 <DropdownItem
                   key="pdf"
-                  onClick={exportPDF}
-                  isDisabled={!pdfBuffer || isExporting}
+                  onClick={() => {
+                    if (currentBuffer && documentName) {
+                      exportPDF(currentBuffer, documentName.replace(/\.[^/.]+$/, '') + '.pdf');
+                    }
+                  }}
+                  isDisabled={!currentBuffer || isExporting}
                   startContent={<DownloadIcon />}
                 >
                   Export as PDF
@@ -811,15 +824,23 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
         ) : (
           // PDF view
           <div className="h-full w-full">
-            {pdfBlobUrl ? (
-              <iframe
-                src={pdfBlobUrl}
-                className="w-full h-full border-0"
-                title="PDF Preview"
+            {blobUrl ? (
+              <PDFViewer 
+                url={blobUrl} 
+                onClose={() => setViewMode('text')} 
               />
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-foreground/60">No PDF generated yet</p>
+                <div className="text-center">
+                  <p className="text-foreground/60 mb-4">No PDF generated yet</p>
+                  <Button 
+                    color="primary"
+                    onClick={handleGeneratePDF}
+                    isLoading={isGenerating}
+                  >
+                    Generate PDF
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -867,9 +888,9 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
       )}
 
       {/* PDF Metadata Panel */}
-      {pdfMetadata && (
+      {metadata && (
         <PDFMetadataPanel
-          metadata={pdfMetadata}
+          metadata={metadata}
           isOpen={showMetadata}
           onClose={() => setShowMetadata(false)}
         />

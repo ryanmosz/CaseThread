@@ -87,10 +87,12 @@
     "js-yaml": "^4.1.0",
     "openai": "^4.78.1",
     "ora": "^8.1.1",
+    "pdfjs-dist": "^3.11.174",
     "pdfkit": "^0.17.1",
     "react": "^19.1.0",
     "react-arborist": "^3.4.3",
     "react-dom": "^19.1.0",
+    "react-pdf": "^7.7.0",
     "uuid": "^11.1.0",
     "winston": "3.17.0"
   }

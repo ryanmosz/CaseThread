@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { 
   PDFGenerateRequest, 
@@ -7,6 +7,8 @@ import {
   PDFCancelRequest
 } from '../../../../types/pdf-ipc';
 import { DocumentType } from '../../../../types';
+import { PDFMetadataExtended } from '../../../../types/pdf';
+import { BlobURLManager } from '../services/BlobURLManager';
 
 // Simple logger for renderer process
 const logger = {
@@ -29,21 +31,26 @@ export interface UsePDFGenerationResult {
   isGenerating: boolean;
   progress: PDFProgressUpdate | null;
   error: string | null;
-  pdfBlobUrl: string | null;
-  pdfBuffer: ArrayBuffer | null;
-  pdfMetadata: any | null;
+  currentBuffer: ArrayBuffer | null;
+  blobUrl: string | null;
+  metadata: PDFMetadataExtended | null;
   cancelGeneration: () => void;
   clearPDF: () => void;
 }
 
-export const usePDFGeneration = (): UsePDFGenerationResult => {
+export const usePDFGeneration = (
+  addToast: (toast: { title: string; description: string; color: string }) => void
+): UsePDFGenerationResult => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState<PDFProgressUpdate | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
-  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
-  const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
-  const [pdfMetadata, setPdfMetadata] = useState<any | null>(null);
+  const [currentBuffer, setCurrentBuffer] = useState<ArrayBuffer | null>(null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [metadata, setMetadata] = useState<PDFMetadataExtended | null>(null);
+  
+  // Blob URL Manager
+  const blobManager = useMemo(() => BlobURLManager.getInstance(), []);
 
   // Register event listeners
   useEffect(() => {
@@ -59,6 +66,11 @@ export const usePDFGeneration = (): UsePDFGenerationResult => {
         logger.error('PDF generation error', data);
         setError(data.errorMessage || 'PDF generation failed');
         setIsGenerating(false);
+        addToast({
+          title: 'PDF Generation Failed',
+          description: data.errorMessage || 'An error occurred while generating the PDF',
+          color: 'danger'
+        });
       }
     };
 
@@ -71,11 +83,20 @@ export const usePDFGeneration = (): UsePDFGenerationResult => {
       window.electronAPI.pdf.offProgress(handleProgress);
       window.electronAPI.pdf.offError(handleError);
     };
-  }, [currentRequestId]);
+  }, [currentRequestId, addToast]);
+
+  // Clean up blob URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (blobUrl && currentRequestId) {
+        blobManager.revokeURL(`pdf-${currentRequestId}`);
+      }
+    };
+  }, [blobUrl, currentRequestId, blobManager]);
 
   const generatePDF = useCallback(async (content: string, documentType: DocumentType) => {
     const requestId = uuidv4();
-    const documentId = `doc-${uuidv4()}`; // Generate a unique document ID
+    const documentId = `doc-${uuidv4()}`;
     setCurrentRequestId(requestId);
     setIsGenerating(true);
     setError(null);
@@ -85,7 +106,7 @@ export const usePDFGeneration = (): UsePDFGenerationResult => {
       requestId,
       content,
       documentType,
-      documentId, // Add the missing documentId field
+      documentId,
       options: {
         fontSize: 12,
         lineSpacing: 'double',
@@ -110,49 +131,74 @@ export const usePDFGeneration = (): UsePDFGenerationResult => {
           pageCount: response.data.metadata.pageCount
         });
         
-        // Log success
-        console.log('PDF generated successfully!', {
+        // Store the buffer
+        setCurrentBuffer(response.data.buffer);
+        
+        // Store enhanced metadata
+        const enhancedMetadata: PDFMetadataExtended = {
           pageCount: response.data.metadata.pageCount,
           fileSize: response.data.metadata.fileSize,
-          documentType: response.data.metadata.documentType
-        });
-        
-        // Store the buffer
-        setPdfBuffer(response.data.buffer);
-        
-        // Store metadata with generation timestamp
-        setPdfMetadata({
-          ...response.data.metadata,
+          documentType: response.data.metadata.documentType,
           generatedAt: new Date(),
-          generationTime: response.data.metadata.generationTime || 0
-        });
+          generationTime: response.data.metadata.generationTime || 0,
+          hasSignatureBlocks: response.data.metadata.hasSignatureBlocks,
+          formFields: response.data.metadata.formFields,
+          fontSize: response.data.metadata.fontSize,
+          lineSpacing: response.data.metadata.lineSpacing,
+          margins: response.data.metadata.margins,
+          signatureBlockCount: response.data.metadata.signatureBlockCount,
+          warnings: response.data.metadata.warnings
+        };
+        setMetadata(enhancedMetadata);
         
-        // Create blob for display
-        const blob = new Blob([response.data.buffer], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        setPdfBlobUrl(url);
+        // Create and manage blob URL
+        const url = blobManager.createBlobURL(
+          response.data.buffer, 
+          'application/pdf',
+          `pdf-${requestId}`
+        );
+        setBlobUrl(url);
         
         // Store globally for debugging
         (window as any).__lastGeneratedPDF = {
           buffer: response.data.buffer,
-          metadata: response.data.metadata,
+          metadata: enhancedMetadata,
           documentType: documentType,
           timestamp: new Date()
         };
         
         setIsGenerating(false);
+        
+        addToast({
+          title: 'PDF Generated Successfully',
+          description: `${enhancedMetadata.pageCount} pages created`,
+          color: 'success'
+        });
       } else {
         logger.error('PDF generation failed', response);
-        setError(response.error?.message || 'PDF generation failed');
+        const errorMsg = response.error?.message || 'PDF generation failed';
+        setError(errorMsg);
         setIsGenerating(false);
+        
+        addToast({
+          title: 'PDF Generation Failed',
+          description: errorMsg,
+          color: 'danger'
+        });
       }
     } catch (err) {
       logger.error('PDF generation exception', err);
       const errorMessage = err instanceof Error ? err.message : 'PDF generation failed';
       setError(errorMessage);
       setIsGenerating(false);
+      
+      addToast({
+        title: 'PDF Generation Error',
+        description: errorMessage,
+        color: 'danger'
+      });
     }
-  }, []);
+  }, [blobManager, addToast]);
 
   const cancelGeneration = useCallback(() => {
     if (currentRequestId) {
@@ -162,27 +208,33 @@ export const usePDFGeneration = (): UsePDFGenerationResult => {
       setIsGenerating(false);
       setCurrentRequestId(null);
       setProgress(null);
+      
+      addToast({
+        title: 'PDF Generation Cancelled',
+        description: 'The PDF generation was cancelled',
+        color: 'warning'
+      });
     }
-  }, [currentRequestId]);
+  }, [currentRequestId, addToast]);
 
   const clearPDF = useCallback(() => {
-    if (pdfBlobUrl) {
-      URL.revokeObjectURL(pdfBlobUrl);
-      setPdfBlobUrl(null);
+    if (blobUrl && currentRequestId) {
+      blobManager.revokeURL(`pdf-${currentRequestId}`);
+      setBlobUrl(null);
     }
-    setPdfBuffer(null);
-    setPdfMetadata(null);
+    setCurrentBuffer(null);
+    setMetadata(null);
     setError(null);
-  }, [pdfBlobUrl]);
+  }, [blobUrl, currentRequestId, blobManager]);
 
   return {
     generatePDF,
     isGenerating,
     progress,
     error,
-    pdfBlobUrl,
-    pdfBuffer,
-    pdfMetadata,
+    currentBuffer,
+    blobUrl,
+    metadata,
     cancelGeneration,
     clearPDF
   };

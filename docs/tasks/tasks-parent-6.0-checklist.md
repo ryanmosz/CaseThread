@@ -54,10 +54,10 @@
   - [x] 6.0.3.4 [Add export PDF button] (Details: tasks-parent-6.0.3.4-detailed.md)
 
 - [ ] 6.0.4 PDF Display Implementation
-  - [ ] 6.0.4.1 [Implement PDF viewer component] (Details: tasks-parent-6.0.4.1-detailed.md)
-  - [ ] 6.0.4.2 [Handle blob URL creation and cleanup] (Details: tasks-parent-6.0.4.2-detailed.md)
-  - [ ] 6.0.4.3 [Add PDF navigation controls] (Details: tasks-parent-6.0.4.3-detailed.md)
-  - [ ] 6.0.4.4 [Implement responsive PDF sizing] (Details: tasks-parent-6.0.4.4-detailed.md)
+  - [x] 6.0.4.1 [Implement PDF viewer component] (Details: tasks-parent-6.0.4.1-detailed.md)
+  - [x] 6.0.4.2 [Handle blob URL creation and cleanup] (Details: tasks-parent-6.0.4.2-detailed.md)
+  - [x] 6.0.4.3 [Add PDF navigation controls] (Details: tasks-parent-6.0.4.3-detailed.md)
+  - [x] 6.0.4.4 [Implement responsive PDF sizing] (Details: tasks-parent-6.0.4.4-detailed.md)
 
 - [ ] 6.0.5 Progress Integration
   - [ ] 6.0.5.1 [Connect PDF service to BackgroundGenerationStatus] (Details: tasks-parent-6.0.5.1-detailed.md)
