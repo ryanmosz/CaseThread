@@ -138,6 +138,19 @@ All modularization tasks have been completed. The PDF service is now fully ready
   - Export PDF to file functionality
   - Progress indicators during generation
 
+### New GUI Features from Developer G (Merged)
+- **AI Assistant**: "Rewrite with AI" tab for document editing
+- **Background Generation**: Progress UI perfect for PDF generation
+- **Quality Pipeline**: 3-agent pipeline for document quality
+- **Enhanced UI**: Better borders, save functionality, and document viewer
+- See analysis: `test-output/g-branch-integration-analysis.md`
+
+Integration opportunities:
+1. Use `BackgroundGenerationStatus` for PDF progress
+2. Enhance AI Assistant with PDF preview
+3. Generate PDFs after quality pipeline approval
+4. Leverage enhanced document viewer for PDF display
+
 ## File Structure
 ```
 src/
