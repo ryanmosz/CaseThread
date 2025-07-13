@@ -341,23 +341,14 @@ export function setupIpcHandlers(): void {
         timeout: 60000
       });
       
-             // Create chat completion for AI assistant
-       const completion = await openai.chat.completions.create({
-         model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
+                   // Create chat completion for AI assistant
+      // The prompt from the UI already contains the full system prompt + user request
+      // So we use it directly as the system message to preserve all context and limitations
+      const completion = await openai.chat.completions.create({
+        model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are a helpful AI assistant integrated into CaseThread, a legal document generation application. You help users with:
-- Document editing and improvement suggestions
-- Legal writing assistance
-- Document structure and formatting
-- Content clarification and enhancement
-- General questions about legal documents
-
-Please provide helpful, accurate, and professional responses. Keep your responses concise and focused on the user's needs.`
-          },
-          {
-            role: 'user',
             content: prompt
           }
         ],

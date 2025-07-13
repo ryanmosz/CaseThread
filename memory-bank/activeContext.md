@@ -1,8 +1,36 @@
 # CaseThread - Active Context
 
-## Current Status: LangGraph-Based Quality Pipeline Architecture Complete ✅
+## Current Status: AI Assistant Context & Limitations Fixed ✅
 
 ### What Just Happened
+- **CRITICAL FIX**: Resolved AI assistant prompt context issue where limitations weren't being respected
+- **ENHANCED PROMPT**: Updated UI prompt to establish clear boundaries on incremental improvements only
+- **FIXED IPC HANDLER**: Corrected system prompt override that was ignoring UI context
+- **IMPROVED UX**: AI assistant now properly understands it cannot make major structural changes
+
+### AI Assistant Context Fix ✅
+
+**Problem Identified:**
+- AI assistant was not maintaining context about its limitations
+- IPC handler was overriding detailed UI prompt with generic system message
+- AI was making major changes instead of incremental improvements
+
+**Solution Implemented:**
+- **Enhanced UI Prompt**: Added detailed role definition and critical limitations
+- **Fixed IPC Handler**: Changed to use UI prompt as system message (preserves all context)
+- **Clear Boundaries**: Established explicit restrictions on major structural changes
+- **Appropriate Scope**: Defined what types of improvements are acceptable
+
+**AI Assistant Now Understands:**
+- **Role**: Incremental improvement specialist (not rewriting tool)
+- **Limitations**: No major structural changes, no complete rewrites
+- **Focus**: Clarity, precision, grammar, legal accuracy within existing framework
+- **Boundaries**: Preserve document intent, structure, and core provisions
+- **Scope**: Targeted improvements to specific sections/phrases only
+
+## Previous Status: LangGraph-Based Quality Pipeline Architecture Complete ✅
+
+### What Happened Before
 - **BREAKTHROUGH**: Decided to use LangGraph for orchestrating the 3-agent quality pipeline
 - **EVOLVED**: From custom orchestrators to LangGraph state-based workflow management
 - **OPTIMIZED**: Strategic model selection - GPT-4 for processing, o3 for complex legal reasoning
