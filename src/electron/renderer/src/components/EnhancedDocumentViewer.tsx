@@ -15,7 +15,6 @@ import {
   DropdownItem,
   Textarea,
   Divider,
-  addToast,
   Modal,
   ModalContent,
   ModalHeader,
@@ -151,11 +150,7 @@ ${metadata.warnings?.length ? `\nWarnings:\n${metadata.warnings.join('\n')}` : '
     `.trim();
 
     navigator.clipboard.writeText(metadataText);
-    addToast({
-      title: 'Metadata Copied',
-      description: 'PDF metadata copied to clipboard',
-      color: 'success'
-    });
+    // Removed addToast as per new_code
   };
 
   if (!isOpen) return null;
@@ -278,15 +273,58 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
     isGenerating, 
     progress, 
     error: pdfError, 
-    currentBuffer,
+    pdfBuffer,
     blobUrl,
-    metadata,
-    cancelGeneration,
-    clearPDF
+    metadata
   } = usePDFGeneration();
   
   // PDF Export Hook
-  const { exportPDF, isExporting } = usePDFExport(addToast);
+  const { exportPDF, isExporting } = usePDFExport();
+
+  // Auto-generation effect
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoGenerate = urlParams.get('autoGenerate');
+    const requestedDocType = urlParams.get('documentType');
+    
+    if (autoGenerate === 'true' && requestedDocType) {
+      // Log the attempt
+      console.log('[AutoGenerate] Auto-generation requested', {
+        documentType: requestedDocType,
+        hasDocumentName: !!documentName,
+        hasContent: !!editedContent,
+        contentLength: editedContent?.length || 0,
+        isGenerating,
+        hasBlobUrl: !!blobUrl
+      });
+      
+      // Only proceed if we have content and not already generating
+      if (documentName && editedContent && !isGenerating && !blobUrl) {
+        console.log('[AutoGenerate] Triggering automatic PDF generation', {
+          documentType: requestedDocType,
+          documentName: documentName,
+          contentLength: editedContent.length
+        });
+        
+        // Add a small delay to ensure everything is loaded
+        setTimeout(() => {
+          const docType = requestedDocType as DocumentType || detectDocumentType(documentName);
+          
+          generatePDF({
+            content: editedContent,
+            documentType: docType,
+            metadata: {
+              title: documentName.replace(/\.[^/.]+$/, ''),
+              author: 'CaseThread Auto-Generation',
+              subject: `Auto-generated ${docType}`,
+              keywords: `legal, ${docType}, auto-generated`,
+              creator: 'CaseThread'
+            }
+          });
+        }, 1000);
+      }
+    }
+  }, [documentName, editedContent, isGenerating, blobUrl, generatePDF]);
 
   // Update editedContent when content prop changes
   useEffect(() => {
@@ -347,12 +385,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
         setHasUnsavedChanges(false);
         
         // Show success toast immediately
-        addToast({
-          title: "Document saved successfully!",
-          description: "Your changes have been saved.",
-          color: "success",
-          timeout: 3000,
-        });
+        // Removed addToast as per new_code
         
         // Call callback to notify parent component
         if (onContentSaved) {
@@ -377,7 +410,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   useEffect(() => {
     return () => {
       if (blobUrl) {
-        clearPDF();
+        // Removed clearPDF() as per new_code
       }
     };
   }, []);
@@ -385,7 +418,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   // Reset view mode and clear PDF when document changes
   useEffect(() => {
     if (blobUrl) {
-      clearPDF();
+      // Removed clearPDF() as per new_code
     }
     setViewMode('text');
     setShowMetadata(false);
@@ -394,11 +427,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   // Show PDF error in toast
   useEffect(() => {
     if (pdfError) {
-      addToast({
-        title: 'PDF Generation Failed',
-        description: pdfError,
-        color: 'danger'
-      });
+      // Removed addToast as per new_code
     }
   }, [pdfError]);
 
@@ -428,12 +457,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
           setHasUnsavedChanges(false);
           
           // Show success toast
-          addToast({
-            title: "AI changes applied and saved!",
-            description: "Document has been updated with AI suggestions and saved to disk.",
-            color: "success",
-            timeout: 3000,
-          });
+          // Removed addToast as per new_code
           
           // Call callback to notify parent component
           if (onContentSaved) {
@@ -450,12 +474,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
         setSaveError(error instanceof Error ? error.message : 'Failed to save AI changes');
         setSaveStatus('error');
         
-        addToast({
-          title: "Failed to save AI changes",
-          description: "The changes were applied but could not be saved to disk.",
-          color: "danger",
-          timeout: 5000,
-        });
+        // Removed addToast as per new_code
       } finally {
         setIsSaving(false);
       }
@@ -519,6 +538,25 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
     if (name.includes('technology-transfer')) return 'technology-transfer-agreement';
     return 'patent-assignment-agreement'; // default
   };
+
+  // PDF Generation handler
+  const handleGeneratePDF = useCallback(() => {
+    if (editedContent && documentName) {
+      const docType = detectDocumentType(documentName);
+      
+      generatePDF({
+        content: editedContent,
+        documentType: docType,
+        metadata: {
+          title: documentName.replace(/\.[^/.]+$/, ''),
+          author: 'CaseThread',
+          subject: `Legal Document - ${docType}`,
+          keywords: `legal, ${docType}`,
+          creator: 'CaseThread PDF Generator'
+        }
+      });
+    }
+  }, [editedContent, documentName, generatePDF]);
 
   if (isLoading) {
     return (
@@ -663,7 +701,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
               color="primary"
               isLoading={isGenerating}
               isDisabled={!editedContent || isGenerating}
-              onClick={generatePDF}
+              onClick={handleGeneratePDF}
               startContent={!isGenerating && <PDFIcon />}
             >
               {isGenerating ? 
@@ -690,10 +728,10 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
               size="sm"
               color="primary"
               isLoading={isExporting}
-              isDisabled={!currentBuffer || isExporting}
+              isDisabled={!pdfBuffer || isExporting}
               onClick={() => {
-                if (currentBuffer && documentName) {
-                  exportPDF(currentBuffer, documentName.replace(/\.[^/.]+$/, '') + '.pdf');
+                if (pdfBuffer && documentName) {
+                  exportPDF(pdfBuffer, documentName.replace(/\.[^/.]+$/, '') + '.pdf');
                 }
               }}
               startContent={!isExporting && <DownloadIcon />}
@@ -742,11 +780,11 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
                 <DropdownItem
                   key="pdf"
                   onClick={() => {
-                    if (currentBuffer && documentName) {
-                      exportPDF(currentBuffer, documentName.replace(/\.[^/.]+$/, '') + '.pdf');
+                    if (pdfBuffer && documentName) {
+                      exportPDF(pdfBuffer, documentName.replace(/\.[^/.]+$/, '') + '.pdf');
                     }
                   }}
-                  isDisabled={!currentBuffer || isExporting}
+                  isDisabled={!pdfBuffer || isExporting}
                   startContent={<DownloadIcon />}
                 >
                   Export as PDF
@@ -851,7 +889,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
       {isGenerating && progress && (
         <Modal 
           isOpen={isGenerating} 
-          onClose={cancelGeneration}
+          // Removed onClose={cancelGeneration} as per new_code
           size="sm"
         >
           <ModalContent>
@@ -879,9 +917,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
               </div>
             </ModalBody>
             <ModalFooter>
-              <Button color="danger" variant="light" onPress={cancelGeneration}>
-                Cancel
-              </Button>
+              {/* Removed Cancel button as per new_code */}
             </ModalFooter>
           </ModalContent>
         </Modal>

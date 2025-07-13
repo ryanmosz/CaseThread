@@ -41,19 +41,19 @@
   - [x] 6.0.1.3 [Plan state management for PDF data] (Details: tasks-parent-6.0.1.3-detailed.md)
   - [x] 6.0.1.4 [Define IPC communication protocol] (Details: tasks-parent-6.0.1.4-detailed.md)
 
-- [ ] 6.0.2 IPC Infrastructure
+- [x] 6.0.2 IPC Infrastructure
   - [x] 6.0.2.1 [Create PDF generation IPC handler] (Details: tasks-parent-6.0.2.1-detailed.md)
   - [x] 6.0.2.2 [Implement progress reporting IPC channel] (Details: tasks-parent-6.0.2.2-detailed.md)
   - [x] 6.0.2.3 [Add PDF export IPC handler] (Details: tasks-parent-6.0.2.3-detailed.md)
   - [x] 6.0.2.4 [Create IPC security validation] (Details: tasks-parent-6.0.2.4-detailed.md)
 
-- [ ] 6.0.3 UI Components
+- [x] 6.0.3 UI Components
   - [x] 6.0.3.1 [Add PDF generation button to toolbar] (Details: tasks-parent-6.0.3.1-detailed.md)
   - [x] 6.0.3.2 [Implement view mode toggle] (Details: tasks-parent-6.0.3.2-detailed.md)
   - [x] 6.0.3.3 [Create PDF metadata display] (Details: tasks-parent-6.0.3.3-detailed.md)
   - [x] 6.0.3.4 [Add export PDF button] (Details: tasks-parent-6.0.3.4-detailed.md)
 
-- [ ] 6.0.4 PDF Display Implementation
+- [x] 6.0.4 PDF Display Implementation
   - [x] 6.0.4.1 [Implement PDF viewer component] (Details: tasks-parent-6.0.4.1-detailed.md)
   - [x] 6.0.4.2 [Handle blob URL creation and cleanup] (Details: tasks-parent-6.0.4.2-detailed.md)
   - [x] 6.0.4.3 [Add PDF navigation controls] (Details: tasks-parent-6.0.4.3-detailed.md)

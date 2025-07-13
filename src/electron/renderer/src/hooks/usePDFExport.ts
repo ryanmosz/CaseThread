@@ -1,15 +1,12 @@
 import { useState, useCallback } from 'react';
-import { PDFExportRequest } from '../../../../types/pdf-ipc';
 
-export interface UsePDFExportResult {
+interface UsePDFExportReturn {
   exportPDF: (buffer: ArrayBuffer, filename: string) => Promise<void>;
   isExporting: boolean;
   error: string | null;
 }
 
-export const usePDFExport = (
-  addToast: (toast: { title: string; description: string; color: string }) => void
-): UsePDFExportResult => {
+export function usePDFExport(): UsePDFExportReturn {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,48 +15,26 @@ export const usePDFExport = (
     setError(null);
 
     try {
-      const request: PDFExportRequest = {
-        buffer: Buffer.from(buffer),
-        defaultFilename: filename,
-        options: {
-          title: 'Save PDF Document',
-          filters: [
-            { name: 'PDF Documents', extensions: ['pdf'] },
-            { name: 'All Files', extensions: ['*'] }
-          ]
-        }
-      };
-
-      const response = await window.electronAPI.pdf.export(request);
+      console.log('[PDFExport] Starting export', { filename, size: buffer.byteLength });
       
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Export failed');
-      }
-
-      // Show success toast
-      if (response.data?.savedPath) {
-        addToast({
-          title: 'PDF Exported',
-          description: `Saved to ${response.data.savedPath}`,
-          color: 'success'
-        });
+      const result = await window.electron.pdf.export({ buffer, filename });
+      
+      if (result.success) {
+        console.log('[PDFExport] Export successful', { path: result.path });
+        // Success is now handled silently or by the caller
+      } else {
+        const errorMsg = result.error || 'Failed to export PDF';
+        console.error('[PDFExport] Export failed:', errorMsg);
+        setError(errorMsg);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to export PDF';
-      setError(errorMessage);
-      addToast({
-        title: 'Export Failed',
-        description: errorMessage,
-        color: 'danger'
-      });
+      console.error('[PDFExport] Export exception:', err);
+      const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMsg);
     } finally {
       setIsExporting(false);
     }
-  }, [addToast]);
+  }, []);
 
-  return {
-    exportPDF,
-    isExporting,
-    error
-  };
-}; 
+  return { exportPDF, isExporting, error };
+} 

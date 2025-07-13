@@ -1,241 +1,107 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { 
-  PDFGenerateRequest, 
-  PDFGenerateResponse, 
-  PDFProgressUpdate,
-  PDFCancelRequest
-} from '../../../../types/pdf-ipc';
-import { DocumentType } from '../../../../types';
-import { PDFMetadataExtended } from '../../../../types/pdf';
-import { BlobURLManager } from '../services/BlobURLManager';
+import { useState, useCallback } from 'react';
+import { PDFGenerationOptions, PDFGenerationProgress, PDFGenerationResult } from '../../../../types/pdf-ipc';
 
-// Simple logger for renderer process
-const logger = {
-  info: (message: string, meta?: any) => {
-    console.log(`[PDFGeneration] ${message}`, meta || '');
-  },
-  error: (message: string, meta?: any) => {
-    console.error(`[PDFGeneration] ${message}`, meta || '');
-  },
-  warn: (message: string, meta?: any) => {
-    console.warn(`[PDFGeneration] ${message}`, meta || '');
-  },
-  debug: (message: string, meta?: any) => {
-    console.debug(`[PDFGeneration] ${message}`, meta || '');
-  }
-};
-
-export interface UsePDFGenerationResult {
-  generatePDF: (content: string, documentType: DocumentType) => Promise<void>;
+interface UsePDFGenerationReturn {
+  generatePDF: (options: PDFGenerationOptions) => Promise<void>;
   isGenerating: boolean;
-  progress: PDFProgressUpdate | null;
+  progress: PDFGenerationProgress | null;
   error: string | null;
-  currentBuffer: ArrayBuffer | null;
+  pdfBuffer: ArrayBuffer | null;
   blobUrl: string | null;
-  metadata: PDFMetadataExtended | null;
-  cancelGeneration: () => void;
-  clearPDF: () => void;
+  metadata: PDFGenerationResult['metadata'] | null;
 }
 
-export const usePDFGeneration = (
-  addToast: (toast: { title: string; description: string; color: string }) => void
-): UsePDFGenerationResult => {
+export function usePDFGeneration(): UsePDFGenerationReturn {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [progress, setProgress] = useState<PDFProgressUpdate | null>(null);
+  const [progress, setProgress] = useState<PDFGenerationProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
-  const [currentBuffer, setCurrentBuffer] = useState<ArrayBuffer | null>(null);
+  const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [metadata, setMetadata] = useState<PDFMetadataExtended | null>(null);
-  
-  // Blob URL Manager
-  const blobManager = useMemo(() => BlobURLManager.getInstance(), []);
+  const [metadata, setMetadata] = useState<PDFGenerationResult['metadata'] | null>(null);
 
-  // Register event listeners
-  useEffect(() => {
-    const handleProgress = (update: PDFProgressUpdate) => {
-      if (update.requestId === currentRequestId) {
-        logger.debug('Received progress update', update);
-        setProgress(update);
-      }
-    };
-
-    const handleError = (data: { requestId: string; error: any; errorMessage: string }) => {
-      if (data.requestId === currentRequestId) {
-        logger.error('PDF generation error', data);
-        setError(data.errorMessage || 'PDF generation failed');
-        setIsGenerating(false);
-        addToast({
-          title: 'PDF Generation Failed',
-          description: data.errorMessage || 'An error occurred while generating the PDF',
-          color: 'danger'
-        });
-      }
-    };
-
-    // Add listeners
-    window.electronAPI.pdf.onProgress(handleProgress);
-    window.electronAPI.pdf.onError(handleError);
-
-    // Cleanup
-    return () => {
-      window.electronAPI.pdf.offProgress(handleProgress);
-      window.electronAPI.pdf.offError(handleError);
-    };
-  }, [currentRequestId, addToast]);
-
-  // Clean up blob URL when component unmounts
-  useEffect(() => {
-    return () => {
-      if (blobUrl && currentRequestId) {
-        blobManager.revokeURL(`pdf-${currentRequestId}`);
-      }
-    };
-  }, [blobUrl, currentRequestId, blobManager]);
-
-  const generatePDF = useCallback(async (content: string, documentType: DocumentType) => {
-    const requestId = uuidv4();
-    const documentId = `doc-${uuidv4()}`;
-    setCurrentRequestId(requestId);
-    setIsGenerating(true);
-    setError(null);
-    setProgress(null);
-
-    const request: PDFGenerateRequest = {
-      requestId,
-      content,
-      documentType,
-      documentId,
-      options: {
-        fontSize: 12,
-        lineSpacing: 'double',
-        margins: {
-          top: 72,
-          bottom: 72,
-          left: 72,
-          right: 72
-        }
-      }
-    };
-
-    logger.info('Starting PDF generation', { requestId, documentType });
-
+  const generatePDF = useCallback(async (options: PDFGenerationOptions) => {
+    const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log('[PDFGeneration] Starting PDF generation', { requestId, documentType: options.documentType });
+    
     try {
-      const response = await window.electronAPI.pdf.generate(request);
+      setIsGenerating(true);
+      setError(null);
+      setProgress(null);
+      setPdfBuffer(null);
       
-      if (response.success && response.data) {
-        logger.info('PDF generation response received', {
-          requestId: response.requestId,
-          bufferSize: response.data.buffer.byteLength,
-          pageCount: response.data.metadata.pageCount
+      // Clean up previous blob URL
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        setBlobUrl(null);
+      }
+
+      // Set up progress listener
+      const progressHandler = (_event: any, progressData: PDFGenerationProgress) => {
+        if (progressData.requestId === requestId) {
+          console.log('[PDFGeneration] Progress update:', progressData);
+          setProgress(progressData);
+        }
+      };
+
+      window.electron.on('pdf:generation:progress', progressHandler);
+
+      // Ensure we're sending only serializable data
+      const serializedOptions: PDFGenerationOptions = {
+        ...options,
+        requestId,
+        // Remove any non-serializable properties
+        metadata: options.metadata ? {
+          title: options.metadata.title || '',
+          subject: options.metadata.subject || '',
+          author: options.metadata.author || '',
+          keywords: options.metadata.keywords || '',
+          creator: options.metadata.creator || ''
+        } : undefined
+      };
+
+      console.log('[PDFGeneration] Calling IPC with options:', serializedOptions);
+      const result = await window.electron.pdf.generate(serializedOptions);
+
+      if (result.success && result.data) {
+        console.log('[PDFGeneration] PDF generated successfully', {
+          size: result.data.buffer.byteLength,
+          pages: result.data.metadata?.pageCount
         });
         
-        // Store the buffer
-        setCurrentBuffer(response.data.buffer);
+        setPdfBuffer(result.data.buffer);
+        setMetadata(result.data.metadata);
         
-        // Store enhanced metadata
-        const enhancedMetadata: PDFMetadataExtended = {
-          pageCount: response.data.metadata.pageCount,
-          fileSize: response.data.metadata.fileSize,
-          documentType: response.data.metadata.documentType,
-          generatedAt: new Date(),
-          generationTime: response.data.metadata.generationTime || 0,
-          hasSignatureBlocks: response.data.metadata.hasSignatureBlocks,
-          formFields: response.data.metadata.formFields,
-          fontSize: response.data.metadata.fontSize,
-          lineSpacing: response.data.metadata.lineSpacing,
-          margins: response.data.metadata.margins,
-          signatureBlockCount: response.data.metadata.signatureBlockCount,
-          warnings: response.data.metadata.warnings
-        };
-        setMetadata(enhancedMetadata);
-        
-        // Create and manage blob URL
-        const url = blobManager.createBlobURL(
-          response.data.buffer, 
-          'application/pdf',
-          `pdf-${requestId}`
-        );
+        // Create blob URL for display
+        const blob = new Blob([result.data.buffer], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
         setBlobUrl(url);
         
-        // Store globally for debugging
-        (window as any).__lastGeneratedPDF = {
-          buffer: response.data.buffer,
-          metadata: enhancedMetadata,
-          documentType: documentType,
-          timestamp: new Date()
-        };
-        
-        setIsGenerating(false);
-        
-        addToast({
-          title: 'PDF Generated Successfully',
-          description: `${enhancedMetadata.pageCount} pages created`,
-          color: 'success'
-        });
+        setError(null);
       } else {
-        logger.error('PDF generation failed', response);
-        const errorMsg = response.error?.message || 'PDF generation failed';
+        const errorMsg = result.error || 'Failed to generate PDF';
+        console.error('[PDFGeneration] Generation failed:', errorMsg);
         setError(errorMsg);
-        setIsGenerating(false);
-        
-        addToast({
-          title: 'PDF Generation Failed',
-          description: errorMsg,
-          color: 'danger'
-        });
       }
+
+      // Clean up listener
+      window.electron.off('pdf:generation:progress', progressHandler);
     } catch (err) {
-      logger.error('PDF generation exception', err);
-      const errorMessage = err instanceof Error ? err.message : 'PDF generation failed';
-      setError(errorMessage);
+      console.error('[PDFGeneration] PDF generation exception', err);
+      const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMsg);
+    } finally {
       setIsGenerating(false);
-      
-      addToast({
-        title: 'PDF Generation Error',
-        description: errorMessage,
-        color: 'danger'
-      });
     }
-  }, [blobManager, addToast]);
-
-  const cancelGeneration = useCallback(() => {
-    if (currentRequestId) {
-      logger.info('Cancelling PDF generation', { requestId: currentRequestId });
-      const cancelRequest: PDFCancelRequest = { requestId: currentRequestId };
-      window.electronAPI.pdf.cancel(cancelRequest);
-      setIsGenerating(false);
-      setCurrentRequestId(null);
-      setProgress(null);
-      
-      addToast({
-        title: 'PDF Generation Cancelled',
-        description: 'The PDF generation was cancelled',
-        color: 'warning'
-      });
-    }
-  }, [currentRequestId, addToast]);
-
-  const clearPDF = useCallback(() => {
-    if (blobUrl && currentRequestId) {
-      blobManager.revokeURL(`pdf-${currentRequestId}`);
-      setBlobUrl(null);
-    }
-    setCurrentBuffer(null);
-    setMetadata(null);
-    setError(null);
-  }, [blobUrl, currentRequestId, blobManager]);
+  }, [blobUrl]);
 
   return {
     generatePDF,
     isGenerating,
     progress,
     error,
-    currentBuffer,
+    pdfBuffer,
     blobUrl,
-    metadata,
-    cancelGeneration,
-    clearPDF
+    metadata
   };
-}; 
+} 

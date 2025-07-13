@@ -64,7 +64,7 @@ export interface PDFMetadata {
   pageCount: number;
   fileSize: number;
   documentType: string;
-  generatedAt: Date;
+  generatedAt: string;
   generationTime: number;
   hasSignatureBlocks?: boolean;
   formFields?: string[];

@@ -112,7 +112,7 @@ export class PDFGenerationHandler {
             pageCount: result.pageCount,
             fileSize: result.buffer.byteLength,
             documentType: request.documentType,
-            generatedAt: new Date(),
+            generatedAt: new Date().toISOString(),
             generationTime: Date.now() - startTime,
             hasSignatureBlocks: result.signatureBlockCount > 0,
             formFields: [], // TODO: Extract form fields when implemented

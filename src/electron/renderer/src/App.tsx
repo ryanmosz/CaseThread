@@ -92,6 +92,8 @@ const AppContent: React.FC = () => {
     loadInitialData();
   }, []);
 
+  // Auto-generation effect moved below function definitions to avoid initialization error
+
   const loadInitialData = async () => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -519,6 +521,39 @@ const AppContent: React.FC = () => {
 
     setState(prev => ({ ...prev, selectedTab: key }));
   };
+
+  // Auto-generation effect for PDF testing (moved here to avoid initialization error)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoGenerate = urlParams.get('autoGenerate');
+    const requestedDocType = urlParams.get('documentType');
+    
+    if (autoGenerate === 'true' && requestedDocType && state.documentTree.length > 0) {
+      console.log('[AutoGenerate] Looking for document type:', requestedDocType);
+      
+      // Find a document that matches the requested type
+      const findMatchingDocument = (entries: DirectoryEntry[]): string | null => {
+        for (const entry of entries) {
+          if (entry.type === 'file' && entry.name.includes(requestedDocType)) {
+            return entry.path;
+          }
+          if (entry.type === 'directory' && entry.children) {
+            const found = findMatchingDocument(entry.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      
+      const matchingPath = findMatchingDocument(state.documentTree);
+      
+      if (matchingPath && !state.selectedDocument) {
+        console.log('[AutoGenerate] Found matching document:', matchingPath);
+        // Load the document
+        handleDocumentSelect(matchingPath);
+      }
+    }
+  }, [state.documentTree, state.selectedDocument, handleDocumentSelect]);
 
   if (state.isLoading && state.templates.length === 0) {
     return (

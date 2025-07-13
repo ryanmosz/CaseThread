@@ -47,6 +47,12 @@ class WindowManager {
   }
 
   private setupApp(): void {
+    // Enable remote debugging for automated testing
+    if (process.env.CASETHREAD_AUTO_GENERATE === 'true') {
+      app.commandLine.appendSwitch('remote-debugging-port', '9222');
+      console.log('Remote debugging enabled on port 9222 for automated testing');
+    }
+    
     // This method will be called when Electron has finished initialization
     app.whenReady().then(async () => {
       // Install React DevTools in development mode
@@ -130,7 +136,31 @@ class WindowManager {
 
     // Load the renderer
     if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-      await this.mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+      // Check for auto-generation parameters
+      const autoGenerate = process.env.CASETHREAD_AUTO_GENERATE === 'true';
+      const documentType = process.env.CASETHREAD_DOCUMENT_TYPE || '';
+      
+      let loadUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL;
+      
+      if (autoGenerate && documentType) {
+        const params = new URLSearchParams({
+          autoGenerate: 'true',
+          documentType: documentType
+        });
+        loadUrl = `${MAIN_WINDOW_VITE_DEV_SERVER_URL}?${params.toString()}`;
+        console.log('Loading with auto-generation:', loadUrl);
+        console.log('Auto-generate parameters:', { autoGenerate, documentType });
+      }
+      
+      await this.mainWindow.loadURL(loadUrl);
+      
+      // Log when page loads successfully
+      this.mainWindow.webContents.once('did-finish-load', () => {
+        console.log('Renderer page loaded successfully');
+        if (autoGenerate) {
+          console.log('Auto-generation should trigger in renderer process');
+        }
+      });
       
       // Set CSP header to allow Google Fonts
       this.mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
