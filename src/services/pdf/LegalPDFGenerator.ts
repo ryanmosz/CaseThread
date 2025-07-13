@@ -44,7 +44,7 @@ export class LegalPDFGenerator {
       this.output = outputOrPath;
     }
     
-    this.currentPage = 1;
+    this.currentPage = 0; // Start at 0 since pageAdded event will increment to 1
     
     // Default page configuration for legal documents
     this.pageConfig = {

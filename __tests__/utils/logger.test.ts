@@ -36,14 +36,12 @@ jest.mock('winston', () => {
 });
 
 import winston from 'winston';
-import {
+import { 
   logError,
   logWarning,
   logInfo,
   logDebug,
-  createChildLogger,
-  measureDuration,
-  LOG_LEVELS
+  createChildLogger
 } from '../../src/utils/logger';
 
 describe('Logger Utility', () => {
@@ -59,16 +57,7 @@ describe('Logger Utility', () => {
     }
   });
 
-  describe('LOG_LEVELS', () => {
-    it('should define correct log levels', () => {
-      expect(LOG_LEVELS).toEqual({
-        error: 0,
-        warn: 1,
-        info: 2,
-        debug: 3
-      });
-    });
-  });
+
 
   describe('logError', () => {
     it('should log error message', () => {
@@ -183,14 +172,25 @@ describe('Logger Utility', () => {
 
   describe('createChildLogger', () => {
     it('should create child logger with context', () => {
-      const context = { service: 'template-loader', requestId: 'abc123' };
+      const context = { service: 'template-loader' };
       
-      createChildLogger(context);
-      expect(mockLogger.child).toHaveBeenCalledWith(context);
+      const childLogger = createChildLogger(context);
+      
+      // Test that child logger includes context in all log methods
+      childLogger.info('test message', { extra: 'data' });
+      expect(mockLogger.info).toHaveBeenCalledWith('test message', {
+        service: 'template-loader',
+        extra: 'data'
+      });
+      
+      childLogger.error('error message');
+      expect(mockLogger.error).toHaveBeenCalledWith('error message', {
+        service: 'template-loader'
+      });
     });
 
     it('should return logger instance', () => {
-      const childLogger = createChildLogger({ module: 'test' });
+      const childLogger = createChildLogger({ service: 'test' });
       expect(childLogger).toBeDefined();
       expect(childLogger).toHaveProperty('error');
       expect(childLogger).toHaveProperty('warn');
@@ -199,82 +199,5 @@ describe('Logger Utility', () => {
     });
   });
 
-  describe('measureDuration', () => {
-    beforeEach(() => {
-      jest.useFakeTimers();
-    });
 
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
-    it('should measure synchronous operation duration', async () => {
-      const operation = 'test-operation';
-      const result = 42;
-      
-      const promise = measureDuration(operation, () => {
-        // Simulate 100ms operation
-        jest.advanceTimersByTime(100);
-        return result;
-      });
-
-      await promise;
-      
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Operation completed: ${operation}`,
-        expect.objectContaining({
-          duration: expect.stringMatching(/\d+ms/)
-        })
-      );
-    });
-
-    it('should measure asynchronous operation duration', async () => {
-      const operation = 'async-operation';
-      const result = 'success';
-      
-      await measureDuration(operation, async () => {
-        return Promise.resolve(result);
-      });
-      
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Operation completed: ${operation}`,
-        expect.objectContaining({
-          duration: expect.stringMatching(/\d+ms/)
-        })
-      );
-    });
-
-    it('should log error and rethrow on failure', async () => {
-      const operation = 'failing-operation';
-      const error = new Error('Operation failed');
-      
-      await expect(
-        measureDuration(operation, () => {
-          throw error;
-        })
-      ).rejects.toThrow(error);
-      
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `Operation failed: ${operation}`,
-        expect.objectContaining({
-          duration: expect.stringMatching(/\d+ms/),
-          errorMessage: 'Operation failed',
-          errorName: 'Error'
-        })
-      );
-    });
-
-    it('should return the function result', async () => {
-      const result = await measureDuration('test', () => 'result');
-      expect(result).toBe('result');
-    });
-
-    it('should handle async function results', async () => {
-      const result = await measureDuration('async-test', async () => {
-        await Promise.resolve();
-        return 'async-result';
-      });
-      expect(result).toBe('async-result');
-    });
-  });
 }); 

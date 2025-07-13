@@ -27,7 +27,7 @@ describe('LegalPDFGenerator', () => {
 
       expect(generator).toBeInstanceOf(LegalPDFGenerator);
       expect(generator.getDocument()).toBeDefined();
-      expect(generator.getCurrentPage()).toBe(1);
+      expect(generator.getCurrentPage()).toBe(0); // Before start(), page is 0
       
       const pageConfig = generator.getPageConfig();
       expect(pageConfig.size).toBe('LETTER');
@@ -349,7 +349,7 @@ describe('LegalPDFGenerator', () => {
         documentType: 'test-document'
       });
 
-      expect(generator.getCurrentPage()).toBe(1);
+      expect(generator.getCurrentPage()).toBe(0); // Before start(), page is 0
       
       await generator.start();
       generator.newPage();
