@@ -11,10 +11,15 @@ import { SpinnerMessages } from '../types';
 import { handleError, createError } from '../utils/error-handler';
 import { ErrorCode } from '../types/errors';
 import { Orchestrator } from '../agents/Orchestrator';
+import { executeQualityPipeline } from '../agents/langgraph/QualityPipelineWorkflow';
+import { loadTemplate } from '../services/template';
+import { parseYaml } from '../services/yaml';
+import { MatterContext } from '../types/agents';
 
 interface GenerateOptions {
   output: string;
   debug?: boolean;
+  quality?: boolean;
 }
 
 // Simple wrapper to match the expected interface
@@ -80,6 +85,7 @@ export const generateCommand = new Command('generate')
   .argument('<input-path>', 'Path to YAML input file')
   .option('-o, --output <path>', 'Output directory for generated document', '.')
   .option('-d, --debug', 'Enable debug logging')
+  .option('-q, --quality', 'Use enhanced quality pipeline with LangGraph (slower but higher quality)')
   .action(async (documentType: string, inputPath: string, options: GenerateOptions) => {
     // Check for command-level debug flag
     if (options.debug && logger.level !== 'debug') {
@@ -95,6 +101,7 @@ export const generateCommand = new Command('generate')
     logger.debug(`Input Path: ${inputPath}`);
     logger.debug(`Output Directory: ${options.output}`);
     logger.debug(`Debug Mode: ${options.debug || logger.level === 'debug'}`);
+    logger.debug(`Quality Pipeline: ${options.quality || false}`);
     logger.debug('=================================');
     
     try {
@@ -133,40 +140,117 @@ export const generateCommand = new Command('generate')
         throw createError('INVALID_TYPE', documentType, SUPPORTED_TYPES);
       }
       
-      // Use orchestrator to run the complete pipeline
-      spinner.updateMessage('🚀 Running multi-agent pipeline...');
-
-      const orchestrator = new Orchestrator();
-      const jobResult = await orchestrator.runJob({
-        documentType,
-        inputPath,
-        outputPath: outputDir,
-        options: {
-          debug: options.debug || false
+      if (options.quality) {
+        // Use enhanced quality pipeline
+        spinner.updateMessage('🚀 Running enhanced quality pipeline (LangGraph)...');
+        
+        // Parse YAML data and load template for quality pipeline
+        const yamlData = await parseYaml(inputPath);
+        const template = await loadTemplate(documentType);
+        
+        // Create matter context
+        const matterContext: MatterContext = {
+          documentType: documentType,
+          client: yamlData.client,
+          attorney: yamlData.attorney,
+          template: template.id,
+          yamlData: {
+            ...yamlData,
+            document_type: documentType
+          },
+          validationResults: [],
+          normalizedData: yamlData
+        };
+        
+        // Create empty context bundle for now
+        const contextBundle = {
+          embeddings: [],
+          sources: [],
+          totalTokens: 0,
+          queryMetadata: {
+            searchTerms: [],
+            similarityThreshold: 0.75,
+            resultsCount: 0
+          }
+        };
+        
+        // Execute quality pipeline
+        const qualityState = await executeQualityPipeline(
+          documentType,
+          template,
+          matterContext,
+          contextBundle,
+          {
+            debug: options.debug || false,
+            maxIterations: 3
+          }
+        );
+        
+        if (!qualityState.finalDocument) {
+          throw new Error('Quality pipeline failed to generate document');
         }
-      });
-      
-      if (!jobResult.success) {
-        throw new Error(`Job failed: ${jobResult.error?.message || 'Unknown error'}`);
-      }
-      
-      const generationTime = Math.round((jobResult.metadata.totalProcessingTime || 0) / 1000);
-      
-      // Success!
-      spinner.success(`${SPINNER_MESSAGES.SUCCESS} (completed in ${generationTime}s)`);
-      
-      // Display success information
-      console.log('\n✨ Document Generation Complete!\n');
-      console.log(`📄 Document Type: ${documentType}`);
-      console.log(`📁 Saved to: Generated successfully`);
-      console.log(`⏱️  Generation time: ${generationTime} seconds`);
-      console.log(`🤖 Agents executed: ${jobResult.metadata.agentExecutionOrder.join(' → ')}`);
-      
-      if (jobResult.reviewPacket && jobResult.reviewPacket.recommendations.length > 0) {
-        console.log('\n💡 Recommendations:');
-        jobResult.reviewPacket.recommendations.forEach((rec, index) => {
-          console.log(`  ${index + 1}. ${rec}`);
+        
+        // Save the quality document (simplified for now)
+        const outputPath = path.join(outputDir, `${documentType}-quality.md`);
+        await fs.writeFile(outputPath, qualityState.finalDocument, 'utf-8');
+        
+        const generationTime = Math.round((Date.now() - Date.parse(qualityState.startTime.toISOString())) / 1000);
+        
+        // Success!
+        spinner.success(`Document generated with quality pipeline! (completed in ${generationTime}s)`);
+        
+        // Display success information
+        console.log('\n✨ Quality Document Generation Complete!\n');
+        console.log(`📄 Document Type: ${documentType}`);
+        console.log(`📁 Saved to: ${outputPath}`);
+        console.log(`⏱️  Generation time: ${generationTime} seconds`);
+        console.log(`🎯 Quality Score: ${qualityState.qualityScore}/100`);
+        console.log(`🤖 Pipeline: Enhanced LangGraph Quality Pipeline`);
+        console.log(`📊 Model Usage: ${qualityState.modelUsage.o3Calls} o3 calls, ${qualityState.modelUsage.gpt4Calls} GPT-4 calls`);
+        
+        if (qualityState.qualityAnalysis?.specificFeedback && qualityState.qualityAnalysis.specificFeedback.length > 0) {
+          console.log('\n💡 Quality Feedback:');
+          qualityState.qualityAnalysis.specificFeedback.slice(0, 3).forEach((feedback, index) => {
+            console.log(`  ${index + 1}. ${feedback.category}: ${feedback.issue}`);
+          });
+        }
+        
+      } else {
+        // Use normal orchestrator pipeline
+        spinner.updateMessage('🚀 Running standard pipeline...');
+
+        const orchestrator = new Orchestrator();
+        const jobResult = await orchestrator.runJob({
+          documentType,
+          inputPath,
+          outputPath: outputDir,
+          options: {
+            debug: options.debug || false
+          }
         });
+        
+        if (!jobResult.success) {
+          throw new Error(`Job failed: ${jobResult.error?.message || 'Unknown error'}`);
+        }
+        
+        const generationTime = Math.round((jobResult.metadata.totalProcessingTime || 0) / 1000);
+        
+        // Success!
+        spinner.success(`${SPINNER_MESSAGES.SUCCESS} (completed in ${generationTime}s)`);
+        
+        // Display success information
+        console.log('\n✨ Document Generation Complete!\n');
+        console.log(`📄 Document Type: ${documentType}`);
+        console.log(`📁 Saved to: Generated successfully`);
+        console.log(`⏱️  Generation time: ${generationTime} seconds`);
+        console.log(`🤖 Agents executed: ${jobResult.metadata.agentExecutionOrder.join(' → ')}`);
+        
+        if (jobResult.reviewPacket && jobResult.reviewPacket.recommendations.length > 0) {
+          console.log('\n💡 Recommendations:');
+          jobResult.reviewPacket.recommendations.forEach((rec, index) => {
+            console.log(`  ${index + 1}. ${rec}`);
+          });
+        }
       }
       
       console.log('\n💡 Tip: Review the generated document for accuracy and completeness');

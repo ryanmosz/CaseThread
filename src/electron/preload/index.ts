@@ -35,8 +35,8 @@ const electronAPI: ElectronAPI = {
     ipcRenderer.invoke(IPC_CHANNELS.LOAD_TEMPLATE_SCHEMA, templateId),
   
   // CLI operations
-  generateDocument: (templateId: string, formData: any) =>
-    ipcRenderer.invoke(IPC_CHANNELS.GENERATE_DOCUMENT, { templateId, formData }),
+  generateDocument: (templateId: string, formData: any, options?: { useMultiagent?: boolean }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.GENERATE_DOCUMENT, { templateId, formData, options }),
   
   learnFromPath: (dirPath: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.LEARN_FROM_PATH, dirPath),

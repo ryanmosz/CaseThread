@@ -207,7 +207,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleGenerateDocument = async (formData: any) => {
+  const handleGenerateDocument = async (formData: any, options?: { useMultiagent?: boolean }) => {
     if (!state.selectedTemplate) return;
 
     // Prevent document generation if there are pending AI suggestions
@@ -240,7 +240,8 @@ const App: React.FC = () => {
       
       const result = await window.electronAPI.generateDocument(
         templateId,
-        cleanFormData
+        cleanFormData,
+        options
       );
 
       console.log('App: Generation result:', result);

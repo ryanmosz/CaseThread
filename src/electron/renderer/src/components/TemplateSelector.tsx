@@ -13,7 +13,7 @@ interface TemplateSelectorProps {
   templates: Template[];
   selectedTemplate: Template | null;
   onTemplateSelect: (template: Template) => void;
-  onGenerateDocument: (formData: any) => void;
+  onGenerateDocument: (formData: any, options?: { useMultiagent?: boolean }) => void;
 }
 
 const TemplateSelector: React.FC<TemplateSelectorProps> = ({
@@ -56,10 +56,10 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
     onOpen();
   };
 
-  const handleFormSubmit = async (formData: any) => {
+  const handleFormSubmit = async (formData: any, options?: { useMultiagent?: boolean }) => {
     setIsGenerating(true);
     try {
-      await onGenerateDocument(formData);
+      await onGenerateDocument(formData, options);
       onClose();
     } catch (error) {
       console.error('Generation failed:', error);

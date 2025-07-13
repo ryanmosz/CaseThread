@@ -142,7 +142,7 @@ export function setupIpcHandlers(): void {
   });
 
   // CLI operation handlers
-  ipcMain.handle(IPC_CHANNELS.GENERATE_DOCUMENT, async (_, { templateId, formData }: { templateId: string; formData: any }) => {
+  ipcMain.handle(IPC_CHANNELS.GENERATE_DOCUMENT, async (_, { templateId, formData, options }: { templateId: string; formData: any; options?: { useMultiagent?: boolean } }) => {
     try {
       console.log('IPC: Generate document called with:', { templateId, formData });
       
@@ -190,12 +190,18 @@ export function setupIpcHandlers(): void {
       console.log('IPC: Form data saved to:', documentPaths.formDataPath);
 
       // Execute CLI command to generate document in the folder
-      const command = `npm run cli -- generate ${templateId} "${documentPaths.formDataPath}" --output "${documentPaths.folderPath}"`;
+      const qualityFlag = options?.useMultiagent ? ' --quality' : '';
+      const command = `npm run cli -- generate ${templateId} "${documentPaths.formDataPath}" --output "${documentPaths.folderPath}"${qualityFlag}`;
       console.log('IPC: Executing command:', command);
+      console.log('IPC: Using multiagent pipeline:', options?.useMultiagent || false);
+      
+      // Set timeout based on whether quality pipeline is being used
+      const timeoutMs = options?.useMultiagent ? 300000 : 60000; // 5 minutes for quality, 1 minute for normal
+      console.log('IPC: Using timeout:', timeoutMs / 1000, 'seconds');
       
       const { stdout, stderr } = await execAsync(command, {
         cwd: process.cwd(),
-        timeout: 60000, // 60 second timeout
+        timeout: timeoutMs,
       });
 
       console.log('IPC: Command completed:', { 

@@ -23,7 +23,7 @@ import { Template, TemplateField } from '../../../../shared/types';
 interface EnhancedTemplateFormProps {
   template: Template;
   isOpen: boolean;
-  onSubmit: (data: FormData) => void;
+  onSubmit: (data: FormData, options?: { useMultiagent?: boolean }) => void;
   onCancel: () => void;
   isGenerating?: boolean;
 }
@@ -130,6 +130,10 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
   });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [completionProgress, setCompletionProgress] = useState(0);
+  
+  // Multiagent feature state - enabled for high/very-high complexity templates
+  const isMultiagentEligible = template.complexity === 'high' || template.complexity === 'very-high';
+  const [useMultiagent, setUseMultiagent] = useState(isMultiagentEligible); // Default to true for eligible templates
 
   // Get conditional logic for this template
   const templateConditionalLogic = CONDITIONAL_LOGIC[template.id] || {};
@@ -289,7 +293,7 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
       Object.entries(formData).filter(([key]) => visibleFields.has(key))
     );
     
-    onSubmit(visibleFormData);
+    onSubmit(visibleFormData, { useMultiagent: useMultiagent && isMultiagentEligible });
   };
 
   const formatOptionLabel = (value: string): string => {
@@ -532,6 +536,47 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
         
         <ModalBody className="px-6 py-4">
           <div className="space-y-6">
+            {/* Multiagent Pipeline Option for High/Very-High Complexity Templates */}
+            {isMultiagentEligible && (
+              <Card className="border-dashed border-primary/30 bg-primary/5">
+                <CardBody className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="multiagent-toggle"
+                      isSelected={useMultiagent}
+                      onValueChange={setUseMultiagent}
+                      size="lg"
+                      color="primary"
+                    />
+                    <div className="flex-1">
+                      <label htmlFor="multiagent-toggle" className="text-sm font-semibold cursor-pointer text-primary">
+                        Enhanced Quality Pipeline
+                      </label>
+                      <p className="text-xs text-foreground/70 mt-1">
+                        Use the advanced multi-agent pipeline for {template.complexity} complexity documents. 
+                        This provides partner-level quality with iterative refinement and comprehensive legal analysis.
+                        {template.complexity === 'very-high' ? ' Highly recommended for this complex document type.' : ''}
+                      </p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-foreground/60">
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-primary/60"></span>
+                          Quality-focused (3-4 minutes)
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-warning/60"></span>
+                          Cost-optimized AI model selection
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-success/60"></span>
+                          Legal precedent integration
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            )}
+            
             {Object.entries(groupedFields).map(([groupName, fields]) => (
               <Card key={groupName} className="border-dashed border-divider">
                 <CardHeader className="pb-3">

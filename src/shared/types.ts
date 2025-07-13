@@ -75,7 +75,7 @@ export interface ElectronAPI {
   loadTemplateSchema: (templateId: string) => Promise<{ success: boolean; data?: any; error?: string }>;
   
   // CLI operations
-  generateDocument: (templateId: string, formData: any) => Promise<{ 
+  generateDocument: (templateId: string, formData: any, options?: { useMultiagent?: boolean }) => Promise<{ 
     success: boolean; 
     data?: { 
       output: string; 
