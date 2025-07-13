@@ -315,66 +315,6 @@ Please provide your response:`;
 
   return (
     <div className="h-full flex flex-col bg-background">
-      {/* Context and Status Bar */}
-      <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Button
-              isIconOnly
-              variant="light"
-              size="sm"
-              onClick={() => setShowContext(!showContext)}
-              className="text-foreground/60"
-            >
-              <FileTextIcon />
-            </Button>
-            <span className="text-xs text-foreground/60">
-              {showContext ? 'Hide Context' : 'Show Context'}
-            </span>
-          </div>
-          <Chip
-            size="sm"
-            variant="flat"
-            color={documentContent ? 'success' : 'default'}
-            className="text-xs"
-          >
-            {documentContent ? 'Document Loaded' : 'No Document'}
-          </Chip>
-        </div>
-      </div>
-
-      {/* Context Panel */}
-      {showContext && documentContext && (
-        <Card className="m-4 mb-0">
-                     <CardHeader className="pb-2">
-             <div className="flex items-center space-x-2">
-               <FileTextIcon />
-               <h4 className="text-sm font-medium">Document Context</h4>
-             </div>
-           </CardHeader>
-          <CardBody className="pt-0">
-            <div className="space-y-2 text-xs">
-              <div>
-                <span className="font-medium">Type:</span> {documentContext.documentType}
-              </div>
-              <div>
-                <span className="font-medium">Structure:</span> {documentContext.legalContext.length} sections
-              </div>
-              <div>
-                <span className="font-medium">Key Terms:</span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {documentContext.keyTerms.slice(0, 5).map((term, index) => (
-                    <Chip key={index} size="sm" variant="flat" className="text-xs">
-                      {term}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-      )}
-
       {/* Chat Messages */}
       <div className="flex-1 overflow-hidden">
         <ScrollShadow 
@@ -396,7 +336,7 @@ Please provide your response:`;
                   className={`rounded-lg px-3 py-2 ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-card border border-divider'
+                      : 'bg-card border-2 border-gray-500 dark:border-gray-400'
                   }`}
                 >
                   <div className="text-sm whitespace-pre-wrap">
@@ -421,7 +361,7 @@ Please provide your response:`;
                    className="mr-2 flex-shrink-0"
                    icon={<BotIcon />}
                  />
-                <div className="rounded-lg px-3 py-2 bg-card border border-divider">
+                <div className="rounded-lg px-3 py-2 bg-card border-2 border-gray-500 dark:border-gray-400">
                   <div className="flex items-center space-x-2">
                     <Spinner size="sm" />
                     <span className="text-sm text-foreground/60">Thinking...</span>
@@ -437,7 +377,7 @@ Please provide your response:`;
 
       {/* Quick Actions */}
       {messages.length <= 1 && (
-        <div className="p-4 border-t border-divider">
+        <div className="p-4 border-t-2 border-gray-500 dark:border-gray-400">
           <div className="mb-3">
             <h4 className="text-sm font-medium text-foreground mb-2">Quick Actions</h4>
             <div className="flex flex-wrap gap-2">
@@ -459,7 +399,7 @@ Please provide your response:`;
       )}
 
       {/* Input Area */}
-      <div className="p-4 border-t border-divider bg-background/50 backdrop-blur-sm">
+      <div className="p-4 border-t-2 border-gray-500 dark:border-gray-400 bg-background/50 backdrop-blur-sm">
         <div className="flex space-x-2">
           <Textarea
             value={inputText}

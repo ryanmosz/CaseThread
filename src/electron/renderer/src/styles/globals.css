@@ -106,4 +106,70 @@ body {
 /* Theme transitions */
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Custom border utilities for thicker, more spread dashed borders */
+@layer utilities {
+  .border-dashed-thick {
+    border-style: dashed;
+    border-width: 2px;
+    border-image: none;
+  }
+  
+  .border-dashed-thick-light {
+    border-style: dashed;
+    border-width: 2px;
+    border-color: rgb(107 114 128); /* gray-500 */
+  }
+  
+  .border-dashed-thick-dark {
+    border-style: dashed;
+    border-width: 2px;
+    border-color: rgb(156 163 175); /* gray-400 */
+  }
+  
+  .border-b-dashed-thick {
+    border-bottom-style: dashed;
+    border-bottom-width: 2px;
+  }
+  
+  .border-r-dashed-thick {
+    border-right-style: dashed;
+    border-right-width: 2px;
+  }
+  
+  .border-l-dashed-thick {
+    border-left-style: dashed;
+    border-left-width: 2px;
+  }
+  
+  /* Custom dashed border with more spacing and thickness */
+  .border-dashed-custom {
+    border-style: dashed;
+    border-width: 3px;
+    border-image: none;
+  }
+  
+  .border-b-dashed-custom {
+    border-bottom-style: dashed;
+    border-bottom-width: 3px;
+  }
+  
+  .border-r-dashed-custom {
+    border-right-style: dashed;
+    border-right-width: 3px;
+  }
+  
+  .border-l-dashed-custom {
+    border-left-style: dashed;
+    border-left-width: 3px;
+  }
+  
+  /* Enhanced dashed border with custom dash spacing */
+  .border-dashed-enhanced {
+    border-style: dashed;
+    border-width: 2px;
+    border-image: linear-gradient(90deg, transparent, transparent 30%, currentColor 30%, currentColor 70%, transparent 70%, transparent) 1;
+    border-image-slice: 1;
+  }
 } 

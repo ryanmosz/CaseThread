@@ -64,7 +64,7 @@ const DiffViewer: React.FC<DiffViewerProps> = ({
     <Card className="w-full h-full">
       <CardBody className="p-0 h-full flex flex-col">
         {/* Header */}
-        <div className="border-b border-divider p-4 bg-background/50">
+        <div className="border-b-2 border-gray-500 dark:border-gray-400 p-4 bg-background/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">

@@ -553,7 +553,7 @@ const AppContent: React.FC = () => {
     <ErrorBoundary>
       <div className="h-screen flex flex-col bg-background">
           {/* Header */}
-          <header className="bg-card border-b border-dashed border-divider/60 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
+          <header className="bg-card border-b-dashed-custom border-gray-500 dark:border-gray-400 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="relative">
@@ -586,7 +586,7 @@ const AppContent: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-card border border-divider/60">
+                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-card border-2 border-gray-300 dark:border-gray-600">
                   <svg 
                     className="w-4 h-4 text-foreground/40" 
                     fill="none" 
@@ -614,8 +614,8 @@ const AppContent: React.FC = () => {
           {/* Main Content - Three Pane Layout */}
           <main className="flex-1 flex overflow-hidden">
             {/* Left Pane - Document Browser */}
-            <div className="w-80 bg-card border-r border-dashed border-divider flex flex-col">
-              <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
+            <div className="w-80 bg-card border-r-dashed-custom border-gray-500 dark:border-gray-400 flex flex-col">
+              <div className="border-b-dashed-custom border-gray-500 dark:border-gray-400 bg-background/50 backdrop-blur-sm p-4">
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -655,16 +655,22 @@ const AppContent: React.FC = () => {
             </div>
 
             {/* Right Pane - Tabbed Interface */}
-            <div className="w-96 bg-card border-l border-dashed border-divider flex flex-col">
-              <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
-                <div className="flex justify-center">
+                <div className="w-96 bg-card border-l-dashed-custom border-gray-500 dark:border-gray-400 flex flex-col h-full">
+                <div className="border-b-dashed-custom border-gray-500 dark:border-gray-400 bg-background/50 backdrop-blur-sm py-3.5">
+                <div className="flex items-center justify-center">
                   <Tabs
                     selectedKey={state.selectedTab}
                     onSelectionChange={(key) => handleTabSelect(key as string)}
                     variant="underlined"
+                    size="sm"
+                    classNames={{
+                      tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                      cursor: "w-full bg-primary h-0.5",
+                      tab: "max-w-fit px-0 h-10",
+                      tabContent: "group-data-[selected=true]:text-primary font-semibold text-sm text-foreground/60 group-data-[selected=true]:text-foreground"
+                    }}
                   >
                     <Tab key="templates" title="Templates">
-            
                     </Tab>
                     <Tab key="ai-assistant" title="Rewrite with AI">
                       {/* Removed duplicate AI Assistant heading - the tab title is sufficient */}
@@ -697,7 +703,7 @@ const AppContent: React.FC = () => {
           </main>
 
           {/* Status Bar */}
-          <footer className="bg-card border-t border-divider px-6 py-2">
+          <footer className="bg-card border-t-2 border-gray-300 dark:border-gray-600 px-6 py-2">
             <div className="flex items-center justify-between text-sm text-foreground/60">
               <div>Ready</div>
               <div>

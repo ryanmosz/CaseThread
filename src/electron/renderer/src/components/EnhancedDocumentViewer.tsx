@@ -328,7 +328,7 @@ const EnhancedDocumentViewer: React.FC<EnhancedDocumentViewerProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="border-b border-dashed border-divider bg-background/50 backdrop-blur-sm p-4">
+      <div className="border-b-dashed-custom border-gray-500 dark:border-gray-400 bg-background/50 backdrop-blur-sm p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">

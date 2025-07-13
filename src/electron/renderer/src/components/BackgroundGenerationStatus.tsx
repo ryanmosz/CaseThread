@@ -53,7 +53,7 @@ export const BackgroundGenerationStatus: React.FC<BackgroundGenerationStatusProp
   // Prominent version when no modal is open and not minimized
   if (!shouldShowCompact) {
     return (
-      <Card className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] shadow-2xl border-2 border-primary/30 bg-background/98 backdrop-blur-lg z-50 animate-in slide-in-from-bottom-4 duration-300">
+      <Card className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] shadow-2xl border-3 border-primary/80 bg-background/98 backdrop-blur-lg z-50 animate-in slide-in-from-bottom-4 duration-300">
         <CardBody className="p-8 relative">
           {/* Minimize button */}
           <Button
@@ -125,7 +125,7 @@ export const BackgroundGenerationStatus: React.FC<BackgroundGenerationStatusProp
 
   // Compact version when modal is open or minimized
   return (
-    <Card className="fixed bottom-4 right-4 w-96 shadow-lg border border-primary/20 bg-background/95 backdrop-blur-sm z-50">
+    <Card className="fixed bottom-4 right-4 w-96 shadow-lg border-2 border-primary/60 bg-background/95 backdrop-blur-sm z-50">
       <CardBody className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div>

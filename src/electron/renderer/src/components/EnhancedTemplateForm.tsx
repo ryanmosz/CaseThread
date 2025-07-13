@@ -542,7 +542,7 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
           <div className="space-y-6">
             {/* Multiagent Pipeline Option for High/Very-High Complexity Templates */}
             {isMultiagentEligible && (
-              <Card className="border-dashed border-primary/30 bg-primary/5">
+              <Card className="border-dashed border-primary/50 bg-primary/5">
                 <CardBody className="p-4">
                   <div className="flex items-start gap-3">
                     <Checkbox
@@ -582,7 +582,7 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
             )}
             
             {Object.entries(groupedFields).map(([groupName, fields]) => (
-              <Card key={groupName} className="border-dashed border-divider">
+              <Card key={groupName} className="border-dashed border-gray-500 dark:border-gray-400">
                 <CardHeader className="pb-3">
                   <h3 className="text-lg font-semibold text-foreground">
                     {groupName}
