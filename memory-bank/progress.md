@@ -18,22 +18,21 @@ Task 6.0 - GUI Integration with PDF Service
 - ✅ Fixed critical "An object could not be cloned" IPC error
   - Changed Date object to ISO string in pdf-generation-handler.ts
   - Updated type definition in pdf-ipc.ts
+- ✅ Fixed "Invalid document ID" security validation error
+  - Updated usePDFGeneration hook to send proper PDFGenerateRequest
+  - Added documentId field to request structure
+- ✅ Fixed "window.electron.off is not a function" error
+  - Changed to use removeListener method for event cleanup
+- ✅ PDF generation now fully functional!
+  - Successfully generates 10-page PDF from meeting memo
+  - Automatic view switching to PDF mode after generation
+  - Blob URL creation for PDF display
+  - Toast notifications working properly
 - ✅ Created comprehensive automated testing framework
   - 6 test scripts for programmatic PDF testing
-  - Auto-generation feature for startup testing
-  - Real-time monitoring capabilities
-- ✅ Enhanced auto-generation support
-  - URL parameters for autoGenerate and documentType
-  - Auto-loading of matching documents
-- ✅ Fixed JavaScript initialization error in App.tsx
-  - Moved auto-generation useEffect after handleDocumentSelect definition
-  - Resolved "Cannot access before initialization" error
-- ✅ Improved test scripts with better error detection
-  - Added JavaScript error detection (Uncaught errors)
-  - Added React component error detection
-  - Enhanced process cleanup with trap and kill_process_tree
-  - Fixed process management to prevent zombie Electron instances
-- ✅ All tests now passing - app starts cleanly
+  - Auto-generation feature for standalone testing
+  - Process management to prevent zombie Electron instances
+  - Detailed logging and error detection
 
 ### Current State
 - PDF generation fully functional after fix
