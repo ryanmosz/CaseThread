@@ -6,6 +6,8 @@ import DocumentBrowser from './components/DocumentBrowser';
 import EnhancedDocumentViewer from './components/EnhancedDocumentViewer';
 import TemplateSelector from './components/TemplateSelector';
 import AIAssistant from './components/AIAssistant';
+import { BackgroundGenerationProvider, useBackgroundGeneration } from './contexts/BackgroundGenerationContext';
+import { BackgroundGenerationStatus } from './components/BackgroundGenerationStatus';
 import { Template, DirectoryEntry } from '../../../shared/types';
 
 // Error Boundary Component
@@ -69,7 +71,7 @@ interface AppState {
   suggestedContent: string | null;
 }
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [state, setState] = useState<AppState>({
     templates: [],
     selectedTemplate: null,
@@ -80,6 +82,8 @@ const App: React.FC = () => {
     selectedTab: 'templates',
     suggestedContent: null,
   });
+
+  const backgroundGeneration = useBackgroundGeneration();
 
   // Load initial data
   useEffect(() => {
@@ -178,6 +182,88 @@ const App: React.FC = () => {
     }
   };
 
+  const generateDocumentInBackground = async (formData: any, options?: { useMultiagent?: boolean }) => {
+    if (!state.selectedTemplate) return;
+    
+    try {
+      console.log('Background: Starting quality pipeline generation');
+      
+      // Ensure template ID is serializable
+      const templateId = state.selectedTemplate.id;
+      if (!templateId || typeof templateId !== 'string') {
+        throw new Error('Invalid template selected');
+      }
+      
+      // Ensure form data is clean and serializable
+      const cleanFormData = JSON.parse(JSON.stringify(formData));
+      
+      const result = await window.electronAPI.generateDocument(
+        templateId,
+        cleanFormData,
+        options
+      );
+
+      console.log('Background: Generation result:', result);
+
+      if (result.success && result.data) {
+        const documentContent = result.data.documentContent || result.data.output || '';
+        
+        if (documentContent.trim()) {
+          setState(prev => ({
+            ...prev,
+            selectedDocument: {
+              content: documentContent,
+              path: result.data?.savedFilePath || `output/${result.data?.folderName || 'document-folder'}/document.md`,
+              name: `${state.selectedTemplate?.name || 'Document'} - Generated`,
+            },
+          }));
+          
+          // Show success toast
+          const folderName = result.data?.folderName || 'document-folder';
+          const categoryFolder = result.data?.categoryFolder || '';
+          const folderPath = categoryFolder ? `output/${categoryFolder}/${folderName}` : `output/${folderName}`;
+          addToast({
+            title: `Enhanced Quality Generation Complete!`,
+            description: `${state.selectedTemplate?.name} saved to: ${folderPath}`,
+            color: "success",
+            timeout: 10000,
+          });
+          
+          // Refresh document tree to show the new file
+          await refreshDocumentTree();
+          
+          console.log('Background: Document generation successful');
+        } else {
+          throw new Error('Generated document is empty');
+        }
+      } else {
+        throw new Error(result.error || 'Background generation failed');
+      }
+      
+      // Mark generation as complete
+      backgroundGeneration.completeGeneration();
+      
+    } catch (error) {
+      console.error('Background: Generation error:', error);
+      
+      let userFriendlyError = 'Background generation failed';
+      if (error instanceof Error) {
+        userFriendlyError = error.message;
+      }
+      
+      // Show error toast
+      addToast({
+        title: "Background Generation Failed",
+        description: userFriendlyError,
+        color: "danger",
+        timeout: 8000,
+      });
+      
+      // Mark generation as complete (even on error)
+      backgroundGeneration.completeGeneration();
+    }
+  };
+
   const handleDocumentSelect = async (filePath: string) => {
     // Prevent document switching if there are pending AI suggestions
     if (state.suggestedContent) {
@@ -219,6 +305,41 @@ const App: React.FC = () => {
         timeout: 5000,
       });
       return;
+    }
+
+    // Prevent multiple generations while one is running
+    if (backgroundGeneration.state.isGenerating) {
+      addToast({
+        title: "Generation In Progress",
+        description: "Please wait for the current generation to complete before starting a new one.",
+        color: "warning",
+        timeout: 5000,
+      });
+      return;
+    }
+
+    // Handle background generation for multiagent (quality pipeline)
+    if (options?.useMultiagent) {
+      console.log('App: Starting background generation with quality pipeline');
+      
+      // Start background generation tracking
+      backgroundGeneration.startGeneration(
+        state.selectedTemplate.id,
+        state.selectedTemplate.name || 'Document'
+      );
+      
+      // Show start toast
+      addToast({
+        title: "Enhanced Quality Generation Started",
+        description: `${state.selectedTemplate.name} is being generated in the background. This will take 3-4 minutes.`,
+        color: "primary",
+        timeout: 8000,
+      });
+      
+      // Start background generation - don't await it
+      generateDocumentInBackground(formData, options);
+      
+      return; // Don't block the UI
     }
 
     try {
@@ -423,9 +544,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <ThemeProvider defaultTheme="light">
-      <ErrorBoundary>
-        <div className="h-screen flex flex-col bg-background">
+    <ErrorBoundary>
+      <div className="h-screen flex flex-col bg-background">
           {/* Header */}
           <header className="bg-card border-b border-dashed border-divider/60 px-8 py-5 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
             <div className="flex items-center justify-between">
@@ -581,7 +701,17 @@ const App: React.FC = () => {
             </div>
           </footer>
         </div>
+        <BackgroundGenerationStatus />
       </ErrorBoundary>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ThemeProvider defaultTheme="light">
+      <BackgroundGenerationProvider>
+        <AppContent />
+      </BackgroundGenerationProvider>
     </ThemeProvider>
   );
 };

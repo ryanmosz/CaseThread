@@ -19,6 +19,7 @@ import {
   addToast
 } from '@heroui/react';
 import { Template, TemplateField } from '../../../../shared/types';
+import { useBackgroundGeneration } from '../contexts/BackgroundGenerationContext';
 
 interface EnhancedTemplateFormProps {
   template: Template;
@@ -134,6 +135,9 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
   // Multiagent feature state - enabled for high/very-high complexity templates
   const isMultiagentEligible = template.complexity === 'high' || template.complexity === 'very-high';
   const [useMultiagent, setUseMultiagent] = useState(isMultiagentEligible); // Default to true for eligible templates
+  
+  // Background generation state
+  const { state: backgroundGenerationState } = useBackgroundGeneration();
 
   // Get conditional logic for this template
   const templateConditionalLogic = CONDITIONAL_LOGIC[template.id] || {};
@@ -598,7 +602,7 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
           <Button 
             variant="light" 
             onPress={onCancel}
-            disabled={isGenerating}
+            disabled={isGenerating || backgroundGenerationState.isGenerating}
           >
             Cancel
           </Button>
@@ -606,9 +610,14 @@ const EnhancedTemplateForm: React.FC<EnhancedTemplateFormProps> = ({
             color="primary" 
             onPress={handleSubmit}
             isLoading={isGenerating}
-            disabled={completionProgress === 0}
+            disabled={completionProgress === 0 || backgroundGenerationState.isGenerating}
           >
-            {isGenerating ? 'Generating...' : 'Generate Document'}
+            {backgroundGenerationState.isGenerating 
+              ? 'Generation in Background...' 
+              : isGenerating 
+                ? 'Generating...' 
+                : 'Generate Document'
+            }
           </Button>
         </ModalFooter>
       </ModalContent>
