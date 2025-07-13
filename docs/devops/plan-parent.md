@@ -2,27 +2,57 @@
 
 ## 🎯 CURRENT TASK CONTEXT
 <!-- UPDATE THIS SECTION FOR EACH NEW PARENT TASK -->
-**Current Focus**: PDF Generation and Export Functionality  
-**Developer**: Developer R  
-**Branch**: R (or feature branches off R)  
+**Current Focus**: Task 6.0 - GUI Integration with PDF Service  
+**Developer**: Developer R (integrating with Developer G's GUI work)  
+**Branch**: feature/r-g-integration  
+**Integration Status**: Developer G's branch successfully merged
 
 ### Task Resources
 - **Task List**: `docs/tasks/complete/developer-r-tasks.md` - Developer R's specific assignments
 - **Roadmap**: `docs/planning/MFD-roadmap.md` - Overall developer task breakdown
-- **Project State**: `AGENT-HANDOFF.md` - Current implementation status
+- **GUI Workflow**: `docs/planning/gui-pdf-workflow-plan.md` - PDF workflow in 3-pane GUI
+- **Integration Analysis**: `docs/testing/test-output/g-branch-integration-analysis.md` - G's features available
+- **Handoff Docs**: `docs/handoff/pdf-modularization-handoff.md` - PDF service status
 
 ### Developer Focus Areas
-- PDF generation and export functionality
-- Legal document formatting (spacing, margins, fonts)
-- Signature block implementation and positioning
-- Document persistence and management
+- Integrating modular PDF service into Electron GUI
+- Connecting PDF generation to viewer pane
+- Implementing preview-before-export workflow
+- Progress reporting using BackgroundGenerationStatus component
+- IPC handlers for main/renderer communication
 
 ### Task-Specific Context
-- All development inside Docker container
-- CLI tool with completed multi-agent architecture
-- Key inputs: Template JSON, Explanation markdown, YAML scenarios
-- Output: Generated legal documents via OpenAI API
-- Current goal: Adding PDF export capability with legal formatting
+- **Current State**: 
+  - Task 5 (PDF Service Modularization) 100% complete
+  - All 670 tests passing
+  - PDF service supports buffer generation and progress reporting
+  - G's GUI enhancements merged (AI Assistant, better UI, quality pipeline)
+- **GUI Architecture**: 
+  - 3-pane layout: File Explorer | Viewer | Document Type Chooser
+  - React/TypeScript frontend with Electron
+  - EnhancedDocumentViewer component for content display
+  - BackgroundGenerationStatus for long operations
+- **Integration Points**:
+  - PDFServiceFactory.forGUI() with callback progress
+  - Buffer-based generation for preview
+  - IPC communication between main and renderer
+  - Context bundle integration from quality pipeline
+- **Key Features from G's Work**:
+  - AI Assistant with "Rewrite with AI" capability
+  - Quality pipeline (3-agent workflow) for better documents
+  - Enhanced save functionality and UI borders
+  - Background task status display
+- **Task 6.0 Goals**:
+  - Enable PDF generation from GUI viewer pane
+  - Preview-before-export workflow (buffer → display → save)
+  - Update EnhancedDocumentViewer to display PDFs
+  - Show progress during generation
+  - Maintain smooth UX with error handling
+- **Testing Considerations**:
+  - Mock IPC handlers for unit tests
+  - Test main/renderer process communication
+  - GUI component testing with React Testing Library
+  - Maintain all 670 existing tests passing
 
 <!-- END OF TASK-SPECIFIC SECTION -->
 
@@ -222,6 +252,25 @@ Requirements must be:
 - Tables for structured data
 - Actual file paths and function names
 - Reference specific PRD lines where applicable
+
+## 🧪 TEST OUTPUT ORGANIZATION
+
+**CRITICAL**: All test outputs MUST be organized within `docs/testing/` directory:
+
+```
+docs/testing/
+├── scenario-inputs/     # YAML test input files
+├── test-scripts/       # Executable test scripts  
+├── test-results/       # Generated test documents
+├── test-errors/        # Error logs and failures
+└── test-output/        # Task summaries and analysis
+```
+
+**Important Guidelines**:
+- **NEVER** create `test-output/` in the project root
+- **ALWAYS** use `docs/testing/test-output/` for summaries and analysis
+- **ALWAYS** use `docs/testing/test-results/` for generated documents
+- Keep the project root clean - no test artifacts should remain there
 
 ---
 **Note**: Always run `npm test` first when picking up work to understand current state.

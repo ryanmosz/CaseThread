@@ -387,6 +387,138 @@ class CloudStorageOutput implements PDFOutput {
 3. **Memory Limits**: Buffer size limits enforced
 4. **Error Handling**: Sensitive data not exposed in errors
 
+## GUI Integration Architecture
+
+### Electron IPC Communication
+
+The PDF service integrates with the Electron GUI through IPC handlers:
+
+```typescript
+// Main process handler
+ipcMain.handle('generate-pdf', async (event, { text, documentType }) => {
+  const progressReporter = new CallbackProgressReporter((step, detail) => {
+    event.sender.send('pdf-progress', { step, detail });
+  });
+  
+  const service = PDFServiceFactory.forGUI(progressReporter);
+  const result = await service.exportToBuffer(text, documentType);
+  
+  return {
+    buffer: result.buffer,
+    metadata: result.metadata
+  };
+});
+
+// Renderer process usage
+const { buffer, metadata } = await window.api.generatePDF({
+  text: documentContent,
+  documentType: selectedType
+});
+```
+
+### Buffer-Based Preview Workflow
+
+The GUI uses buffer generation for preview-before-save:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant GUI
+    participant Main Process
+    participant PDF Service
+    
+    User->>GUI: Click "Generate PDF"
+    GUI->>Main Process: IPC: generate-pdf
+    Main Process->>PDF Service: exportToBuffer()
+    PDF Service-->>Main Process: Progress updates
+    Main Process-->>GUI: IPC: pdf-progress
+    GUI-->>User: Show progress
+    PDF Service->>Main Process: Return buffer
+    Main Process->>GUI: Return buffer + metadata
+    GUI->>User: Display PDF preview
+    User->>GUI: Click "Save"
+    GUI->>Main Process: Save buffer to file
+```
+
+### Progress Reporting Integration
+
+The service integrates with the BackgroundGenerationStatus component:
+
+```typescript
+// GUI component integration
+const PDFGenerator = () => {
+  const [progress, setProgress] = useState<ProgressState>();
+  
+  const generatePDF = async () => {
+    // Subscribe to progress updates
+    window.api.onPDFProgress((step, detail) => {
+      setProgress({ step, detail, percentage: calculatePercentage(step) });
+    });
+    
+    const result = await window.api.generatePDF({
+      text: document.content,
+      documentType: document.type
+    });
+    
+    // Display in viewer
+    displayPDF(result.buffer);
+  };
+  
+  return (
+    <>
+      <BackgroundGenerationStatus progress={progress} />
+      <Button onClick={generatePDF}>Generate PDF</Button>
+    </>
+  );
+};
+```
+
+### Memory Management
+
+Buffer handling for large documents:
+
+```typescript
+// Efficient buffer transfer
+const optimizedHandler = async (event, options) => {
+  const result = await service.exportToBuffer(options.text, options.documentType);
+  
+  // Transfer buffer efficiently
+  const arrayBuffer = result.buffer.buffer.slice(
+    result.buffer.byteOffset,
+    result.buffer.byteOffset + result.buffer.byteLength
+  );
+  
+  return {
+    buffer: new Uint8Array(arrayBuffer),
+    metadata: result.metadata
+  };
+};
+```
+
+### Error Handling in GUI Context
+
+User-friendly error display:
+
+```typescript
+// Main process error handling
+ipcMain.handle('generate-pdf', async (event, options) => {
+  try {
+    return await generatePDF(options);
+  } catch (error) {
+    // Log detailed error
+    logger.error('PDF generation failed', error);
+    
+    // Return user-friendly error
+    return {
+      error: {
+        message: getUserFriendlyMessage(error),
+        code: error.code || 'PDF_GENERATION_FAILED'
+      }
+    };
+  }
+});
+```
+
 ## Future Architecture Enhancements
 
 1. **Plugin System**: Dynamic component loading

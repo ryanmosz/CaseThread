@@ -180,7 +180,17 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
 16. Technology Transfer Agreement (Federal): Inter-institutional agreements for technology commercialization
 
 17. Test Output Management Requirements:
-    - **CRITICAL**: All test-generated documents MUST go to `docs/testing/test-results/`
+    - **CRITICAL**: All test-generated documents MUST go to `docs/testing/` subdirectories
+    - **NEVER CREATE test-output IN ROOT**: Do NOT create `/test-output/` in the project root
+    - **Testing Folder Structure**:
+      ```
+      docs/testing/
+      ├── scenario-inputs/     # YAML test input files
+      ├── test-scripts/        # Executable test scripts
+      ├── test-results/        # Generated test documents
+      ├── test-errors/         # Error logs and failures
+      └── test-output/         # Task summaries and test analysis
+      ```
     - **Automatic Detection**: The file-writer service automatically detects test contexts:
       * When NODE_ENV=test
       * When TEST_MODE=true
@@ -193,11 +203,13 @@ When working with task lists, follow these critical rules from `.cursor/rules/pr
       process.env.TEST_MODE = 'true';
       process.env.TEST_NAME = 'your-test-name';
       ```
-    - **Organization**:
+    - **Output Locations**:
       * `docs/testing/test-results/` - All generated documents
       * `docs/testing/test-errors/` - Error logs and failures
+      * `docs/testing/test-output/` - Task summaries and analysis files
       * `docs/testing/test-scripts/` - Helper scripts
     - **NEVER**: Save test outputs to the root directory
+    - **ALWAYS**: Use `docs/testing/` for ALL test-related outputs
     - **ALWAYS**: Check root directory is clean after testing
 
 ## Cross-Task Dependencies and Integration Points

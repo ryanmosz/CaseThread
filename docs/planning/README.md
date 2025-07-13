@@ -4,81 +4,71 @@
 
 **Mission:** Build a transparent, affordable alternative to Harvey AI that helps IP attorneys generate documents faster while maintaining complete control.
 
-**Current Status:** ✅ CLI POC Complete | 🚧 Multi-Agent Integration in Progress
+**Current Status:** ✅ Multi-Agent System Complete | ✅ PDF Generation Complete | 🚧 GUI Integration in Progress (Task 6.0)
 
-## 📁 Planning Documents
+## 📁 Current Planning Documents
 
-1. **[Project Overview](./project-overview.md)**
-   - Vision, market analysis, and competitive positioning
-   - Core features and target market
-   - Open source advantages over Harvey
-   - CLI-first development approach
+### Active Plans
 
-2. **[Project Roadmap](./project-roadmap.md)** 
-   - Current status and completed items
-   - 6-week CLI MVP, then GUI development
-   - Beta launch and growth phases
-   - Living document updated weekly
+1. **[GUI PDF Workflow Plan](./gui-pdf-workflow-plan.md)**
+   - 3-pane GUI layout structure
+   - PDF generation and preview workflow
+   - Buffer-based preview before export
+   - Integration with BackgroundGenerationStatus
+   - User flow from text editing to PDF export
 
-3. **[Technical Implementation](./technical-implementation.md)**
-   - CLI architecture with Commander.js
-   - TypeScript core business logic
-   - Electron/React GUI (Phase 2)
-   - Testing strategy (TDD)
+## 📁 Archived Planning Documents
 
-4. **[Team Coordination Guide](./coordination-guide.md)**
-   - 2-developer workflow options
-   - Daily/weekly sync structure
-   - Git workflow and code review process
-   - First week setup checklist
+Historical planning documents have been moved to the `archive/` folder for reference:
 
-5. **[GitHub Projects Setup](./github-project-setup.md)** 
-   - 5-minute setup guide
-   - Recommended board structure
-   - Issue templates and labels
-   - Weekly workflow process
+### Project Foundation
+- **project-overview.md** - Original vision and market analysis
+- **project-roadmap.md** - Initial 6-week timeline
+- **github-project-setup.md** - GitHub Projects configuration
 
-6. **[Architecture Decisions](./decisions.md)**
-   - Decision log template
-   - Key technical decisions
-   - CLI-first approach rationale
-   - Track trade-offs
+### Development Planning
+- **MFD-roadmap.md** - Developer task assignments
+- **MFD-moving-forward.md** - Demo preparation plans
+- **MFD-gui-architecture-decisions.md** - Early GUI decisions
+- **MFD-pdf-generation-options.md** - PDF planning (now implemented)
+- **demo-script-dev-r.md** - Past demo script
 
-7. **[Concerns & Risks](./concerns.md)**
-   - Legal liability mitigation
-   - Data privacy approach
-   - Quality control measures
+### Completed Plans
+- **enhanced-context-pipeline-plan.md** - Langgraph pipeline (implemented by Dev G)
+- **gui-field-requirements-plan.md** - Field documentation plan (completed)
+- **integration-archive/** - Multi-agent integration plans (completed)
 
-8. **[Next Steps - Ryan](./next-steps-ryan.md)** 
-   - Template list for IP attorneys
-   - Database integration research
-   - Mock law firm data creation
+## 🚀 Current Project State
 
-## 🚀 Quick Facts
-
-**What We're Building:**
-- CLI tool for template-based document generation
-- Multi-agent system with context-aware generation
-- Learns from your firm's style and precedents  
-- GUI interface coming in Phase 2
-- Local-first, transparent, customizable
+**What We've Built:**
+- ✅ CLI tool with full document generation
+- ✅ Multi-agent system with Langgraph quality pipeline
+- ✅ ChromaDB context awareness
+- ✅ PDF generation with legal formatting
+- ✅ Modular PDF service (Task 5 complete)
+- ✅ Electron + React GUI (functional)
+- 🚧 GUI/PDF Integration (Task 6 in progress)
 
 **Tech Stack:**
 - TypeScript + Commander.js (CLI)
-- Multi-Agent Architecture (Context Builder, Drafting Agent)
+- Electron + React + Tailwind (GUI)
+- Langgraph for multi-agent orchestration
 - ChromaDB for vector search
+- PDFKit for document generation
 - Docker containerization
-- Electron + React (GUI - Phase 2)
-- Jest for TDD (266 tests passing)
+- Jest for testing (670 tests passing)
 - OpenAI API (user provides key)
 
 **Current Features:**
 - ✅ 8 document types fully functional
 - ✅ YAML-based input system
 - ✅ Template + Explanation system
-- ✅ Multi-agent pipeline with ChromaDB
-- ✅ Context learning via `learn` command
-- ✅ Graceful degradation without ChromaDB
+- ✅ 3-agent quality pipeline
+- ✅ Context learning and retrieval
+- ✅ PDF generation with buffer support
+- ✅ Progress reporting system
+- ✅ AI Assistant for document editing
+- ✅ Background generation status UI
 
 **Development Status:**
 ```
@@ -88,79 +78,67 @@
 ├── Document generation
 └── Command-line interface
 
-🚧 Phase 2: Multi-Agent Integration (In Progress)
-├── PR #1 integrated to feature branch
-├── ChromaDB vector search working
-├── Test coverage: 65.77% (target: 80%)
-└── Performance: 33s avg generation
+✅ Phase 2: Multi-Agent System (Complete)
+├── Langgraph integration
+├── 3-agent quality pipeline
+├── ChromaDB vector search
+└── Context-aware generation
 
-📅 Phase 3: GUI Development (Planned)
-├── Electron application
-├── React interface
-├── CLI core integration
-└── Visual features
+✅ Phase 3: PDF Generation (Complete)
+├── Legal formatting compliance
+├── Signature block protection
+├── Buffer-based generation
+└── Progress reporting
+
+🚧 Phase 4: GUI Integration (Current - Task 6.0)
+├── IPC handlers for PDF generation
+├── Preview before export workflow
+├── Progress display in UI
+└── EnhancedDocumentViewer updates
+
+📅 Phase 5: Polish & Launch (Planned)
+├── Performance optimization
+├── User testing
+├── Documentation
+└── Beta release
 ```
-
-**Target Users:**
-- Licensed IP attorneys
-- Small/mid IP firms (2-50 attorneys)
-- Solo IP practitioners
-- Currently priced out of Harvey ($100K+/year)
-
-**Timeline:**
-- ✅ Weeks 1-6: CLI POC Development (Complete)
-- 🚧 Week 7: Multi-Agent Integration (Current)
-- 📅 Weeks 8-11: GUI Development  
-- 📅 Weeks 12-13: Beta Launch
-- 📅 Months 4-6: Growth Phase
 
 ## 📊 Key Metrics
 
-- **Cost:** Free core + $99/month premium (vs Harvey's $100K+/year)
-- **Speed:** 33 second average generation (with context retrieval)
-- **Quality:** 90% acceptance rate on first generation
+- **Cost:** Free core + premium tier planned
+- **Speed:** 25-35 seconds with quality pipeline
+- **Quality:** 3-agent refinement system
 - **Privacy:** Local ChromaDB + only prompts to OpenAI
-- **Test Coverage:** 65.77% (improving to 80%+)
+- **Test Coverage:** 670 tests passing
 - **Document Types:** 8 fully functional templates
 
-## 🤝 For the Dev Team
+## 🔄 Current Focus: Task 6.0 - GUI Integration
 
-1. Start with the [Coordination Guide](./coordination-guide.md)
-2. Set up [GitHub Projects](./github-project-setup.md) for task tracking
-3. Review the [Roadmap](./project-roadmap.md) together
-4. Log decisions in [decisions.md](./decisions.md)
-5. Check [Technical Implementation](./technical-implementation.md) for architecture
+**Objective:** Integrate the modular PDF service into the Electron GUI
 
-## 🤖 Multi-Agent Integration (NEW)
+**Key Components:**
+1. IPC handlers for main/renderer communication
+2. Buffer-based PDF preview in viewer pane
+3. Progress reporting using BackgroundGenerationStatus
+4. Export workflow with native save dialog
+5. Error handling and user feedback
 
-**PR #1 Status:** Integrated to `feature/integrate-multi-agent` branch
-
-**What's New:**
-- Context Builder Agent: Retrieves relevant context from ChromaDB
-- Drafting Agent: Generates documents with context awareness
-- Learn Command: Index existing documents for context
-- ChromaDB: Vector database for semantic search
-
-**Integration Documents:**
-- [Integration Plan](../testing/MULTIAGENT_INTEGRATION_PLAN.md)
-- [Test Results](../testing/test-results/MULTIAGENT_TEST_RESULTS_20250708.md)
-- [Test Plan](../testing/MULTIAGENT_TEST_PLAN.md)
-
-## 🔄 Next Steps
-
-1. **Immediate:** Increase test coverage to 80%+
-2. **This Week:** Merge multi-agent to main branch
-3. **Next Week:** Begin GUI development phase
-4. **Ongoing:** Performance optimization (target <20s generation)
+**Integration Points:**
+- `PDFServiceFactory.forGUI()` for callback-based progress
+- EnhancedDocumentViewer for PDF display
+- Context bundle from quality pipeline
+- AI Assistant for pre-generation editing
 
 ## 📁 Key Directories
 
-- `/docs/planning/` - Project planning and roadmaps
+- `/docs/planning/` - Current and archived planning docs
 - `/docs/architecture/` - Technical decisions and guides
 - `/docs/testing/` - Test plans and results
 - `/docs/tasks/` - Development task tracking
-- `/templates/` - Document templates and examples
-- `/mock-data/` - Test scenarios and sample data
+- `/docs/api/` - API documentation
+- `/docs/guides/` - Integration guides
+- `/templates/` - Document templates
+- `/src/electron/` - GUI application code
 
 ---
 

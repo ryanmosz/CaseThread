@@ -13,6 +13,8 @@
   - Integration Guide: `docs/guides/pdf-integration-guide.md`
   - Migration Guide: `docs/guides/pdf-migration-guide.md`
   - Architecture Overview: `docs/architecture/pdf-service-architecture.md`
+  - Check @pdf-modularization-handoff.md for the complete file list
+  
 - **Task 5 Progress** (100% Complete): 
   - ✅ 5.1: Architecture Analysis - Documented all coupling points
   - ✅ 5.2: Core Service Extraction - Buffer support added

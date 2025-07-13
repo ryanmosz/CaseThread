@@ -143,7 +143,7 @@ All modularization tasks have been completed. The PDF service is now fully ready
 - **Background Generation**: Progress UI perfect for PDF generation
 - **Quality Pipeline**: 3-agent pipeline for document quality
 - **Enhanced UI**: Better borders, save functionality, and document viewer
-- See analysis: `test-output/g-branch-integration-analysis.md`
+- See analysis: `docs/testing/test-output/g-branch-integration-analysis.md`
 
 Integration opportunities:
 1. Use `BackgroundGenerationStatus` for PDF progress
