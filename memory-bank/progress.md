@@ -264,4 +264,28 @@ npm run cli -- generate patent-assignment-agreement input.yaml --quality --debug
 4. **Context Integration**: Fix critical ContextBundle gap
 5. **CLI Enhancement**: Add `--quality` flag for LangGraph mode
 
-**All architectural decisions made - ready to code!** 
+**All architectural decisions made - ready to code!**
+
+## ✅ PDF Service Modularization Complete (Task 5 - 100%)
+
+### Merged from Developer R (feature/r-g-integration)
+- **Architecture Analysis**: All coupling points identified and documented
+- **Core Service Extraction**: Buffer support for GUI preview
+- **Enhanced API**: Progress reporting with 3 implementations (CLI, GUI, Test)
+- **Dependency Injection**: All services now injectable for testing
+- **Comprehensive Documentation**: API reference, integration guide, migration guide
+
+### PDF Service Features Ready
+- **Buffer Generation**: `exportToBuffer()` for in-memory PDFs
+- **Progress Reporting**: Real-time updates via callbacks
+- **Factory Methods**: `PDFServiceFactory.forGUI()` for easy integration
+- **Service Container**: Full DI support with environment configs
+- **Backward Compatible**: All existing code continues to work
+
+### Integration with G's Features
+1. **BackgroundGenerationStatus** can show PDF progress
+2. **AI Assistant** can be enhanced with PDF preview
+3. **Quality Pipeline** → PDF generation workflow
+4. **Enhanced Document Viewer** ready for PDF display
+
+**Ready for Task 6: GUI Integration with PDF Generation!** 
