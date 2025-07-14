@@ -12,7 +12,8 @@
  * const result = await service.generateDocument(
  *   template,
  *   explanation,
- *   yamlData
+ *   yamlData,
+ *   contextBundle
  * );
  * ```
  */
@@ -20,6 +21,7 @@
 import OpenAI from 'openai';
 import { OpenAIConfig, GenerationResult, OpenAIError } from '../types/openai';
 import { Template, YamlData } from '../types';
+import { ContextBundle } from '../types/agents';
 import { logger } from '../utils/logger';
 import { withRetry, withTimeout } from '../utils/retry';
 import * as dotenv from 'dotenv';
@@ -65,19 +67,22 @@ export class OpenAIService {
   async generateDocument(
     template: Template,
     explanation: string,
-    yamlData: YamlData
+    yamlData: YamlData,
+    contextBundle?: ContextBundle
   ): Promise<GenerationResult> {
     const startTime = Date.now();
     
     try {
-      // Build the prompt
-      const prompt = this.buildPrompt(template, explanation, yamlData);
+      // Build the prompt with context
+      const prompt = this.buildPrompt(template, explanation, yamlData, contextBundle);
       
       // Log generation start
       logger.info('Starting document generation', {
         templateId: template.id,
         documentType: yamlData.document_type,
-        client: yamlData.client
+        client: yamlData.client,
+        contextResults: contextBundle?.embeddings?.length || 0,
+        contextTokens: contextBundle?.totalTokens || 0
       });
 
       // Call OpenAI with retry logic and timeout
@@ -143,7 +148,8 @@ export class OpenAIService {
       logger.info('Document generation completed', {
         templateId: template.id,
         duration,
-        totalTokens: usage?.totalTokens
+        totalTokens: usage?.totalTokens,
+        contextUsed: contextBundle ? true : false
       });
 
       return {
@@ -196,21 +202,25 @@ export class OpenAIService {
   }
 
   /**
-   * Build the prompt for document generation (subtask 4.2)
+   * Build the prompt for document generation with context integration
    */
   protected buildPrompt(
     template: Template,
     explanation: string,
-    yamlData: YamlData
+    yamlData: YamlData,
+    contextBundle?: ContextBundle
   ): string {
     // Format the template for clarity
     const templateStructure = this.formatTemplateStructure(template);
     
     // Format YAML data for readability
     const formattedData = this.formatYamlData(yamlData);
+    
+    // Format context if available
+    const contextSection = contextBundle ? this.formatContextBundle(contextBundle) : '';
 
     // Build the complete prompt
-    const prompt = `You are a professional legal document generator. Your task is to create a complete, professionally formatted legal document based on the provided template, explanation, and client data.
+    const prompt = `You are a professional legal document generator. Your task is to create a complete, professionally formatted legal document based on the provided template, explanation, and client data${contextBundle ? ', using relevant firm precedents and context' : ''}.
 
 INSTRUCTIONS:
 1. Generate a complete legal document in Markdown format
@@ -220,6 +230,7 @@ INSTRUCTIONS:
 5. Ensure all sections are complete and properly formatted
 6. Include appropriate legal disclaimers and standard clauses
 7. Return ONLY the final document without any additional commentary
+8. Do NOT include section titles or headers in the output - the content should flow naturally${contextBundle ? '\n9. Incorporate relevant precedents and writing style from the provided context' : ''}
 
 TEMPLATE STRUCTURE:
 ${templateStructure}
@@ -230,11 +241,13 @@ ${explanation}
 CLIENT DATA:
 ${formattedData}
 
+${contextSection}
+
 IMPORTANT:
 - Generate the complete document ready for use
 - Ensure all variable placeholders are replaced with actual data
 - Maintain professional formatting throughout
-- Use proper markdown syntax for headers, lists, and emphasis
+- Use proper markdown syntax for headers, lists, and emphasis${contextBundle ? '\n- Use the provided context to inform writing style, clause structures, and legal precedents' : ''}
 - PRESERVE these special markers exactly as they appear in the template:
   - [SIGNATURE_BLOCK:*] - placement markers for signature areas
   - [INITIALS_BLOCK:*] - placement markers for initial areas
@@ -245,7 +258,8 @@ Generate the complete legal document now:`;
 
     logger.debug('Built prompt for document generation', {
       templateId: template.id,
-      promptLength: prompt.length
+      promptLength: prompt.length,
+      contextResults: contextBundle?.embeddings?.length || 0
     });
 
     return prompt;
@@ -258,7 +272,7 @@ Generate the complete legal document now:`;
     const sections = template.sections
       .sort((a, b) => a.order - b.order)
       .map(section => {
-        return `Section ${section.order}: ${section.title}
+        return `${section.title}
 Required: ${section.required}
 Content Template:
 ${section.content}
@@ -295,6 +309,40 @@ ${template.requiredFields.map(f => `- ${f.name} (${f.type}): ${f.description}`).
       .join('\n');
     
     return formatted;
+  }
+
+  /**
+   * Format context bundle for inclusion in prompt
+   */
+  private formatContextBundle(contextBundle: ContextBundle): string {
+    if (!contextBundle.embeddings || contextBundle.embeddings.length === 0) {
+      return '';
+    }
+
+    const contextSections = contextBundle.embeddings
+      .slice(0, 5) // Limit to top 5 most relevant results
+      .map((embedding, index) => {
+        const source = contextBundle.sources[index];
+        return `### Context ${index + 1}: ${source?.title || 'Related Document'}
+**Source**: ${source?.citation || 'Unknown'}
+**Relevance Score**: ${(embedding.similarity * 100).toFixed(1)}%
+
+${embedding.content.substring(0, 800)}${embedding.content.length > 800 ? '...' : ''}`;
+      })
+      .join('\n\n');
+
+    return `RELEVANT FIRM PRECEDENTS AND CONTEXT:
+The following are similar documents and precedents from your firm's practice that should inform your writing style and approach:
+
+${contextSections}
+
+CONTEXT GUIDANCE:
+- Use similar language patterns and clause structures from the precedents above
+- Maintain consistency with the firm's established writing style
+- Reference applicable legal precedents where appropriate
+- Ensure the new document aligns with the firm's standard practices
+
+`;
   }
 
   /**
@@ -449,11 +497,13 @@ export async function generateDocument(
   template: Template,
   explanation: string,
   yamlData: YamlData,
+  contextBundle?: ContextBundle,
   modelOverride?: string
 ): Promise<string> {
   logger.debug('generateDocument called', {
     templateId: template.id,
-    documentType: yamlData.document_type
+    documentType: yamlData.document_type,
+    contextResults: contextBundle?.embeddings?.length || 0
   });
   
   // Load environment variables
@@ -472,7 +522,7 @@ export async function generateDocument(
   });
   
   const service = createOpenAIService(config);
-  const result = await service.generateDocument(template, explanation, yamlData);
+  const result = await service.generateDocument(template, explanation, yamlData, contextBundle);
   
   logger.debug('Document generated successfully', {
     contentLength: result.content.length,

@@ -12,7 +12,6 @@ import {
 import { generateDocument } from '../services/openai';
 import { loadExplanation } from '../services/template';
 import { logger } from '../utils/logger';
-import { config } from '../config';
 
 export class DraftingAgent extends BaseAgent {
   readonly name = 'DraftingAgent';
@@ -46,17 +45,24 @@ export class DraftingAgent extends BaseAgent {
       taskExplanation += `\n\nADDITIONAL INSTRUCTIONS:\nGenerate ONLY the following sections (in this exact order) and nothing else: ${orderedTitles}. Do NOT include any other document parts, cover pages, or duplicate sections.`;
     }
 
-    // Generate document (partial or full) using OpenAI service
-    const modelOverride = input.sectionIds && input.sectionIds.length > 0
-      ? config.parallel.WORKER_MODEL
-      : undefined;
-
+    // Generate document using OpenAI service with context
     const draftMarkdown = await generateDocument(
       workingTemplate,
       taskExplanation,
       input.matterContext.yamlData,
-      modelOverride
+      input.contextBundle
     );
+
+    // Log context usage
+    if (input.contextBundle && input.contextBundle.embeddings.length > 0) {
+      logger.info('Document generated with context', {
+        contextResults: input.contextBundle.embeddings.length,
+        averageSimilarity: input.contextBundle.embeddings.reduce((sum, e) => sum + e.similarity, 0) / input.contextBundle.embeddings.length,
+        contextTokens: input.contextBundle.totalTokens
+      });
+    } else {
+      logger.info('Document generated without context - no relevant precedents found');
+    }
 
     // Analyze the generated document
     const sectionsGenerated = this.extractSections(draftMarkdown);
