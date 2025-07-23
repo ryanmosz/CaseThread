@@ -115,10 +115,10 @@ class WindowManager {
   private async createMainWindow(): Promise<void> {
     // Create the browser window
     this.mainWindow = new BrowserWindow({
-      width: 1400,
-      height: 900,
-      minWidth: 1200,
-      minHeight: 700,
+      width: 1200,
+      height: 800,
+      minWidth: 900,
+      minHeight: 600,
       show: false,
       titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
       webPreferences: {

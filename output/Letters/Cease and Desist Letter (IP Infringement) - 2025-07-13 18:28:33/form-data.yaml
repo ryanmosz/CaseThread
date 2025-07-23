@@ -1,0 +1,22 @@
+# Generated from GUI form data
+
+# Metadata
+client: "GUI Client"
+attorney: "GUI Attorney"
+document_type: "cease-and-desist-letter"
+template: "cease-and-desist-letter.json"
+
+# Document Parameters
+evidence_attached: true
+sender_name: "Ryan M"
+sender_address: "111 Test Rd McDonald PA 15057"
+recipient_name: "Josh Shipley"
+recipient_address: "222 Test Dr. Canonsburg PA 68801"
+infringement_type: "trademark"
+ip_description: "Gummi Bear Designs used for candy packaging"
+relationship_type: "vendor"
+tone_level: "friendly"
+desired_outcome:
+  - "licensing_discussion"
+response_deadline: 14
+infringement_description: "Stole Gummi bear designs from Daughters high school notebook."

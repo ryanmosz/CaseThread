@@ -108,6 +108,15 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
+/* Electron window dragging regions */
+.app-region-drag {
+  -webkit-app-region: drag;
+}
+
+.app-region-no-drag {
+  -webkit-app-region: no-drag;
+}
+
 /* Custom border utilities for thicker, more spread dashed borders */
 @layer utilities {
   .border-dashed-thick {
